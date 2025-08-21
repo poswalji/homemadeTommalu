@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+  
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+  
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+  
+    .circular-scroll {
+      display: flex;
+      overflow-x: auto;
+      gap: 1rem;
+      padding: 1rem 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+  
+    .circular-scroll::-webkit-scrollbar {
+      display: none;
+    }
+  
+    .circular-item {
+      min-width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(45deg, #ff6b6b, #feca57);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+  
+    .circular-item:hover {
+      transform: scale(1.1);
+    }
+  
+    .mobile-menu {
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+  
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+  
+    .order-status-preparing {
+      background: linear-gradient(45deg, #f59e0b, #f97316);
+    }
+  
+    .order-status-on-way {
+      background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    }
+  
+    .order-status-delivered {
+      background: linear-gradient(45deg, #10b981, #059669);
+    }
+  
+    .order-status-cancelled {
+      background: linear-gradient(45deg, #ef4444, #dc2626);
+    }
+        /* index.css ya globals.css me */
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+          /* Chrome, Safari, Opera */
+        }
+    
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          /* IE and Edge */
+          scrollbar-width: none;
+          /* Firefox */
+        }
