@@ -237,7 +237,7 @@ import { useState,useEffect } from "react";
 
                     {/* Mobile Search Bar (Below Header) */}
                     {currentPage === 'home' && (
-                        <div className="md:hidden bg-white bg-opacity-10 px-4 py-3">
+                        <div className="md:hidden bg-white/10  px-4 py-3">
                             <div className="relative">
                                 <input
                                     type="text"
