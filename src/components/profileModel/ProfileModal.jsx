@@ -54,10 +54,8 @@ const ProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
                 });
             };
 
-            const handleSave = () => {
-                onUpdateProfile(editData);
-                setIsEditing(false);
-            };
+           
+           
 
             const handleCancel = () => {
                 setEditData({
