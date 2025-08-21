@@ -69,7 +69,7 @@ import StatsSection from "./pages/statsSection/StatsSection";
   useEffect(() => {
     const verifyUser = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/auth/verify", {
+        const res = await fetch("https://backend-tommalu.onrender.com/api/auth/verify", {
           method: "GET",
           credentials: "include", // include HttpOnly cookie
         });
