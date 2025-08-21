@@ -53,7 +53,31 @@ const ProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
                     [e.target.name]: e.target.value
                 });
             };
+const handleSave = async () => {
+  try {
+    const res = await fetch("https://backend-tommalu.onrender.com/api/auth/profile", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // cookies के लिए
+      body: JSON.stringify(editData),
+    });
 
+    const data = await res.json();
+
+    if (res.ok) {
+      onUpdateProfile(data.user); // parent component में update
+      setIsEditing(false);
+      alert("Profile updated successfully");
+    } else {
+      alert(data.message || "Failed to update profile");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong");
+  }
+};
            
            
 
