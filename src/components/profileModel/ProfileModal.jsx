@@ -27,7 +27,7 @@ const ProfileModal = ({ isOpen, onClose, user, onUpdateProfile }) => {
   const handleSave = async () => {
     try {
       const res = await fetch(
-        "https://backend-tommalu.onrender.com/api/auth/profile",
+        "http://localhost:8080/api/auth/profile",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
