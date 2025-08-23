@@ -1,6 +1,6 @@
 import React from "react";
 import ProfileDropdown from "../profileDropdown/ProfileDropdown";
-
+import {Link} from "react-router-dom"
 import { useState,useEffect } from "react";
   const Header = ({
             isSignedIn,
@@ -207,7 +207,8 @@ import { useState,useEffect } from "react";
                                 )}
 
                                 {/* Cart */}
-                                <button onClick={onCartClick} className="relative hover:text-yellow-300 transition-colors">
+                                <Link to='/cart'>
+                                <button  onClick={onCartClick} className="relative hover:text-yellow-300 transition-colors">
                                     <i className="fas fa-shopping-cart text-xl"></i>
                                     {cartCount > 0 && (
                                         <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -215,6 +216,7 @@ import { useState,useEffect } from "react";
                                         </span>
                                     )}
                                 </button>
+                                </Link >
                             </div>
                         </div>
 

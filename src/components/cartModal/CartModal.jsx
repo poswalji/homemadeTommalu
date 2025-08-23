@@ -6,6 +6,7 @@ const CartModal = ({ isOpen, onClose, cartItems, onRemoveFromCart, onUpdateQuant
             const [couponError, setCouponError] = useState('');
             
             if (!isOpen) return null;
+            
 
             // Available coupons
             const availableCoupons = {

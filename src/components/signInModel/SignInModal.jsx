@@ -137,7 +137,7 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
       console.log("Google User:", decoded);
 
       // yahan backend ko bhejna hai
-      fetch("https://backend-tommalu.onrender.com/api/auth/google", {
+      fetch("http://localhost:8080/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

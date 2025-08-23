@@ -1,5 +1,7 @@
   import { useState,useEffect } from 'react'
   import reactLogo from './assets/react.svg'
+  import { Router, Routes, Route } from "react-router-dom";
+
   import viteLogo from '/vite.svg'
   import './index.css';
 
@@ -19,7 +21,10 @@ import FeaturesSection from "./pages/featuresSection/FeaturesSection";
 import Footer from "./pages/footer/Footer";
 import NewsletterSection from "./pages/newsletterSection/NewsletterSection";
 import StatsSection from "./pages/statsSection/StatsSection";
+import CartPage from './pages/cart/CartPage';
   const App = () => {
+  
+    
               // Load saved user locations from localStorage on app start
               useEffect(() => {
                   const savedLocations = localStorage.getItem('tommaluUserLocations');
@@ -63,7 +68,21 @@ import StatsSection from "./pages/statsSection/StatsSection";
                   }
               }, [userLocations]);
 
-              
+            useEffect(() => {
+  const savedCart = localStorage.getItem("cartItems");
+  if (savedCart) {
+    setCartItems(JSON.parse(savedCart));
+    // count bhi set karna zaruri hai
+    const count = JSON.parse(savedCart).reduce((acc, item) => acc + item.quantity, 0);
+    setCartCount(count);
+  }
+}, []);
+
+// ✅ Jab cartItems change hoga to localStorage update karo
+useEffect(() => {
+  localStorage.setItem("cartItems", JSON.stringify(cartItems));
+}, [cartItems]);
+
 
   // Verify token on page load
   useEffect(() => {
@@ -773,14 +792,22 @@ import StatsSection from "./pages/statsSection/StatsSection";
                       />
 
                       {/* Cart Modal */}
-                      <CartModal
-                          isOpen={isCartModalOpen}
-                          onClose={closeCart}
-                          cartItems={cartItems}
-                          onRemoveFromCart={removeFromCart}
-                          onUpdateQuantity={updateCartQuantity}
-                          onCheckout={handleCheckout}
-                      />
+                     <Router>
+      <Routes>
+        <Route path="/" element={<App/>} />
+        <Route
+          path="/cart"
+          element={
+            <CartPage
+              cartItems={cartItems}
+              onRemoveFromCart={removeFromCart}
+              onUpdateQuantity={updateCartQuantity}
+              onCheckout={handleCheckout}
+            />
+          }
+        />
+      </Routes>
+    </Router>   
 
                       {/* Order Tracking Modal */}
                       <OrderTrackingModal
