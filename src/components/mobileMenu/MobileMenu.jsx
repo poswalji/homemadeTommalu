@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import ProfileDropdown from "../profileDropdown/ProfileDropdown";
 const MobileMenu = ({ isOpen, onClose, onNavigate, user, isSignedIn,
             onSignIn,
@@ -65,29 +66,56 @@ const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
 
                             {/* Mobile Menu Items */}
                             <nav className="space-y-4">
-                                <button
-                                    onClick={() => { onNavigate('home'); onClose(); }}
-                                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors w-full text-left"
-                                >
-                                    <i className="fas fa-home text-purple-500 w-5"></i>
-                                    <span className="font-medium">Home</span>
-                                </button>
-                               {isSignedIn && <button
-                                    onClick={() => { onNavigate('orders'); onClose(); }}
-                                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors w-full text-left"
-                                >
-                                    <i className="fas fa-shopping-bag text-orange-500 w-5"></i>
-                                    <span className="font-medium">My Orders</span>
-                                </button>}
-                                <a href="#" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <i className="fas fa-utensils text-orange-500 w-5"></i>
-                                    <span className="font-medium">Food Delivery</span>
-                                </a>
-                                <a href="#" className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <i className="fas fa-shopping-cart text-green-500 w-5"></i>
-                                    <span className="font-medium">Grocery</span>
-                                </a>
-
+                                <NavLink
+    to="/"
+    onClick={onClose}
+    className={({ isActive }) =>
+      `flex items-center space-x-3 p-3 rounded-lg transition-colors w-full text-left ${
+        isActive ? "bg-gray-100 text-purple-600" : "hover:bg-gray-100"
+      }`
+    }
+  >
+    <i className="fas fa-home text-purple-500 w-5"></i>
+    <span className="font-medium">Home</span>
+  </NavLink>
+                               {isSignedIn && (
+    <NavLink
+      to="/orders"
+      onClick={onClose}
+      className={({ isActive }) =>
+        `flex items-center space-x-3 p-3 rounded-lg transition-colors w-full text-left ${
+          isActive ? "bg-gray-100 text-orange-600" : "hover:bg-gray-100"
+        }`
+      }
+    >
+      <i className="fas fa-shopping-bag text-orange-500 w-5"></i>
+      <span className="font-medium">My Orders</span>
+    </NavLink>
+  )}
+  <NavLink
+    to="/food"
+    onClick={onClose}
+    className={({ isActive }) =>
+      `flex items-center space-x-3 p-3 rounded-lg transition-colors w-full text-left ${
+        isActive ? "bg-gray-100 text-orange-600" : "hover:bg-gray-100"
+      }`
+    }
+  >
+    <i className="fas fa-utensils text-orange-500 w-5"></i>
+    <span className="font-medium">Food Delivery</span>
+  </NavLink>
+  <NavLink
+    to="/grocery"
+    onClick={onClose}
+    className={({ isActive }) =>
+      `flex items-center space-x-3 p-3 rounded-lg transition-colors w-full text-left ${
+        isActive ? "bg-gray-100 text-green-600" : "hover:bg-gray-100"
+      }`
+    }
+  >
+    <i className="fas fa-shopping-cart text-green-500 w-5"></i>
+    <span className="font-medium">Grocery</span>
+  </NavLink>
                                 {/* Delivery Locations Section */}
                                 <div className="relative group">
                                     <button className=" bg-opacity-20 text-blue border border-yellow-300 border-opacity-30 rounded px-3 py-2 focus:outline-none hover:bg-opacity-30 transition-colors flex items-center space-x-2">

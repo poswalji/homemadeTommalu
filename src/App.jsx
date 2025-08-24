@@ -1,26 +1,27 @@
   import { useState,useEffect } from 'react'
   import reactLogo from './assets/react.svg'
-  import { Router, Routes, Route } from "react-router-dom";
-
-  import viteLogo from '/vite.svg'
+ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Grocery from './pages/grocery/Grocery';
+ 
   import './index.css';
-
+import Home from './pages/home/Home';
   import './App.css'
-import CartModal from "./components/cartModal/CartModal";
+// import CartModal from "./components/cartModal/CartModal";
+import CheckOut from './pages/checkout/CheckOut';
 import Header from "./components/header/Header";
 import MenuModal from "./components/menuModal/MenuModal";
 import MobileMenu from "./components/mobileMenu/MobileMenu";
-import MyOrdersPage from "./components/myOrderPage/MyOrdersPage";
+import MyOrdersPage from "./pages/myOrderPage/MyOrdersPage";
 import Notification from "./components/notifications/Notification";
 import OrderTrackingModal from "./components/orderTrakingModel/OrderTrackingModal";
 import ProfileDropdown from "./components/profileDropdown/ProfileDropdown";
 import ProfileModal from "./components/profileModel/ProfileModal";
-import RestaurantCard from "./components/restaurantCard/RestaurantCard";
+
 import SignInModal from "./components/signInModel/SignInModal";
-import FeaturesSection from "./pages/featuresSection/FeaturesSection";
+
 import Footer from "./pages/footer/Footer";
-import NewsletterSection from "./pages/newsletterSection/NewsletterSection";
-import StatsSection from "./pages/statsSection/StatsSection";
+
+
 import CartPage from './pages/cart/CartPage';
   const App = () => {
   
@@ -282,7 +283,47 @@ useEffect(() => {
                   }
               ];
 
-              // Grocery stores data
+              //data for link grocery
+            const groceryData = [
+  {
+    id: 1,
+    name: "Rice",
+    shops: [
+      {
+        id: 1,
+        name: "Sharma Kirana Store",
+        items: [
+          { id: 1, name: "Basmati Rice (5kg)", price: "₹450", image: "" },
+          { id: 2, name: "Sona Masoori Rice (1kg)", price: "₹100", image: "" },
+        ],
+      },
+      {
+        id: 2,
+        name: "Fresh Market",
+        items: [
+          { id: 1, name: "Organic Rice (1kg)", price: "₹120", image: "" },
+        ],
+      },
+    ],
+  },
+  {
+    id: 2,
+    name: "Flour",
+    shops: [
+      {
+        id: 1,
+        name: "Sharma Kirana Store",
+        items: [
+          { id: 1, name: "Wheat Flour (10kg)", price: "₹380", image: "" },
+        ],
+      },
+    ],
+  },
+  // More categories...
+];
+
+
+                            // Grocery stores data
               const groceryStores = [
                   {
                       name: 'Sharma Kirana Store',
@@ -579,6 +620,11 @@ useEffect(() => {
                   // Navigate to orders page
                   setCurrentPage('orders');
               };
+               const handleOrder = (orderData) => {
+  console.log("Order Placed:", orderData);
+  // yaha backend API call ya cart clear karna add kar sakte ho
+  alert("Order Placed Successfully ✅");
+};
 
               const handleReorder = (order) => {
                   // Add all items from the order back to cart
@@ -668,122 +714,64 @@ useEffect(() => {
                           onLocationChange={handleLocationChange}
                       />
 
-                      {/* Main Content */}
-                      {currentPage === 'home' ? (
-                          <>
-                              <main className="container mx-auto px-4 py-8">
-                                  {/* Hero Section */}
-                                  <section className="text-center mb-12">
-                                      <h2 className="text-4xl font-bold text-gray-800 mb-4">Delicious Food & Fresh Groceries</h2>
-                                      <p className="text-xl text-gray-600 mb-8">Delivered to your doorstep in minutes</p>
+   <Routes>
+  {/* ✅ Home */}
+  <Route
+    path="/"
+    element={
+      <Home
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+        categories={categories}
+        selectedCategory={selectedCategory}
+        handleCategoryClick={handleCategoryClick}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        getFilteredRestaurants={getFilteredRestaurants}
+        openRestaurantMenu={openRestaurantMenu}
+      />
+    }
+  />
 
-                                      {/* Section Toggle Buttons */}
-                                      <div className="flex justify-center gap-4 mb-8">
-                                          <button
-                                              onClick={() => setActiveSection('food')}
-                                              className={`px-8 py-3 rounded-full font-semibold transition-all ${activeSection === 'food'
-                                                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
-                                                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                  }`}
-                                          >
-                                              🍕 Food Delivery
-                                          </button>
-                                          <button
-                                              onClick={() => setActiveSection('grocery')}
-                                              className={`px-8 py-3 rounded-full font-semibold transition-all ${activeSection === 'grocery'
-                                                      ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
-                                                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                  }`}
-                                          >
-                                              🛒 Grocery Shopping
-                                          </button>
-                                      </div>
+  {/* ✅ Orders */}
+  <Route
+    path="/orders"
+    element={
+      <MyOrdersPage
+        orders={orders}
+        onReorder={handleReorder}
+        onTrackOrder={handleTrackOrder}
+      />
+    }
+  />
 
-                                      <div className="flex flex-wrap justify-center gap-4">
-                                          <span className="bg-orange-100 text-orange-800 px-4 py-2 rounded-full font-medium">🍕 Fast Food</span>
-                                          <span className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-medium">🥬 Fresh Groceries</span>
-                                          <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-medium">🚚 Quick Delivery</span>
-                                          <span className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-medium">🍛 Indian Cuisine</span>
-                                      </div>
-                                  </section>
+  {/* ✅ Cart */}
+  <Route
+    path="/cart"
+    element={
+      <CartPage
+      addToCart={addToCart}
+             cartItems={cartItems}
+        onRemoveFromCart={removeFromCart}
+        onUpdateQuantity={updateCartQuantity}
+        onCheckout={handleCheckout}
+      />
+    }
+  />
+  <Route path='/cart/checkout'element={<CheckOut cartItems={cartItems} userData={user} onPlaceOrder={handleOrder}/>}/>
+  <Route path='/grocery' element={<Grocery groceryData={groceryData} onAddToCart={addToCart}/>}/>
 
-                                  {/* Categories Section */}
-                                  <section className="mb-12">
-                                      <h3 className="text-2xl font-bold text-gray-800 mb-6">Browse Categories</h3>
-                                      <div className="circular-scroll">
-                                          {categories.map((category, index) => (
-                                              <div
-                                                  key={index}
-                                                  className={`circular-item bg-gradient-to-br ${category.color} ${selectedCategory === category.name ? 'ring-4 ring-white ring-opacity-50' : ''
-                                                      }`}
-                                                  onClick={() => handleCategoryClick(category.name)}
-                                              >
-                                                  <div className="text-3xl mb-2">{category.icon}</div>
-                                                  <div className="text-sm font-medium text-center">{category.name}</div>
-                                              </div>
-                                          ))}
-                                      </div>
-                                  </section>
-
-                                  {/* Popular Restaurants & Stores */}
-                                  <section className="mb-12">
-                                      <h3 className="text-2xl font-bold text-gray-800 mb-6">
-                                          {searchQuery ? `Search Results for "${searchQuery}"` :
-                                              selectedCategory ? `${selectedCategory} Options` :
-                                                  activeSection === 'food' ? 'Popular Restaurants' : 'Popular Grocery Stores'}
-                                      </h3>
-                                      {(searchQuery || selectedCategory) && (
-                                          <button
-                                              onClick={() => {
-                                                  setSearchQuery('');
-                                                  setSelectedCategory('');
-                                              }}
-                                              className="mb-4 text-purple-600 hover:text-purple-800 font-medium"
-                                          >
-                                              ← Clear filters
-                                          </button>
-                                      )}
-                                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                          {getFilteredRestaurants().length > 0 ? (
-                                              getFilteredRestaurants().map((restaurant, index) => (
-                                                  <RestaurantCard
-                                                      key={index}
-                                                      restaurant={restaurant}
-                                                      onClick={openRestaurantMenu}
-                                                  />
-                                              ))
-                                          ) : (
-                                              <div className="col-span-full text-center py-12">
-                                                  <i className="fas fa-search text-6xl text-gray-300 mb-4"></i>
-                                                  <p className="text-gray-500 text-lg">No results found</p>
-                                                  <p className="text-gray-400">Try searching for something else or browse categories</p>
-                                              </div>
-                                          )}
-                                      </div>
-                                  </section>
-                              </main>
-
-                              {/* Features Section */}
-                              <FeaturesSection />
-
-                              {/* Stats Section */}
-                              <StatsSection />
-
-                              {/* Newsletter Section */}
-                              <NewsletterSection />
-                          </>
-                      ) : (
-                          <MyOrdersPage
-                              orders={orders}
-                              onReorder={handleReorder}
-                              onTrackOrder={handleTrackOrder}
-                          />
-                      )}
-
-                      {/* Footer */}
-                      <Footer />
-
-                      {/* Menu Modal */}
+  {/* ✅ 404 Fallback */}
+  <Route
+    path="*"
+    element={
+      <h1 className="mt-8 mb-22 text-center text-3xl">404 Page Not Found</h1>
+    }
+  />
+</Routes>
+<Footer/>
+            
+           {/* Menu Modal */}
                       <MenuModal
                           isOpen={isMenuModalOpen}
                           restaurant={selectedRestaurant}
@@ -791,23 +779,6 @@ useEffect(() => {
                           onAddToCart={addToCart}
                       />
 
-                      {/* Cart Modal */}
-                     <Router>
-      <Routes>
-        <Route path="/" element={<App/>} />
-        <Route
-          path="/cart"
-          element={
-            <CartPage
-              cartItems={cartItems}
-              onRemoveFromCart={removeFromCart}
-              onUpdateQuantity={updateCartQuantity}
-              onCheckout={handleCheckout}
-            />
-          }
-        />
-      </Routes>
-    </Router>   
 
                       {/* Order Tracking Modal */}
                       <OrderTrackingModal

@@ -1,7 +1,8 @@
 import React from "react";
 import ProfileDropdown from "../profileDropdown/ProfileDropdown";
-import {Link} from "react-router-dom"
+
 import { useState,useEffect } from "react";
+import { NavLink,useLocation } from "react-router-dom";
   const Header = ({
             isSignedIn,
             onSignIn,
@@ -21,7 +22,7 @@ import { useState,useEffect } from "react";
         }) => {
             const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
             const [language, setLanguage] = useState('EN');
-
+              const location = useLocation();
             const toggleProfileDropdown = () => {
                 setIsProfileDropdownOpen(!isProfileDropdownOpen);
             };
@@ -59,32 +60,59 @@ import { useState,useEffect } from "react";
                         {/* Desktop Header */}
                         <div className="hidden md:flex items-center justify-between py-4">
                             <div className="flex items-center space-x-8">
-                                <button onClick={() => onNavigate('home')} className="text-3xl font-bold hover:text-yellow-300 transition-colors">
+                                <NavLink to="/" className="text-3xl font-bold hover:text-yellow-300 transition-colors">
                                     Tommalu
-                                </button>
-                                <nav className="flex space-x-6">
-                                    <button
-                                        onClick={() => onNavigate('home')}
-                                        className={`hover:text-yellow-300 transition-colors font-medium ${currentPage === 'home' ? 'text-yellow-300' : ''}`}
-                                    >
-                                        Home
-                                    </button>
-                                    <a href="#" className="hover:text-yellow-300 transition-colors font-medium">Food</a>
-                                    <a href="#" className="hover:text-yellow-300 transition-colors font-medium">Grocery</a>
-                                    {isSignedIn && (
-                                        <button
-                                            onClick={() => onNavigate('orders')}
-                                            className={`hover:text-yellow-300 transition-colors font-medium ${currentPage === 'orders' ? 'text-yellow-300' : ''}`}
-                                        >
-                                            My Orders
-                                        </button>
-                                    )}
-                                </nav>
+                                </NavLink>
+                               <nav className="flex space-x-6">
+                                    <NavLink
+    to="/"
+    className={({ isActive }) =>
+      `font-medium transition-colors ${
+        isActive ? "text-yellow-300" : "hover:text-yellow-300"
+      }`
+    }
+  >
+    Home
+  </NavLink>
+               <NavLink
+    to="/food"
+    className={({ isActive }) =>
+      `font-medium transition-colors ${
+        isActive ? "text-yellow-300" : "hover:text-yellow-300"
+      }`
+    }
+  >
+    Food
+  </NavLink>
+  <NavLink
+    to="/grocery"
+    className={({ isActive }) =>
+      `font-medium transition-colors ${
+        isActive ? "text-yellow-300" : "hover:text-yellow-300"
+      }`
+    }
+  >
+    Grocery
+  </NavLink>
+  {isSignedIn && (
+    <NavLink
+      to="/orders"
+      className={({ isActive }) =>
+        `font-medium transition-colors ${
+          isActive ? "text-yellow-300" : "hover:text-yellow-300"
+        }`
+      }
+    >
+      My Orders
+    </NavLink>
+)}
+
+                               </nav>
                             </div>
 
                             <div className="flex items-center space-x-6">
                               {/* Search Bar */}
-{currentPage === 'home' && (
+{location.pathname==='/' && (
   <div className="relative">
     <input
       type="text"
@@ -168,7 +196,7 @@ import { useState,useEffect } from "react";
                                         </div>
                                     </div>
                                 </div>
-
+                                        
                                 {/* Language Toggle */}
                                 <select
                                     value={language}
@@ -206,39 +234,45 @@ import { useState,useEffect } from "react";
                                     </div>
                                 )}
 
-                                {/* Cart */}
-                                <Link to='/cart'>
-                                <button  onClick={onCartClick} className="relative hover:text-yellow-300 transition-colors">
-                                    <i className="fas fa-shopping-cart text-xl"></i>
-                                    {cartCount > 0 && (
-                                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                            {cartCount}
-                                        </span>
-                                    )}
-                                </button>
-                                </Link >
+                               
+                               <NavLink
+  to="/cart"
+  className={({ isActive }) =>
+    `relative font-medium transition-colors ${
+      isActive ? "text-yellow-300" : "hover:text-yellow-300"
+    }`
+  }
+>
+  <i className="fas fa-shopping-cart text-xl"></i>
+  {cartCount > 0 && (
+    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+      {cartCount}
+    </span>
+  )}
+</NavLink>
+                              
                             </div>
                         </div>
 
                         {/* Mobile Header */}
-                        <div className="md:hidden flex items-center justify-between py-4">
-                            <button onClick={onToggleMobileMenu} className="text-white">
-                                <i className="fas fa-bars text-xl"></i>
-                            </button>
-                            <button onClick={() => onNavigate('home')} className="text-2xl font-bold">Tommalu</button>
-                            <button onClick={onCartClick} className="relative">
-                                <i className="fas fa-shopping-cart text-xl"></i>
-                                {cartCount > 0 && (
-                                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                        {cartCount}
-                                    </span>
-                                )}
-                            </button>
-                        </div>
+                      <div className="md:hidden flex items-center justify-between py-4">
+  <button onClick={onToggleMobileMenu} className="text-white">
+    <i className="fas fa-bars text-xl"></i>
+  </button>
+  <NavLink to="/" className="text-2xl font-bold">Tommalu</NavLink>
+  <NavLink to="/cart" className="relative">
+    <i className="fas fa-shopping-cart text-xl"></i>
+    {cartCount > 0 && (
+      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+        {cartCount}
+      </span>
+    )}
+  </NavLink>
+</div>
                     </div>
 
                     {/* Mobile Search Bar (Below Header) */}
-                    {currentPage === 'home' && (
+                    {location.pathname==="/"&& (
                         <div className="md:hidden bg-white/10  px-4 py-3">
                             <div className="relative">
                                 <input

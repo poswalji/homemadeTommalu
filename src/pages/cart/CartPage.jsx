@@ -1,7 +1,7 @@
 // src/pages/CartPage.jsx
 import React, { useState } from "react";
-
-const CartPage = ({ cartItems, onRemoveFromCart, onUpdateQuantity, onCheckout }) => {
+import { Link } from "react-router-dom";
+const CartPage = ({ cartItems, addToCart ,onRemoveFromCart, onUpdateQuantity, onCheckout }) => {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
@@ -149,9 +149,9 @@ const CartPage = ({ cartItems, onRemoveFromCart, onUpdateQuantity, onCheckout })
             </div>
           </div>
 
-          <button onClick={onCheckout} className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-colors">
+          <Link to="/cart/checkout"  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-colors">
             Proceed to Checkout
-          </button>
+          </Link>
         </>
       )}
     </div>

@@ -17,7 +17,7 @@ import React from "react";
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                             {stats.map((stat, index) => (
                                 <div key={index} className="text-center">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white bg-opacity-20 mb-4">
+                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20   mb-4">
                                         <i className={`${stat.icon} text-2xl`}></i>
                                     </div>
                                     <div className="text-3xl font-bold mb-2">{stat.number}</div>

@@ -1,5 +1,7 @@
  import React from "react";
  import { useState } from "react";
+import Footer from "../footer/Footer";
+
  const MyOrdersPage = ({ orders, onReorder, onTrackOrder }) => {
             const [activeTab, setActiveTab] = useState('current');
 
@@ -107,6 +109,7 @@
             );
 
             return (
+                <>
                 <div className="container mx-auto px-4 py-8">
                     <div className="max-w-4xl mx-auto">
                         {/* Page Header */}
@@ -190,6 +193,8 @@
                         </div>
                     </div>
                 </div>
+                
+                </>
             );
         };
 export default MyOrdersPage
