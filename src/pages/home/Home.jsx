@@ -5,7 +5,7 @@ import NewsletterSection from "../newsletterSection/NewsletterSection";
 import StatsSection from "../statsSection/StatsSection";
 import RestaurantCard from "../../components/restaurantCard/RestaurantCard";
 import ItemCard from "../../components/itemsCard/ItemCard";
-import { Link } from "react-router-dom";
+import { Link ,NavLink} from "react-router-dom";
 
 const Home = ({
   onRestaurantClick,
@@ -31,26 +31,33 @@ const Home = ({
 
         {/* Section Toggle Buttons */}
         <div className="flex justify-center gap-4 mb-8">
-          <button
-            onClick={() => setActiveSection("food")}
-            className={`px-8 py-3 rounded-full font-semibold transition-all ${
-              activeSection === "food"
-                ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            🍕 Food Delivery
-          </button>
-          <button
-            onClick={() => setActiveSection("grocery")}
-            className={`px-8 py-3 rounded-full font-semibold transition-all ${
-              activeSection === "grocery"
-                ? "bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            🛒 Grocery Shopping
-          </button>
+    <NavLink
+  to="/food"
+  className={({ isActive }) =>
+    `px-8 py-3 rounded-full font-semibold transition-all ${
+      isActive
+        ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+        : "bg-gray-200 text-gray-700 hover:bg-gradient-to-r hover:from-orange-500 hover:to-red-500 hover:text-white hover:shadow-lg"
+    }`
+  }
+>
+  🍕 Food Delivery
+</NavLink>
+
+  <NavLink
+  to="/grocery"
+  onClick={() => setActiveSection("grocery")}
+  className={({ isActive }) =>
+    `px-8 py-3 rounded-full font-semibold transition-all duration-300 ${
+      isActive || activeSection === "grocery"
+        ? "bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg"
+        : "bg-gray-200 text-gray-700 hover:bg-gradient-to-r hover:from-green-500 hover:to-blue-500 hover:text-white"
+    }`
+  }
+>
+  🛒 Grocery Shopping
+</NavLink>
+
         </div>
 
         <div className="flex flex-wrap justify-center gap-4">
