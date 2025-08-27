@@ -41,6 +41,16 @@ import { NavLink,useLocation } from "react-router-dom";
                 onOpenProfile();
                 setIsProfileDropdownOpen(false);
             };
+             const handleSearchInput = (e) => {
+                onSearchChange(e.target.value);
+            };
+
+            const handleSearchKeyPress = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    onSearchChange(e.target.value);
+                }
+              }
 
             // Close dropdown when clicking outside
             useEffect(() => {

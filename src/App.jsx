@@ -1,8 +1,8 @@
-  import { useState,useEffect } from 'react'
+  import { useState,useEffect,useCallback } from 'react'
   import reactLogo from './assets/react.svg'
  import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Grocery from './pages/grocery/Grocery';
- 
+ import Food from './pages/food/Food';
   import './index.css';
 import Home from './pages/home/Home';
   import './App.css'
@@ -20,9 +20,11 @@ import ProfileModal from "./components/profileModel/ProfileModal";
 import SignInModal from "./components/signInModel/SignInModal";
 
 import Footer from "./pages/footer/Footer";
-
+import RestaurantItemsPage from './pages/restaurantItems/RestaurantItemsPage';
 
 import CartPage from './pages/cart/CartPage';
+import ItemCard from './components/itemsCard/ItemCard';
+import CategoryProducts from './pages/category/CategoryProducts';
   const App = () => {
   
     
@@ -40,12 +42,12 @@ import CartPage from './pages/cart/CartPage';
 
               const [isSignedIn, setIsSignedIn] = useState(false);
               const [user, setUser] = useState(null);
-              const [cartCount, setCartCount] = useState(0);
+              
               const [cartItems, setCartItems] = useState([]);
               const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
               const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-              const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
-              const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+             (false);
+             
               const [activeSection, setActiveSection] = useState('food'); // 'food' or 'grocery'
               const [searchQuery, setSearchQuery] = useState('');
               const [selectedCategory, setSelectedCategory] = useState('');
@@ -69,20 +71,128 @@ import CartPage from './pages/cart/CartPage';
                   }
               }, [userLocations]);
 
-            useEffect(() => {
-  const savedCart = localStorage.getItem("cartItems");
-  if (savedCart) {
-    setCartItems(JSON.parse(savedCart));
-    // count bhi set karna zaruri hai
-    const count = JSON.parse(savedCart).reduce((acc, item) => acc + item.quantity, 0);
-    setCartCount(count);
+                // Load cart from localStorage on component mount
+            const [cart, setCart] = useState(() => {
+  try {
+    const savedCart = localStorage.getItem("tommaluCart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  } catch (error) {
+    console.error("Error parsing cart from localStorage:", error);
+    return [];
   }
-}, []);
+});
 
-// ✅ Jab cartItems change hoga to localStorage update karo
 useEffect(() => {
-  localStorage.setItem("cartItems", JSON.stringify(cartItems));
-}, [cartItems]);
+  try {
+    localStorage.setItem("tommaluCart", JSON.stringify(cart));
+  } catch (error) {
+    console.error("Error saving cart:", error);
+  }
+}, [cart]);     
+
+            const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+            const handleNavigate = (page) => {
+                setCurrentPage(page);
+                if (page !== 'search') {
+                    setSearchQuery('');
+                }
+                setSelectedRestaurant(null);
+                setSelectedCategory(null);
+            };
+
+            const handleSearchChange = (query) => {
+                setSearchQuery(query);
+                if (query.trim()) {
+                    setCurrentPage('search');
+                } else if (currentPage === 'search') {
+                    setCurrentPage('home');
+                }
+            };
+
+            const handleRestaurantClick = (restaurant) => {
+                setSelectedRestaurant(restaurant);
+                setCurrentPage('restaurant-items');
+                setSearchQuery('');
+                setSelectedCategory(null);
+            };
+
+            const handleCategoryClick = (category) => {
+                setSelectedCategory(category);
+                setCurrentPage('category-products');
+                setSearchQuery('');
+                setSelectedRestaurant(null);
+            };
+
+            const handleAddToCart = (item, restaurant) => {
+                setCart(prevCart => {
+                    // For items with weight options, check both item ID and selected weight
+                    const existingItemIndex = prevCart.findIndex(
+                        cartItem => cartItem.id === item.id && 
+                        cartItem.restaurant.id === restaurant.id &&
+                        (item.selectedWeight ? 
+                            cartItem.selectedWeight?.label === item.selectedWeight.label : 
+                            !cartItem.selectedWeight)
+                    );
+
+                    if (existingItemIndex >= 0) {
+                        // Item with same weight already exists, increase quantity
+                        const updatedCart = [...prevCart];
+                        updatedCart[existingItemIndex].quantity += 1;
+                        return updatedCart;
+                    } else {
+                        // New item or different weight, add to cart
+                        return [...prevCart, {
+                            ...item,
+                            restaurant: restaurant,
+                            quantity: 1
+                        }];
+                    }
+                });
+                
+                const itemName = item.selectedWeight ? 
+                    `${item.name} (${item.selectedWeight.label})` : 
+                    item.name;
+                setNotification(`${itemName} added to cart!`);
+            };
+
+            const handleUpdateQuantity = (restaurantId, itemId, newQuantity, selectedWeight = null) => {
+                if (newQuantity <= 0) {
+                    handleRemoveItem(restaurantId, itemId, selectedWeight);
+                    return;
+                }
+
+                setCart(prevCart => 
+                    prevCart.map(item => 
+                        item.id === itemId && 
+                        item.restaurant.id === restaurantId &&
+                        (selectedWeight ? 
+                            item.selectedWeight?.label === selectedWeight.label : 
+                            !item.selectedWeight)
+                            ? { ...item, quantity: newQuantity }
+                            : item
+                    )
+                );
+            };
+
+            const handleRemoveItem = (restaurantId, itemId, selectedWeight = null) => {
+                setCart(prevCart => 
+                    prevCart.filter(item => 
+                        !(item.id === itemId && 
+                          item.restaurant.id === restaurantId &&
+                          (selectedWeight ? 
+                            item.selectedWeight?.label === selectedWeight.label : 
+                            !item.selectedWeight))
+                    )
+                );
+            };
+
+            const handleCartClick = () => {
+                setCurrentPage('cart');
+                setSearchQuery('');
+                setSelectedRestaurant(null);
+                setSelectedCategory(null);
+            };
 
 
   // Verify token on page load
@@ -102,293 +212,234 @@ useEffect(() => {
     verifyUser();
   }, []);
 
-              // Sample orders data
-              const [orders, setOrders] = useState([
-                  {
-                      id: 'ORD001',
-                      restaurant: 'Spice Garden',
-                      status: 'preparing',
-                      date: 'Today',
-                      time: '2:15 PM',
-                      total: '24.99',
-                      items: [
-                          { name: 'Butter Chicken', price: '16.99', quantity: 1 },
-                          { name: 'Garlic Naan', price: '3.99', quantity: 2 }
-                      ],
-                      confirmedTime: '2:15 PM',
-                      preparingTime: '2:25 PM'
-                  },
-                  {
-                      id: 'ORD002',
-                      restaurant: 'Pizza Palace',
-                      status: 'on-way',
-                      date: 'Today',
-                      time: '1:30 PM',
-                      total: '18.99',
-                      items: [
-                          { name: 'Margherita Pizza', price: '12.99', quantity: 1 },
-                          { name: 'Garlic Bread', price: '5.99', quantity: 1 }
-                      ],
-                      confirmedTime: '1:30 PM',
-                      preparingTime: '1:40 PM',
-                      onWayTime: '2:00 PM'
-                  },
-                  {
-                      id: 'ORD003',
-                      restaurant: 'Curry House',
-                      status: 'delivered',
-                      date: 'Yesterday',
-                      time: '7:45 PM',
-                      total: '32.50',
-                      items: [
-                          { name: 'Chicken Biryani', price: '18.99', quantity: 1 },
-                          { name: 'Dal Tadka', price: '8.99', quantity: 1 },
-                          { name: 'Basmati Rice', price: '4.99', quantity: 1 }
-                      ],
-                      confirmedTime: '7:45 PM',
-                      preparingTime: '7:55 PM',
-                      onWayTime: '8:20 PM',
-                      deliveredTime: '8:35 PM'
-                  },
-                  {
-                      id: 'ORD004',
-                      restaurant: 'Tandoor Express',
-                      status: 'delivered',
-                      date: '2 days ago',
-                      time: '6:20 PM',
-                      total: '28.75',
-                      items: [
-                          { name: 'Tandoori Chicken', price: '19.99', quantity: 1 },
-                          { name: 'Mint Chutney', price: '2.99', quantity: 1 },
-                          { name: 'Roti', price: '2.99', quantity: 2 }
-                      ],
-                      confirmedTime: '6:20 PM',
-                      preparingTime: '6:30 PM',
-                      onWayTime: '6:55 PM',
-                      deliveredTime: '7:10 PM'
-                  }
-              ]);
+    
 
-              // Category data for circular items
-              const categories = [
-                  { name: 'Pizza', icon: '🍕', color: 'from-red-400 to-orange-500' },
-                  { name: 'Burgers', icon: '🍔', color: 'from-yellow-400 to-red-500' },
-                  { name: 'Indian', icon: '🍛', color: 'from-orange-400 to-red-600' },
-                  { name: 'Sushi', icon: '🍣', color: 'from-purple-400 to-pink-500' },
-                  { name: 'Groceries', icon: '🛒', color: 'from-green-400 to-blue-500' },
-                  { name: 'Desserts', icon: '🍰', color: 'from-pink-400 to-purple-500' },
-                  { name: 'Drinks', icon: '🥤', color: 'from-blue-400 to-cyan-500' },
-                  { name: 'Chinese', icon: '🥡', color: 'from-orange-400 to-red-500' }
-              ];
+        // Delivery fee calculation based on distance
+        const calculateDeliveryFee = (distance) => {
+            if (distance <= 2) return 15;
+            if (distance <= 3) return 25;
+            if (distance <= 5) return 35;
+            return 45;
+        };
 
-              // Food restaurants data with Indian restaurants
-              const foodRestaurants = [
-                  {
-                      name: 'Spice Garden',
-                      category: 'Indian • Authentic • Spicy',
-                      rating: 4.8,
-                      deliveryTime: '25-30 min',
-                      type: 'restaurant',
-                      menuItems: [
-                          { name: 'Butter Chicken', price: '₹299', icon: '🍛', description: 'Creamy tomato-based curry with tender chicken' },
-                          { name: 'Chicken Biryani', price: '₹349', icon: '🍚', description: 'Fragrant basmati rice with spiced chicken' },
-                          { name: 'Palak Paneer', price: '₹249', icon: '🥬', description: 'Spinach curry with cottage cheese cubes' },
-                          { name: 'Garlic Naan', price: '₹79', icon: '🫓', description: 'Fresh baked bread with garlic and herbs' },
-                          { name: 'Mango Lassi', price: '₹89', icon: '🥤', description: 'Sweet yogurt drink with mango' }
-                      ]
-                  },
-                  {
-                      name: 'Curry House',
-                      category: 'Indian • Vegetarian • Traditional',
-                      rating: 4.6,
-                      deliveryTime: '20-25 min',
-                      type: 'restaurant',
-                      menuItems: [
-                          { name: 'Dal Tadka', price: '₹159', icon: '🍲', description: 'Yellow lentils tempered with spices' },
-                          { name: 'Chole Bhature', price: '₹229', icon: '🫘', description: 'Spiced chickpeas with fried bread' },
-                          { name: 'Aloo Gobi', price: '₹199', icon: '🥔', description: 'Potato and cauliflower curry' },
-                          { name: 'Basmati Rice', price: '₹89', icon: '🍚', description: 'Fragrant long-grain rice' },
-                          { name: 'Gulab Jamun', price: '₹99', icon: '🍯', description: 'Sweet milk dumplings in syrup' }
-                      ]
-                  },
-                  {
-                      name: 'Tandoor Express',
-                      category: 'Indian • Grilled • Fast Food',
-                      rating: 4.7,
-                      deliveryTime: '15-20 min',
-                      type: 'restaurant',
-                      menuItems: [
-                          { name: 'Tandoori Chicken', price: '₹359', icon: '🍗', description: 'Clay oven grilled chicken with spices' },
-                          { name: 'Seekh Kebab', price: '₹279', icon: '🍢', description: 'Spiced minced meat skewers' },
-                          { name: 'Chicken Tikka', price: '₹319', icon: '🍖', description: 'Marinated chicken chunks grilled to perfection' },
-                          { name: 'Mint Chutney', price: '₹49', icon: '🌿', description: 'Fresh mint and coriander sauce' },
-                          { name: 'Roti', price: '₹49', icon: '🫓', description: 'Whole wheat flatbread' }
-                      ]
-                  },
-                  {
-                      name: 'Biryani Palace',
-                      category: 'Indian • Biryani • Royal',
-                      rating: 4.9,
-                      deliveryTime: '30-35 min',
-                      type: 'restaurant',
-                      menuItems: [
-                          { name: 'Hyderabadi Biryani', price: '₹399', icon: '👑', description: 'Royal style biryani with aromatic spices' },
-                          { name: 'Mutton Biryani', price: '₹449', icon: '🍖', description: 'Tender mutton with fragrant basmati rice' },
-                          { name: 'Veg Biryani', price: '₹299', icon: '🥕', description: 'Mixed vegetables with saffron rice' },
-                          { name: 'Raita', price: '₹69', icon: '🥒', description: 'Cooling yogurt with cucumber and spices' },
-                          { name: 'Shorba', price: '₹99', icon: '🍲', description: 'Traditional spiced soup' }
-                      ]
-                  },
-                  {
-                      name: 'Pizza Palace',
-                      category: 'Italian • Pizza • Fast Food',
-                      rating: 4.5,
-                      deliveryTime: '25-30 min',
-                      type: 'restaurant',
-                      menuItems: [
-                          { name: 'Margherita', price: '₹229', icon: '🍕', description: 'Fresh tomatoes, mozzarella, and basil' },
-                          { name: 'Pepperoni', price: '₹269', icon: '🍕', description: 'Classic pepperoni with cheese' },
-                          { name: 'Veggie Supreme', price: '₹249', icon: '🍕', description: 'Bell peppers, mushrooms, olives' },
-                          { name: 'Garlic Bread', price: '₹99', icon: '🥖', description: 'Crispy bread with garlic butter' },
-                          { name: 'Caesar Salad', price: '₹159', icon: '🥗', description: 'Fresh romaine with caesar dressing' }
-                      ]
-                  },
-                  {
-                      name: 'Burger Hub',
-                      category: 'American • Burgers • Fast Food',
-                      rating: 4.3,
-                      deliveryTime: '20-25 min',
-                      type: 'restaurant',
-                      menuItems: [
-                          { name: 'Classic Burger', price: '₹179', icon: '🍔', description: 'Beef patty with lettuce and tomato' },
-                          { name: 'Cheese Burger', price: '₹199', icon: '🍔', description: 'Classic burger with melted cheese' },
-                          { name: 'Chicken Burger', price: '₹219', icon: '🍔', description: 'Grilled chicken breast with mayo' },
-                          { name: 'French Fries', price: '₹89', icon: '🍟', description: 'Crispy golden potato fries' },
-                          { name: 'Milkshake', price: '₹109', icon: '🥤', description: 'Creamy vanilla milkshake' }
-                      ]
-                  },
-                  {
-                      name: 'Sushi Zen',
-                      category: 'Japanese • Sushi • Asian',
-                      rating: 4.8,
-                      deliveryTime: '30-35 min',
-                      type: 'restaurant',
-                      menuItems: [
-                          { name: 'California Roll', price: '₹159', icon: '🍣', description: 'Crab, avocado, and cucumber roll' },
-                          { name: 'Salmon Nigiri', price: '₹229', icon: '🍣', description: 'Fresh salmon over seasoned rice' },
-                          { name: 'Tuna Sashimi', price: '₹279', icon: '🍣', description: 'Premium grade tuna slices' },
-                          { name: 'Miso Soup', price: '₹69', icon: '🍜', description: 'Traditional soybean soup' },
-                          { name: 'Edamame', price: '₹89', icon: '🫘', description: 'Steamed and salted soybeans' }
-                      ]
-                  }
-              ];
+        // Available coupons
+        const AVAILABLE_COUPONS = [
+            { code: 'SAVE50', discount: 50, minOrder: 149, type: 'fixed', description: 'Save ₹50 on orders above ₹149' },
+            { code: 'FIRST20', discount: 20, minOrder: 99, type: 'percentage', description: '20% off on orders above ₹99 (max ₹100)' },
+            { code: 'WELCOME30', discount: 30, minOrder: 199, type: 'fixed', description: 'Save ₹30 on orders above ₹199' }
+        ];
 
-              //data for link grocery
-            const groceryData = [
-  {
-    id: 1,
-    name: "Rice",
-    shops: [
-      {
-        id: 1,
-        name: "Sharma Kirana Store",
-        items: [
-          { id: 1, name: "Basmati Rice (5kg)", price: "₹450", image: "" },
-          { id: 2, name: "Sona Masoori Rice (1kg)", price: "₹100", image: "" },
-        ],
-      },
-      {
-        id: 2,
-        name: "Fresh Market",
-        items: [
-          { id: 1, name: "Organic Rice (1kg)", price: "₹120", image: "" },
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Flour",
-    shops: [
-      {
-        id: 1,
-        name: "Sharma Kirana Store",
-        items: [
-          { id: 1, name: "Wheat Flour (10kg)", price: "₹380", image: "" },
-        ],
-      },
-    ],
-  },
-  // More categories...
-];
+        // Sample Data
+        const RESTAURANTS_DATA = [
+            {
+                id: 1,
+                slug: 'spice-garden',
+                name: "Spice Garden",
+                type: "restaurant",
+                cuisine: "Indian",
+                rating: 4.8,
+                deliveryTime: "25-30 min",
+                distance: 2.5,
+                image: "🍛",
+                items: [
+                    { id: 101, name: "Butter Chicken", price: 280, category: "Indian", description: "Creamy tomato-based chicken curry", image: "🍛", popular: true },
+                    { id: 102, name: "Paneer Tikka", price: 220, category: "Indian", description: "Grilled cottage cheese with spices", image: "🧀", popular: true },
+                    { id: 103, name: "Chicken Biryani", price: 320, category: "Indian", description: "Fragrant basmati rice with chicken", image: "🍚", popular: true },
+                    { id: 104, name: "Garlic Naan", price: 45, category: "Indian", description: "Fresh baked Indian bread", image: "🫓" },
+                    { id: 105, name: "Dal Makhani", price: 180, category: "Indian", description: "Rich black lentil curry", image: "🍲" }
+                ]
+            },
+            {
+                id: 2,
+                slug: 'pizza-corner',
+                name: "Pizza Corner",
+                type: "restaurant",
+                cuisine: "Italian",
+                rating: 4.6,
+                deliveryTime: "20-25 min",
+                distance: 3.2,
+                image: "🍕",
+                items: [
+                    { id: 201, name: "Margherita Pizza", price: 250, category: "Pizza", description: "Classic tomato and mozzarella", image: "🍕", popular: true },
+                    { id: 202, name: "Pepperoni Pizza", price: 320, category: "Pizza", description: "Spicy pepperoni with cheese", image: "🍕", popular: true },
+                    { id: 203, name: "Chicken Pasta Alfredo", price: 280, category: "Italian", description: "Creamy white sauce pasta", image: "🍝" },
+                    { id: 204, name: "Garlic Bread", price: 120, category: "Italian", description: "Buttery garlic bread sticks", image: "🥖" }
+                ]
+            },
+            {
+                id: 3,
+                slug: 'burger-hub',
+                name: "Burger Hub",
+                type: "restaurant",
+                cuisine: "Fast Food",
+                rating: 4.7,
+                deliveryTime: "15-20 min",
+                distance: 1.8,
+                image: "🍔",
+                items: [
+                    { id: 301, name: "Classic Chicken Burger", price: 180, category: "Burgers", description: "Beef patty with lettuce and tomato", image: "🍔", popular: true },
+                    { id: 302, name: "Chicken Burger Deluxe", price: 200, category: "Burgers", description: "Grilled chicken breast burger", image: "🍔", popular: true },
+                    { id: 303, name: "French Fries", price: 80, category: "Fast Food", description: "Crispy golden potato fries", image: "🍟", popular: true },
+                    { id: 304, name: "Chicken Wings", price: 220, category: "Fast Food", description: "Spicy buffalo chicken wings", image: "🍗" }
+                ]
+            }
+        ];
 
+        const GROCERY_DATA = [
+            {
+                id: 4,
+                slug: 'fresh-mart',
+                name: "Fresh Mart",
+                type: "grocery",
+                category: "Supermarket",
+                rating: 4.5,
+                deliveryTime: "30-40 min",
+                distance: 2.1,
+                image: "🛒",
+                items: [
+                    { id: 401, name: "Basmati Rice", price: 120, category: "Grains", description: "Premium quality basmati rice 1kg", image: "🌾", popular: true },
+                    { id: 402, name: "Fresh Milk", price: 60, category: "Dairy", description: "Full cream fresh milk 1L", image: "🥛", popular: true },
+                    { id: 403, name: "Whole Wheat Bread", price: 40, category: "Bakery", description: "Fresh whole wheat bread loaf", image: "🍞" },
+                    { 
+                        id: 404, 
+                        name: "Fresh Bananas", 
+                        basePrice: 100, 
+                        category: "Fruits", 
+                        description: "Fresh ripe bananas", 
+                        image: "🍌", 
+                        popular: true,
+                        hasWeightOptions: true,
+                        weightOptions: [
+                            { weight: 0.25, label: "250g", price: 25 },
+                            { weight: 0.5, label: "500g", price: 50 },
+                            { weight: 1, label: "1kg", price: 100 },
+                            { weight: 2, label: "2kg", price: 190 }
+                        ]
+                    },
+                    { 
+                        id: 405, 
+                        name: "Organic Tomatoes", 
+                        basePrice: 60, 
+                        category: "Vegetables", 
+                        description: "Fresh red tomatoes", 
+                        image: "🍅",
+                        hasWeightOptions: true,
+                        weightOptions: [
+                            { weight: 0.25, label: "250g", price: 15 },
+                            { weight: 0.5, label: "500g", price: 30 },
+                            { weight: 1, label: "1kg", price: 60 },
+                            { weight: 2, label: "2kg", price: 110 }
+                        ]
+                    },
+                    { 
+                        id: 406, 
+                        name: "Red Onions", 
+                        basePrice: 40, 
+                        category: "Vegetables", 
+                        description: "Fresh red onions", 
+                        image: "🧅",
+                        hasWeightOptions: true,
+                        weightOptions: [
+                            { weight: 0.5, label: "500g", price: 20 },
+                            { weight: 1, label: "1kg", price: 40 },
+                            { weight: 2, label: "2kg", price: 75 }
+                        ]
+                    },
+                    { 
+                        id: 407, 
+                        name: "Potatoes", 
+                        basePrice: 30, 
+                        category: "Vegetables", 
+                        description: "Fresh potatoes", 
+                        image: "🥔",
+                        hasWeightOptions: true,
+                        weightOptions: [
+                            { weight: 0.5, label: "500g", price: 15 },
+                            { weight: 1, label: "1kg", price: 30 },
+                            { weight: 2, label: "2kg", price: 55 },
+                            { weight: 5, label: "5kg", price: 125 }
+                        ]
+                    },
+                    { id: 408, name: "Chicken Breast", price: 250, category: "Meat", description: "Fresh chicken breast 500g", image: "🍗" }
+                ]
+            },
+            {
+                id: 5,
+                slug: 'organic-store',
+                name: "Organic Store",
+                type: "grocery",
+                category: "Organic",
+                rating: 4.3,
+                deliveryTime: "35-45 min",
+                distance: 4.1,
+                image: "🌱",
+                items: [
+                    { 
+                        id: 501, 
+                        name: "Organic Apples", 
+                        basePrice: 180, 
+                        category: "Fruits", 
+                        description: "Certified organic red apples", 
+                        image: "🍎", 
+                        popular: true,
+                        hasWeightOptions: true,
+                        weightOptions: [
+                            { weight: 0.25, label: "250g", price: 45 },
+                            { weight: 0.5, label: "500g", price: 90 },
+                            { weight: 1, label: "1kg", price: 180 },
+                            { weight: 2, label: "2kg", price: 340 }
+                        ]
+                    },
+                    { id: 502, name: "Quinoa Seeds", price: 320, category: "Grains", description: "Organic quinoa seeds 500g", image: "🌾" },
+                    { id: 503, name: "Almond Milk", price: 150, category: "Dairy", description: "Unsweetened almond milk 1L", image: "🥛" },
+                    { 
+                        id: 504, 
+                        name: "Fresh Spinach", 
+                        basePrice: 160, 
+                        category: "Vegetables", 
+                        description: "Fresh organic spinach", 
+                        image: "🥬", 
+                        popular: true,
+                        hasWeightOptions: true,
+                        weightOptions: [
+                            { weight: 0.25, label: "250g", price: 40 },
+                            { weight: 0.5, label: "500g", price: 80 },
+                            { weight: 1, label: "1kg", price: 160 }
+                        ]
+                    },
+                    { 
+                        id: 505, 
+                        name: "Organic Carrots", 
+                        basePrice: 80, 
+                        category: "Vegetables", 
+                        description: "Fresh organic carrots", 
+                        image: "🥕",
+                        hasWeightOptions: true,
+                        weightOptions: [
+                            { weight: 0.5, label: "500g", price: 40 },
+                            { weight: 1, label: "1kg", price: 80 },
+                            { weight: 2, label: "2kg", price: 150 }
+                        ]
+                    },
+                    { id: 506, name: "Organic Chicken", price: 350, category: "Meat", description: "Free-range organic chicken 1kg", image: "🍗" }
+                ]
+            }
+        ];
 
-                            // Grocery stores data
-              const groceryStores = [
-                  {
-                      name: 'Sharma Kirana Store',
-                      category: 'Indian Grocery • Spices • Traditional Items',
-                      rating: 4.8,
-                      deliveryTime: '15-20 min',
-                      type: 'grocery',
-                      menuItems: [
-                          { name: 'Basmati Rice (5kg)', price: '₹450', icon: '🍚', description: 'Premium quality basmati rice' },
-                          { name: 'Atta (Wheat Flour 10kg)', price: '₹380', icon: '🌾', description: 'Fresh ground wheat flour' },
-                          { name: 'Toor Dal (1kg)', price: '₹120', icon: '🫘', description: 'Yellow split pigeon peas' },
-                          { name: 'Turmeric Powder', price: '₹45', icon: '🟡', description: 'Pure turmeric powder 100g' },
-                          { name: 'Garam Masala', price: '₹65', icon: '🌶️', description: 'Homemade spice blend 50g' },
-                          { name: 'Ghee (500ml)', price: '₹280', icon: '🧈', description: 'Pure cow ghee' },
-                          { name: 'Onions (1kg)', price: '₹35', icon: '🧅', description: 'Fresh red onions' },
-                          { name: 'Potatoes (1kg)', price: '₹25', icon: '🥔', description: 'Fresh potatoes' }
-                      ]
-                  },
-                  {
-                      name: 'Fresh Market',
-                      category: 'Groceries • Fresh Produce • Dairy',
-                      rating: 4.7,
-                      deliveryTime: '15-20 min',
-                      type: 'grocery',
-                      menuItems: [
-                          { name: 'Fresh Apples', price: '₹180/kg', icon: '🍎', description: 'Crisp and sweet red apples' },
-                          { name: 'Organic Milk', price: '₹65', icon: '🥛', description: 'Fresh organic whole milk' },
-                          { name: 'Whole Wheat Bread', price: '₹45', icon: '🍞', description: 'Healthy whole grain bread' },
-                          { name: 'Fresh Spinach', price: '₹30', icon: '🥬', description: 'Organic baby spinach leaves' },
-                          { name: 'Free Range Eggs', price: '₹90', icon: '🥚', description: 'Farm fresh free range eggs' }
-                      ]
-                  },
-                  {
-                      name: 'Organic Plus',
-                      category: 'Organic • Health Foods • Supplements',
-                      rating: 4.6,
-                      deliveryTime: '20-25 min',
-                      type: 'grocery',
-                      menuItems: [
-                          { name: 'Organic Bananas', price: '₹60/kg', icon: '🍌', description: 'Certified organic bananas' },
-                          { name: 'Almond Milk', price: '₹180', icon: '🥛', description: 'Unsweetened almond milk' },
-                          { name: 'Quinoa', price: '₹320', icon: '🌾', description: 'Organic quinoa grain' },
-                          { name: 'Greek Yogurt', price: '₹150', icon: '🥛', description: 'Plain Greek yogurt' },
-                          { name: 'Chia Seeds', price: '₹450', icon: '🌱', description: 'Organic chia seeds' }
-                      ]
-                  },
-                  {
-                      name: 'Gupta General Store',
-                      category: 'Indian Kirana • Daily Essentials • Household',
-                      rating: 4.5,
-                      deliveryTime: '10-15 min',
-                      type: 'grocery',
-                      menuItems: [
-                          { name: 'Maggi Noodles (12 pack)', price: '₹144', icon: '🍜', description: 'Instant noodles family pack' },
-                          { name: 'Parle-G Biscuits', price: '₹20', icon: '🍪', description: 'Classic glucose biscuits' },
-                          { name: 'Amul Butter', price: '₹52', icon: '🧈', description: 'Fresh salted butter 100g' },
-                          { name: 'Tata Tea (1kg)', price: '₹420', icon: '☕', description: 'Premium black tea' },
-                          { name: 'Surf Excel (1kg)', price: '₹180', icon: '🧼', description: 'Washing powder' },
-                          { name: 'Colgate Toothpaste', price: '₹85', icon: '🦷', description: 'Total advanced health' },
-                          { name: 'Coconut Oil (500ml)', price: '₹120', icon: '🥥', description: 'Pure coconut oil' },
-                          { name: 'Chana Dal (1kg)', price: '₹90', icon: '🫘', description: 'Split chickpeas' }
-                      ]
-                  }
-              ];
-
+         const CATEGORIES_DATA = [
+            { id: 'all', name: 'All', icon: '🏠', color: 'from-gray-400 to-gray-600' },
+            { id: 'indian', name: 'Indian', icon: '🍛', color: 'from-orange-400 to-red-500' },
+            { id: 'pizza', name: 'Pizza', icon: '🍕', color: 'from-red-400 to-pink-500' },
+            { id: 'burgers', name: 'Burgers', icon: '🍔', color: 'from-yellow-400 to-orange-500' },
+            { id: 'italian', name: 'Italian', icon: '🍝', color: 'from-green-400 to-blue-500' },
+            { id: 'fast-food', name: 'Fast Food', icon: '🍟', color: 'from-purple-400 to-pink-500' },
+            { id: 'fruits', name: 'Fruits', icon: '🍎', color: 'from-green-400 to-green-600' },
+            { id: 'vegetables', name: 'Vegetables', icon: '🥬', color: 'from-green-500 to-emerald-600' },
+            { id: 'dairy', name: 'Dairy', icon: '🥛', color: 'from-blue-400 to-blue-600' },
+            { id: 'grains', name: 'Grains', icon: '🌾', color: 'from-yellow-500 to-amber-600' },
+            { id: 'bakery', name: 'Bakery', icon: '🍞', color: 'from-amber-400 to-orange-500' },
+            { id: 'meat', name: 'Meat', icon: '🍗', color: 'from-red-500 to-red-700' }
+        ];
               const handleSignIn = (userData) => {
                   setIsSignedIn(true);
                   setUser(userData);
@@ -449,134 +500,34 @@ useEffect(() => {
                   setIsMobileMenuOpen(false);
               };
 
-              const handleNavigate = (page) => {
-                  setCurrentPage(page);
-                  if (page === 'orders' && !isSignedIn) {
-                      // Auto sign in for demo with sample user data
-                      const sampleUser = {
-                          name: 'John Doe',
-                          email: 'john.doe@example.com',
-                          phone: '+1 (555) 123-4567',
-                          memberSince: 'January 2023',
-                          totalOrders: 47,
-                          favoriteRestaurant: 'Spice Garden',
-                          address: '123 Main Street, Apartment 4B, New York, NY 10001'
-                      };
-                      setIsSignedIn(true);
-                      setUser(sampleUser);
+              
+                      
+              
 
-                      // Set demo user's saved location
-                      const demoLocation = 'NIMS University';
-                      setSelectedLocation(demoLocation);
-                      setUserLocations(prev => ({
-                          ...prev,
-                          [sampleUser.email]: demoLocation
-                      }));
-                  }
-              };
+              
 
-              const openRestaurantMenu = (restaurant) => {
-                  setSelectedRestaurant(restaurant);
-                  setIsMenuModalOpen(true);
-              };
+            
 
-              const closeMenuModal = () => {
-                  setIsMenuModalOpen(false);
-                  setSelectedRestaurant(null);
-              };
+            //   const addToCart = (item, restaurantName) => {
+            //       const cartItem = {
+            //           id: Date.now() + Math.random(),
+            //           name: item.name,
+            //           price: item.price,
+            //           restaurant: restaurantName,
+            //           quantity: 1
+            //       };
 
-              const addToCart = (item, restaurantName) => {
-                  const cartItem = {
-                      id: Date.now() + Math.random(),
-                      name: item.name,
-                      price: item.price,
-                      restaurant: restaurantName,
-                      quantity: 1
-                  };
+            //       setCartItems(prevItems => [...prevItems, cartItem]);
+            //       setCartCount(prevCount => prevCount + 1);
 
-                  setCartItems(prevItems => [...prevItems, cartItem]);
-                  setCartCount(prevCount => prevCount + 1);
+            //       // Show notification
+            //       setNotification({
+            //           message: `${item.name} added to cart!`,
+            //           isVisible: true
+            //       });
+            //   };
 
-                  // Show notification
-                  setNotification({
-                      message: `${item.name} added to cart!`,
-                      isVisible: true
-                  });
-              };
-
-              const handleSearchChange = (query) => {
-                  setSearchQuery(query);
-                  setSelectedCategory(''); // Clear category filter when searching
-              };
-
-              const handleCategoryClick = (categoryName) => {
-                  if (selectedCategory === categoryName) {
-                      setSelectedCategory(''); // Deselect if already selected
-                  } else {
-                      setSelectedCategory(categoryName);
-                      setSearchQuery(''); // Clear search when selecting category
-                  }
-              };
-
-              const getFilteredRestaurants = () => {
-                  // When searching, show both restaurants and grocery stores
-                  if (searchQuery) {
-                      const allStores = [...foodRestaurants, ...groceryStores];
-                      return allStores.filter(restaurant => {
-                          // Search in restaurant name, category, and menu items
-                          const searchLower = searchQuery.toLowerCase();
-                          const nameMatch = restaurant.name.toLowerCase().includes(searchLower);
-                          const categoryMatch = restaurant.category.toLowerCase().includes(searchLower);
-                          const menuMatch = restaurant.menuItems.some(item =>
-                              item.name.toLowerCase().includes(searchLower)
-                          );
-                          return nameMatch || categoryMatch || menuMatch;
-                      });
-                  }
-
-                  // When filtering by category, also show both types
-                  if (selectedCategory) {
-                      const allStores = [...foodRestaurants, ...groceryStores];
-                      return allStores.filter(restaurant => {
-                          const categoryLower = selectedCategory.toLowerCase();
-                          const nameMatch = restaurant.name.toLowerCase().includes(categoryLower);
-                          const categoryMatch = restaurant.category.toLowerCase().includes(categoryLower);
-                          const menuMatch = restaurant.menuItems.some(item =>
-                              item.name.toLowerCase().includes(categoryLower)
-                          );
-                          return nameMatch || categoryMatch || menuMatch;
-                      });
-                  }
-
-                  // Otherwise show based on active section
-                  return activeSection === 'food' ? foodRestaurants : groceryStores;
-              };
-
-              const removeFromCart = (itemId) => {
-                  const itemToRemove = cartItems.find(item => item.id === itemId);
-                  if (itemToRemove) {
-                      setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
-                      setCartCount(prevCount => Math.max(0, prevCount - itemToRemove.quantity));
-                  }
-              };
-
-              const updateCartQuantity = (itemId, newQuantity) => {
-                  if (newQuantity <= 0) {
-                      removeFromCart(itemId);
-                      return;
-                  }
-
-                  setCartItems(prevItems =>
-                      prevItems.map(item => {
-                          if (item.id === itemId) {
-                              const quantityDiff = newQuantity - item.quantity;
-                              setCartCount(prevCount => prevCount + quantityDiff);
-                              return { ...item, quantity: newQuantity };
-                          }
-                          return item;
-                      })
-                  );
-              };
+              
 
               const openCart = () => {
                   setIsCartModalOpen(true);
@@ -677,8 +628,10 @@ useEffect(() => {
                       });
                   }
               };
+// 
 
               return (
+
                   <div className="min-h-screen bg-gray-50">
                       {/* Mobile Menu */}
                       <MobileMenu
@@ -719,17 +672,16 @@ useEffect(() => {
   <Route
     path="/"
     element={
-      <Home
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-        categories={categories}
-        selectedCategory={selectedCategory}
-        handleCategoryClick={handleCategoryClick}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        getFilteredRestaurants={getFilteredRestaurants}
-        openRestaurantMenu={openRestaurantMenu}
-      />
+       <Home
+      onRestaurantClick={handleRestaurantClick}
+      onCategoryClick={handleCategoryClick}
+      onNavigate={handleNavigate}
+      RESTAURANTS_DATA={RESTAURANTS_DATA}
+      GROCERY_DATA={GROCERY_DATA}
+      activeSection={activeSection}
+      setActiveSection={setActiveSection}
+      CATEGORIES_DATA={CATEGORIES_DATA}   // ✅ make sure yeh exist karta hai
+    />
     }
   />
 
@@ -738,7 +690,7 @@ useEffect(() => {
     path="/orders"
     element={
       <MyOrdersPage
-        orders={orders}
+        
         onReorder={handleReorder}
         onTrackOrder={handleTrackOrder}
       />
@@ -749,18 +701,24 @@ useEffect(() => {
   <Route
     path="/cart"
     element={
-      <CartPage
-      addToCart={addToCart}
-             cartItems={cartItems}
-        onRemoveFromCart={removeFromCart}
-        onUpdateQuantity={updateCartQuantity}
+      <CartPage calculateDeliveryFee={calculateDeliveryFee}
+                                AVAILABLE_COUPONS={AVAILABLE_COUPONS}
+
+       cart={cart}
+                                onUpdateQuantity={handleUpdateQuantity}
+                                onRemoveItem={handleRemoveItem}
+                                onBack={() => handleNavigate('home')}
         onCheckout={handleCheckout}
       />
     }
   />
   <Route path='/cart/checkout'element={<CheckOut cartItems={cartItems} userData={user} onPlaceOrder={handleOrder}/>}/>
-  <Route path='/grocery' element={<Grocery groceryData={groceryData} onAddToCart={addToCart}/>}/>
-
+  <Route path='/grocery' element={<Grocery GROCERY_DATA={GROCERY_DATA}  onAddToCart={handleAddToCart} ItemCard={ItemCard} />}/>
+  <Route path='/food' element={<Food RESTAURANTS_DATA={RESTAURANTS_DATA} onAddToCart={handleAddToCart} ItemCard={ItemCard} />}/>
+ {/* Restaurant Items */}
+       <Route path="/items/:type/:slug" element={<RestaurantItemsPage GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} onAddToCart={handleAddToCart} />} />
+        <Route path="/category/:categoryName" element={<CategoryProducts GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} CATEGORIES_DATA={CATEGORIES_DATA} onAddToCart={handleAddToCart} />} />
+{/* <Route path='/grocery/:itemId' element={<GroceryItemDetail groceryData={groceryData} onAddToCart={addToCart}/>}/> */}
   {/* ✅ 404 Fallback */}
   <Route
     path="*"
@@ -772,12 +730,7 @@ useEffect(() => {
 <Footer/>
             
            {/* Menu Modal */}
-                      <MenuModal
-                          isOpen={isMenuModalOpen}
-                          restaurant={selectedRestaurant}
-                          onClose={closeMenuModal}
-                          onAddToCart={addToCart}
-                      />
+                     
 
 
                       {/* Order Tracking Modal */}
@@ -810,5 +763,6 @@ useEffect(() => {
                       />
                   </div>
               );
-          };
+          }
+        ;
   export default App

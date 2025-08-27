@@ -1,50 +1,50 @@
-import React from "react";
-const RestaurantCard = ({ restaurant, onClick }) => {
-            const getIconClass = (name) => {
-                const icons = {
-                    'Pizza Palace': 'fas fa-pizza-slice',
-                    'Burger Hub': 'fas fa-hamburger',
-                    'Fresh Market': 'fas fa-shopping-basket',
-                    'Sushi Zen': 'fas fa-fish',
-                    'Spice Garden': 'fas fa-pepper-hot',
-                    'Curry House': 'fas fa-fire',
-                    'Tandoor Express': 'fas fa-utensils',
-                    'Biryani Palace': 'fas fa-bowl-rice'
-                };
-                return icons[restaurant.name] || 'fas fa-utensils';
-            };
-
-            const getGradientClass = (name) => {
-                const gradients = {
-                    'Pizza Palace': 'from-red-400 to-orange-500',
-                    'Burger Hub': 'from-yellow-400 to-red-500',
-                    'Fresh Market': 'from-green-400 to-blue-500',
-                    'Sushi Zen': 'from-purple-400 to-pink-500',
-                    'Spice Garden': 'from-orange-400 to-red-600',
-                    'Curry House': 'from-yellow-500 to-orange-600',
-                    'Tandoor Express': 'from-red-500 to-pink-600',
-                    'Biryani Palace': 'from-amber-400 to-orange-500'
-                };
-                return gradients[name] || 'from-blue-400 to-purple-500';
-            };
-
+import { Link } from "react-router-dom";
+const RestaurantCard = ({  type,restaurant }) => {
+     const createSlug = (name) => name.toLowerCase().replace(/\s+/g, "-")
             return (
-                <div
-                    className="card-hover bg-white rounded-xl shadow-md overflow-hidden cursor-pointer"
-                    onClick={() => onClick(restaurant)}
+                <Link to={`/items/${type}/${createSlug(restaurant.name)}`}>
+                <div 
+                   
+                    className="bg-white rounded-lg shadow-md overflow-hidden card-hover cursor-pointer flex-shrink-0 w-80"
                 >
-                    <div className={`h-48 bg-gradient-to-br ${getGradientClass(restaurant.name)} flex items-center justify-center`}>
-                        <i className={`${getIconClass(restaurant.name)} text-6xl text-white`}></i>
-                    </div>
-                    <div className="p-4">
-                        <h4 className="font-bold text-lg mb-2">{restaurant.name}</h4>
-                        <p className="text-gray-600 text-sm mb-2">{restaurant.category}</p>
-                        <div className="flex items-center justify-between">
-                            <span className="text-green-600 font-semibold">⭐ {restaurant.rating}</span>
-                            <span className="text-gray-500 text-sm">{restaurant.deliveryTime}</span>
+                    <div className="p-6">
+                        <div className="flex items-center space-x-4 mb-4">
+                            <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-2xl flex-shrink-0">
+                                {restaurant.image}
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-bold text-gray-800 text-lg">{restaurant.name}</h3>
+                                <p className="text-sm text-gray-600">{restaurant.cuisine || restaurant.category}</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm mb-4">
+                            <span className="text-green-600 font-medium">
+                                ⭐ {restaurant.rating}
+                            </span>
+                            <span className="text-gray-500">
+                                🚚 {restaurant.deliveryTime}
+                            </span>
+                            <span className="text-gray-500">
+                                📍 {restaurant.distance}km
+                            </span>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                            {restaurant.items.slice(0, 3).map(item => (
+                                <span key={item.id} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                                    {item.name}
+                                </span>
+                            ))}
+                            {restaurant.items.length > 3 && (
+                                <span className="text-gray-500 text-xs">
+                                    +{restaurant.items.length - 3} more
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
+                </Link>
             );
         };
-export default RestaurantCard
+        export default RestaurantCard;

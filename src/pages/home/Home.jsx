@@ -4,17 +4,18 @@ import FeaturesSection from "../featuresSection/FeaturesSection";
 import NewsletterSection from "../newsletterSection/NewsletterSection";
 import StatsSection from "../statsSection/StatsSection";
 import RestaurantCard from "../../components/restaurantCard/RestaurantCard";
+import ItemCard from "../../components/itemsCard/ItemCard";
+import { Link } from "react-router-dom";
 
 const Home = ({
+  onRestaurantClick,
+  onCategoryClick,
+  onNavigate,
+  RESTAURANTS_DATA,
+  GROCERY_DATA,
   activeSection,
   setActiveSection,
-  categories,
-  selectedCategory,
-  handleCategoryClick,
-  searchQuery,
-  setSearchQuery,
-  getFilteredRestaurants,
-  openRestaurantMenu,
+  CATEGORIES_DATA
 }) => {
   return (
     <>
@@ -68,73 +69,75 @@ const Home = ({
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="mb-12">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">
-          Browse Categories
-        </h3>
-        <div className="circular-scroll">
-          {categories.map((category, index) => (
-            <div
-              key={index}
-              className={`circular-item bg-gradient-to-br ${category.color} ${
-                selectedCategory === category.name
-                  ? "ring-4 ring-white ring-opacity-50"
-                  : ""
-              }`}
-              onClick={() => handleCategoryClick(category.name)}
-            >
-              <div className="text-3xl mb-2">{category.icon}</div>
-              <div className="text-sm font-medium text-center">
-                {category.name}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+        {/* Categories Section */}
+                    <div className="mb-12">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Browse by Category</h2>
+                        <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide px-2">
+                            {CATEGORIES_DATA.map(category => (
+                                <Link to={`/category/${category.name.toLowerCase()}`} 
+                                    key={category.id}
+                                    
+                                    className="flex-shrink-0 text-center group"
+                                >
+                                    <div className={`w-16 h-16 bg-gradient-to-r ${category.color} rounded-full flex items-center justify-center text-2xl mb-2 group-hover:scale-110 transition-transform shadow-lg`}>
+                                        {category.icon}
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-700 group-hover:text-purple-600 transition-colors w-16 truncate">
+                                        {category.name}
+                                    </p>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
 
-      {/* Popular Restaurants & Stores */}
-      <section className="mb-12">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">
-          {searchQuery
-            ? `Search Results for "${searchQuery}"`
-            : selectedCategory
-            ? `${selectedCategory} Options`
-            : activeSection === "food"
-            ? "Popular Restaurants"
-            : "Popular Grocery Stores"}
-        </h3>
-        {(searchQuery || selectedCategory) && (
-          <button
-            onClick={() => {
-              setSearchQuery("");
-            }}
-            className="mb-4 text-purple-600 hover:text-purple-800 font-medium"
-          >
-            ← Clear filters
-          </button>
-        )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {getFilteredRestaurants().length > 0 ? (
-            getFilteredRestaurants().map((restaurant, index) => (
-              <RestaurantCard
-                key={index}
-                restaurant={restaurant}
-                onClick={openRestaurantMenu}
-              />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-12">
-              <i className="fas fa-search text-6xl text-gray-300 mb-4"></i>
-              <p className="text-gray-500 text-lg">No results found</p>
-              <p className="text-gray-400">
-                Try searching for something else or browse categories
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
-    </main>
+                    {/* Popular Restaurants Section */}
+                    <div className="mb-12">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-gray-800">Popular Restaurants</h2>
+                            <button 
+                                onClick={() => onNavigate('food')}
+                                className="text-purple-600 hover:text-purple-800 font-medium"
+                            >
+                                View All <i className="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                        
+                        <div className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide">
+                            {RESTAURANTS_DATA.map(restaurant => (
+                                <RestaurantCard
+                                    key={restaurant.id}
+                                    restaurant={restaurant}
+                                    onRestaurantClick={onRestaurantClick}
+                                    type="restaurant"
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Popular Grocery Stores Section */}
+                    <div className="mb-12">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-gray-800">Popular Grocery Stores</h2>
+                            <button 
+                                onClick={() => onNavigate('grocery')}
+                                className="text-green-600 hover:text-green-800 font-medium"
+                            >
+                                View All <i className="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                        
+                        <div className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide">
+                            {GROCERY_DATA.map(store => (
+                                <RestaurantCard
+                                    key={store.id}
+                                    restaurant={store}
+                                    onRestaurantClick={onRestaurantClick}
+                                     type="grocery" 
+                                />
+                            ))}
+                        </div>
+                    </div>
+     </main>
      <FeaturesSection />
 
                               {/* Stats Section */}
