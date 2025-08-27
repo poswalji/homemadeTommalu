@@ -713,7 +713,7 @@ useEffect(() => {
       />
     }
   />
-  <Route path='/cart/checkout'element={<CheckOut cartItems={cartItems} userData={user} onPlaceOrder={handleOrder}/>}/>
+  <Route path='/cart/checkout'element={<CheckOut cartItems={cart} userData={user} onPlaceOrder={handleOrder}/>}/>
   <Route path='/grocery' element={<Grocery GROCERY_DATA={GROCERY_DATA}  onAddToCart={handleAddToCart} ItemCard={ItemCard} />}/>
   <Route path='/food' element={<Food RESTAURANTS_DATA={RESTAURANTS_DATA} onAddToCart={handleAddToCart} ItemCard={ItemCard} />}/>
  {/* Restaurant Items */}

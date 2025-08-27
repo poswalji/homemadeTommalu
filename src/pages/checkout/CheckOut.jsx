@@ -1,7 +1,7 @@
 // src/pages/Checkout.jsx
 import React, { useState, useEffect } from "react";
 
-const allowedLocations = ["Achrol", "Talamod"]; // limited delivery locations
+const allowedLocations = ["Achrol", "Talamod","Nims","Amity",'Chandwaji']; // limited delivery locations
 
 const CheckOut = ({ userData, cartItems, onPlaceOrder }) => {
   const [formData, setFormData] = useState({

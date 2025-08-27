@@ -300,9 +300,9 @@ const CartPage = ({ cart, onUpdateQuantity, onRemoveItem, onBack,calculateDelive
                                         </div>
                                     </div>
                                     
-                                    <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-colors">
+                                    <Link to='/cart/checkout' className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-colors">
                                         Proceed to Checkout
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                         )}
