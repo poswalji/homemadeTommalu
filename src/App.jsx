@@ -628,6 +628,7 @@ useEffect(() => {
                       });
                   }
               };
+              const [orders, setOrders] = useState([]);
 // 
 
               return (
@@ -690,7 +691,7 @@ useEffect(() => {
     path="/orders"
     element={
       <MyOrdersPage
-        
+        orders={orders}
         onReorder={handleReorder}
         onTrackOrder={handleTrackOrder}
       />

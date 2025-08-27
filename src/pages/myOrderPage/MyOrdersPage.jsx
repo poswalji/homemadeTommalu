@@ -1,6 +1,5 @@
  import React from "react";
  import { useState } from "react";
-import Footer from "../footer/Footer";
 
  const MyOrdersPage = ({ orders, onReorder, onTrackOrder }) => {
             const [activeTab, setActiveTab] = useState('current');
@@ -58,7 +57,7 @@ import Footer from "../footer/Footer";
                             <p className="text-gray-500 text-sm">{order.date} • {order.time}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-xl font-bold text-gray-800">${order.total}</p>
+                            <p className="text-xl font-bold text-gray-800">₹{order.total}</p>
                             <p className="text-sm text-gray-500">{order.items.length} items</p>
                         </div>
                     </div>
@@ -133,7 +132,7 @@ import Footer from "../footer/Footer";
                                 <div className="text-sm text-gray-600">Total Orders</div>
                             </div>
                             <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-                                <div className="text-2xl font-bold text-orange-600">$247.50</div>
+                                <div className="text-2xl font-bold text-orange-600">₹0</div>
                                 <div className="text-sm text-gray-600">Total Spent</div>
                             </div>
                         </div>
