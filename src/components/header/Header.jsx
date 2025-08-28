@@ -14,11 +14,12 @@ import { NavLink,useLocation } from "react-router-dom";
             searchQuery,
             onSearchChange,
             onNavigate,
+            
             currentPage,
             user,
             onOpenProfile,
             selectedLocation,
-            onLocationChange
+            onLocationChange,
         }) => {
             const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
             const [language, setLanguage] = useState('EN');
@@ -128,7 +129,9 @@ import { NavLink,useLocation } from "react-router-dom";
       type="text"
       placeholder="Search for food or groceries..."
       value={searchQuery}
-      onChange={(e) => onSearchChange(e.target.value)}
+                                        onChange={handleSearchInput}
+                                        onKeyPress={handleSearchKeyPress}
+      
       className="w-96 px-4 py-2 pr-12 rounded-full text-white
                  border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-300 
                  transition-all duration-200"

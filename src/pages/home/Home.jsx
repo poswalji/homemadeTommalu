@@ -4,6 +4,7 @@ import FeaturesSection from "../featuresSection/FeaturesSection";
 import NewsletterSection from "../newsletterSection/NewsletterSection";
 import StatsSection from "../statsSection/StatsSection";
 import RestaurantCard from "../../components/restaurantCard/RestaurantCard";
+import HeroSection from "../../components/hero/HeroSection";
 import ItemCard from "../../components/itemsCard/ItemCard";
 import { Link ,NavLink} from "react-router-dom";
 
@@ -20,61 +21,12 @@ const Home = ({
   return (
     <>
     <main className="container mx-auto px-4 py-8">
-      {/* Hero Section */}
-      <section className="text-center mb-12">
-        <h2 className="text-4xl font-bold text-gray-800 mb-4">
-          Delicious Food & Fresh Groceries
-        </h2>
-        <p className="text-xl text-gray-600 mb-8">
-          Delivered to your doorstep in minutes
-        </p>
+     {/* Hero Section */}
+<HeroSection />
 
-        {/* Section Toggle Buttons */}
-        <div className="flex justify-center gap-4 mb-8">
-    <NavLink
-  to="/food"
-  className={({ isActive }) =>
-    `px-8 py-3 rounded-full font-semibold transition-all ${
-      isActive
-        ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
-        : "bg-gray-200 text-gray-700 hover:bg-gradient-to-r hover:from-orange-500 hover:to-red-500 hover:text-white hover:shadow-lg"
-    }`
-  }
->
-  🍕 Food Delivery
-</NavLink>
 
-  <NavLink
-  to="/grocery"
-  onClick={() => setActiveSection("grocery")}
-  className={({ isActive }) =>
-    `px-8 py-3 rounded-full font-semibold transition-all duration-300 ${
-      isActive || activeSection === "grocery"
-        ? "bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg"
-        : "bg-gray-200 text-gray-700 hover:bg-gradient-to-r hover:from-green-500 hover:to-blue-500 hover:text-white"
-    }`
-  }
->
-  🛒 Grocery Shopping
-</NavLink>
+    
 
-        </div>
-
-        <div className="flex flex-wrap justify-center gap-4">
-          <span className="bg-orange-100 text-orange-800 px-4 py-2 rounded-full font-medium">
-            🍕 Fast Food
-          </span>
-          <span className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-medium">
-            🥬 Fresh Groceries
-          </span>
-          <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-medium">
-            🚚 Quick Delivery
-          </span>
-          <span className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-medium">
-            🍛 Indian Cuisine
-          </span>
-        </div>
-      </section>
 
        {/* Categories Section */}
 <div className="mb-12">

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-const SearchResults = ({ searchQuery, onAddToCart }) => {
+import ItemCard from '../itemsCard/ItemCard';
+const SearchResults = ({ searchQuery, onAddToCart, RESTAURANTS_DATA, GROCERY_DATA }) => {
+      
             const [searchResults, setSearchResults] = useState([]);
 
             useEffect(() => {
@@ -71,35 +73,5 @@ const SearchResults = ({ searchQuery, onAddToCart }) => {
                     </div>
                 );
             }
-
-            return (
-                <div className="container mx-auto px-4 py-8">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Search Results</h1>
-                        <p className="text-gray-600">
-                            Found {searchResults.length} items for "{searchQuery}"
-                        </p>
-                    </div>
-
-                    {searchResults.length === 0 ? (
-                        <div className="text-center py-12">
-                            <i className="fas fa-search text-6xl text-gray-300 mb-4"></i>
-                            <h3 className="text-xl font-semibold text-gray-800 mb-2">No results found</h3>
-                            <p className="text-gray-600 mb-4">Try searching for "chicken", "pizza", "milk", or "bread"</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {searchResults.map(item => (
-                                <ItemCard
-                                    key={`${item.source}-${item.id}`}
-                                    item={item}
-                                    restaurant={item.restaurant}
-                                    onAddToCart={onAddToCart}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            );
-        };
+        }
 export default SearchResults;

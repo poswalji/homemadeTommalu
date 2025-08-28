@@ -22,7 +22,7 @@ import SignInModal from "./components/signInModel/SignInModal";
 
 import Footer from "./pages/footer/Footer";
 import RestaurantItemsPage from './pages/restaurantItems/RestaurantItemsPage';
-
+import SearchResults from './components/searchResult/SearchResults';
 import CartPage from './pages/cart/CartPage';
 import ItemCard from './components/itemsCard/ItemCard';
 import CategoryProducts from './pages/category/CategoryProducts';
@@ -686,7 +686,7 @@ useEffect(() => {
                       />
 
                       {/* Header */}
-                      <Header
+                      <Header RESTAURANTS_DATA={RESTAURANTS_DATA} GROCERY_DATA={GROCERY_DATA} 
                           isSignedIn={isSignedIn}
                           onSignIn={openSignInModal}
                           onLogout={handleLogout}
@@ -755,6 +755,7 @@ useEffect(() => {
  {/* Restaurant Items */}
        <Route path="/items/:type/:slug" element={<RestaurantItemsPage GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} onAddToCart={handleAddToCart} />} />
         <Route path="/category/:categoryName" element={<CategoryProducts GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} CATEGORIES_DATA={CATEGORIES_DATA} onAddToCart={handleAddToCart} />} />
+        <Route path="/search" element={<SearchResults GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} searchQuery={searchQuery} onAddToCart={handleAddToCart} />} />
         <Route path='/checkout'element={<TommaluCheckout cart={cart} user={user} onOrder={handleOrder} calculateDeliveryFee={calculateDeliveryFee} AVAILABLE_COUPONS={AVAILABLE_COUPONS}/>}/>
 {/* <Route path='/grocery/:itemId' element={<GroceryItemDetail groceryData={groceryData} onAddToCart={addToCart}/>}/> */}
   {/* ✅ 404 Fallback */}
