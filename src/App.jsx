@@ -1,5 +1,6 @@
   import { useState,useEffect,useCallback } from 'react'
   import reactLogo from './assets/react.svg'
+  import {TommaluCheckout, DeliveryAddress, Payment, OrderConfirmation, CheckoutHeader, SAMPLE_ADDRESSES, SAMPLE_CART} from './pages/checkout/TommaluCheckout';
  import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Grocery from './pages/grocery/Grocery';
  import Food from './pages/food/Food';
@@ -58,7 +59,42 @@ import CategoryProducts from './pages/category/CategoryProducts';
               const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
               const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
               const [selectedLocation, setSelectedLocation] = useState('');
-              const [userLocations, setUserLocations] = useState({}); // Store locations per user
+              const [userLocations, setUserLocations] = useState({});
+              
+               const [currentStep, setCurrentStep] = useState(1);
+          
+            const [selectedAddress, setSelectedAddress] = useState(SAMPLE_ADDRESSES[0]);
+            const [deliveryTime, setDeliveryTime] = useState('standard');
+            const [instructions, setInstructions] = useState('');
+            const [paymentMethod, setPaymentMethod] = useState('');
+            const [orderDetails, setOrderDetails] = useState(null);
+
+            const handleNext = () => {
+                if (currentStep < 3) {
+                    setCurrentStep(currentStep + 1);
+                    if (currentStep === 2) {
+                        // Place order
+                        const subtotal = cart.reduce((sum, item) => {
+                            const itemPrice = item.discount ? item.price * (1 - item.discount / 100) : item.price;
+                            return sum + (itemPrice * item.quantity);
+                        }, 0);
+                        const deliveryFee = deliveryTime === 'express' ? 25 : 40;
+                        const total = subtotal + deliveryFee + Math.round(subtotal * 0.05);
+                        
+                        setOrderDetails({
+                            total: Math.round(total),
+                            paymentMethod,
+                            deliveryTime,
+                            address: selectedAddress,
+                            items: cart,
+                            instructions
+                        });
+                    }
+                }
+            };
+
+
+              // Store locations per user
     const [isSignInOpen, setIsSignInOpen] = useState(false);
               // Save user locations to localStorage whenever it changes
               useEffect(() => {
@@ -713,12 +749,13 @@ useEffect(() => {
       />
     }
   />
-  <Route path='/cart/checkout'element={<CheckOut cartItems={cart} userData={user} onPlaceOrder={handleOrder}/>}/>
+  {/* <Route path='/cart/checkout'element={<CheckOut cartItems={cart} userData={user} onPlaceOrder={handleOrder}/>}/> */}
   <Route path='/grocery' element={<Grocery GROCERY_DATA={GROCERY_DATA}  onAddToCart={handleAddToCart} ItemCard={ItemCard} />}/>
   <Route path='/food' element={<Food RESTAURANTS_DATA={RESTAURANTS_DATA} onAddToCart={handleAddToCart} ItemCard={ItemCard} />}/>
  {/* Restaurant Items */}
        <Route path="/items/:type/:slug" element={<RestaurantItemsPage GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} onAddToCart={handleAddToCart} />} />
         <Route path="/category/:categoryName" element={<CategoryProducts GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} CATEGORIES_DATA={CATEGORIES_DATA} onAddToCart={handleAddToCart} />} />
+        <Route path='/checkout'element={<TommaluCheckout cart={cart} user={user} onOrder={handleOrder} calculateDeliveryFee={calculateDeliveryFee} AVAILABLE_COUPONS={AVAILABLE_COUPONS}/>}/>
 {/* <Route path='/grocery/:itemId' element={<GroceryItemDetail groceryData={groceryData} onAddToCart={addToCart}/>}/> */}
   {/* ✅ 404 Fallback */}
   <Route
