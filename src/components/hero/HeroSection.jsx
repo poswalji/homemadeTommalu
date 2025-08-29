@@ -16,14 +16,14 @@ export default function HeroSection() {
   >
     <SwiperSlide>
       <img
-        src="src\assets\happy-hard-working-handsome-male-driver-scooter-with-red-helmet-delivering-pizza.jpg"
+        src="public\header_img.png"
         alt="Food"
         className="h-full w-full object-cover"
       />
     </SwiperSlide>
     <SwiperSlide>
       <img
-        src="src/assets/header_img.png"
+        src="public\happy-hard-working-handsome-male-driver-scooter-with-red-helmet-delivering-pizza.jpg"
         alt="Groceries"
         className="h-full w-full object-cover"
       />
