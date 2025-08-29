@@ -34,31 +34,36 @@ const Home = ({
     Browse by Category
   </h2>
 
-  <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide px-2">
+  <div className="flex space-x-4 overflow-x-auto pb-4 pt-2 scrollbar-hide px-2">
     {CATEGORIES_DATA.map((category) => (
-      <Link
-        to={`/category/${category.name.toLowerCase()}`}
-        key={category.id}
-        className="flex-shrink-0 text-center group"
-      >
-        <div
-          className={`
-            w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28
-            bg-gradient-to-r ${category.color} 
-            rounded-full flex items-center justify-center
-            text-3xl md:text-4xl mb-2
-            group-hover:scale-110 transition-all duration-300
-            shadow-lg cursor-pointer
-            border-4 border-transparent hover:border-purple-500
-          `}
-        >
-          {category.icon}
-        </div>
-        <p className="text-sm md:text-base font-medium text-gray-700 group-hover:text-purple-600 transition-colors w-20 sm:w-24 md:w-28 truncate">
-          {category.name}
-        </p>
-      </Link>
-    ))}
+  <Link
+    to={`/category/${category.name.toLowerCase()}`}
+    key={category.id}
+    className="flex-shrink-0 text-center group"
+  >
+    <div
+      className={`
+        w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28
+        bg-gradient-to-r ${category.color} 
+        rounded-full flex items-center justify-center
+        mb-2
+        group-hover:scale-110 transition-all duration-300
+        shadow-lg cursor-pointer
+        border-4 border-transparent hover:border-purple-500
+      `}
+    >
+      <img
+        src={category.icon}
+        alt={category.name}
+        className="w-full h-full object-cover rounded-full"
+      />
+    </div>
+    <p className="text-sm md:text-base font-medium text-gray-700 group-hover:text-purple-600 transition-colors w-20 sm:w-24 md:w-28 truncate">
+      {category.name}
+    </p>
+  </Link>
+))}
+
   </div>
 </div>
 

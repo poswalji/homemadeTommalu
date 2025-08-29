@@ -1,4 +1,8 @@
 import { Swiper, SwiperSlide } from "swiper/react";
+import headerImg from '../../assets/header_img.png';
+ // from src folder
+import deliveryGuyImg from '../../assets/happy-hard-working-handsome-male-driver-scooter-with-red-helmet-delivering-pizza.jpg';
+
 import "swiper/css";
 import "swiper/css/autoplay";
 import { Autoplay } from "swiper/modules";
@@ -16,14 +20,14 @@ export default function HeroSection() {
   >
     <SwiperSlide>
       <img
-        src="public\header_img.png"
+        src={headerImg}
         alt="Food"
         className="h-full w-full object-cover"
       />
     </SwiperSlide>
     <SwiperSlide>
       <img
-        src="public\happy-hard-working-handsome-male-driver-scooter-with-red-helmet-delivering-pizza.jpg"
+       src={deliveryGuyImg}
         alt="Groceries"
         className="h-full w-full object-cover"
       />

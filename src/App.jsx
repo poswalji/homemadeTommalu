@@ -26,6 +26,21 @@ import SearchResults from './components/searchResult/SearchResults';
 import CartPage from './pages/cart/CartPage';
 import ItemCard from './components/itemsCard/ItemCard';
 import CategoryProducts from './pages/category/CategoryProducts';
+///asset file////
+
+import indianIcon from './assets/indian.jpg';
+import pizzaIcon from './assets/pizza.jpg';
+import burgerIcon from './assets/burger.jpg';
+import italianIcon from './assets/italian.jpg';
+import fastFoodIcon from './assets/fastfood.jpg';
+import fruitsIcon from './assets/fruits.jpg';
+import vegetablesIcon from './assets/vegetables.jpg';
+import dairyIcon from './assets/Dairy.jpg';
+import grainsIcon from './assets/grains.jpg';
+import bakeryIcon from './assets/bakery.jpg';
+import meatIcon from './assets/meat.jpg';
+
+
   const App = () => {
   
     
@@ -462,20 +477,34 @@ useEffect(() => {
             }
         ];
 
-         const CATEGORIES_DATA = [
-            { id: 'all', name: 'All', icon: '🏠', color: 'from-gray-400 to-gray-600' },
-            { id: 'indian', name: 'Indian', icon: '🍛', color: 'from-orange-400 to-red-500' },
-            { id: 'pizza', name: 'Pizza', icon: '🍕', color: 'from-red-400 to-pink-500' },
-            { id: 'burgers', name: 'Burgers', icon: '🍔', color: 'from-yellow-400 to-orange-500' },
-            { id: 'italian', name: 'Italian', icon: '🍝', color: 'from-green-400 to-blue-500' },
-            { id: 'fast-food', name: 'Fast Food', icon: '🍟', color: 'from-purple-400 to-pink-500' },
-            { id: 'fruits', name: 'Fruits', icon: '🍎', color: 'from-green-400 to-green-600' },
-            { id: 'vegetables', name: 'Vegetables', icon: '🥬', color: 'from-green-500 to-emerald-600' },
-            { id: 'dairy', name: 'Dairy', icon: '🥛', color: 'from-blue-400 to-blue-600' },
-            { id: 'grains', name: 'Grains', icon: '🌾', color: 'from-yellow-500 to-amber-600' },
-            { id: 'bakery', name: 'Bakery', icon: '🍞', color: 'from-amber-400 to-orange-500' },
-            { id: 'meat', name: 'Meat', icon: '🍗', color: 'from-red-500 to-red-700' }
-        ];
+        //  const CATEGORIES_DATA = [
+        //     { id: 'all', name: 'All', icon: '🏠', color: 'from-gray-400 to-gray-600' },
+        //     { id: 'indian', name: 'Indian', icon: '🍛', color: 'from-orange-400 to-red-500' },
+        //     { id: 'pizza', name: 'Pizza', icon: '🍕', color: 'from-red-400 to-pink-500' },
+        //     { id: 'burgers', name: 'Burgers', icon: '🍔', color: 'from-yellow-400 to-orange-500' },
+        //     { id: 'italian', name: 'Italian', icon: '🍝', color: 'from-green-400 to-blue-500' },
+        //     { id: 'fast-food', name: 'Fast Food', icon: '🍟', color: 'from-purple-400 to-pink-500' },
+        //     { id: 'fruits', name: 'Fruits', icon: '🍎', color: 'from-green-400 to-green-600' },
+        //     { id: 'vegetables', name: 'Vegetables', icon: '🥬', color: 'from-green-500 to-emerald-600' },
+        //     { id: 'dairy', name: 'Dairy', icon: '🥛', color: 'from-blue-400 to-blue-600' },
+        //     { id: 'grains', name: 'Grains', icon: '🌾', color: 'from-yellow-500 to-amber-600' },
+        //     { id: 'bakery', name: 'Bakery', icon: '🍞', color: 'from-amber-400 to-orange-500' },
+        //     { id: 'meat', name: 'Meat', icon: '🍗', color: 'from-red-500 to-red-700' }
+        // ];
+        const CATEGORIES_DATA = [
+  { id: 'all', name: 'All', icon: '🏠', color: 'from-gray-400 to-gray-600' },
+  { id: 'indian', name: 'Indian', icon: indianIcon, color: 'from-orange-400 to-red-500' },
+  { id: 'pizza', name: 'Pizza', icon: pizzaIcon, color: 'from-red-400 to-pink-500' },
+  { id: 'burgers', name: 'Burgers', icon: burgerIcon, color: 'from-yellow-400 to-orange-500' },
+  { id: 'italian', name: 'Italian', icon: italianIcon, color: 'from-green-400 to-blue-500' },
+  { id: 'fast-food', name: 'Fast Food', icon: fastFoodIcon, color: 'from-purple-400 to-pink-500' },
+  { id: 'fruits', name: 'Fruits', icon: fruitsIcon, color: 'from-green-400 to-green-600' },
+  { id: 'vegetables', name: 'Vegetables', icon: vegetablesIcon, color: 'from-green-500 to-emerald-600' },
+  { id: 'dairy', name: 'Dairy', icon: dairyIcon, color: 'from-blue-400 to-blue-600' },
+  { id: 'grains', name: 'Grains', icon: grainsIcon, color: 'from-yellow-500 to-amber-600' },
+  { id: 'bakery', name: 'Bakery', icon: bakeryIcon, color: 'from-amber-400 to-orange-500' },
+  { id: 'meat', name: 'Meat', icon: meatIcon, color: 'from-red-500 to-red-700' }
+];
               const handleSignIn = (userData) => {
                   setIsSignedIn(true);
                   setUser(userData);
