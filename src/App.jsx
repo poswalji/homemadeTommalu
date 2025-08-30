@@ -26,6 +26,7 @@ import SearchResults from './components/searchResult/SearchResults';
 import CartPage from './pages/cart/CartPage';
 import ItemCard from './components/itemsCard/ItemCard';
 import CategoryProducts from './pages/category/CategoryProducts';
+import ScrollToTop from './components/scrollTop/ScrollTop';
 ///asset file////
 
 import indianIcon from './assets/indian.jpg';
@@ -204,7 +205,10 @@ useEffect(() => {
                 const itemName = item.selectedWeight ? 
                     `${item.name} (${item.selectedWeight.label})` : 
                     item.name;
-                setNotification(`${itemName} added to cart!`);
+              setNotification({
+      isVisible: true,
+      message: `${itemName} added to cart!`,
+    });
             };
 
             const handleUpdateQuantity = (restaurantId, itemId, newQuantity, selectedWeight = null) => {
@@ -245,6 +249,7 @@ useEffect(() => {
                 setSelectedCategory(null);
             };
 
+           
 
   // Verify token on page load
   useEffect(() => {
@@ -693,6 +698,7 @@ useEffect(() => {
                       });
                   }
               };
+              
               const [orders, setOrders] = useState([]);
 // 
 
@@ -732,7 +738,7 @@ useEffect(() => {
                           selectedLocation={selectedLocation}
                           onLocationChange={handleLocationChange}
                       />
-
+<ScrollToTop />
    <Routes>
   {/* ✅ Home */}
   <Route

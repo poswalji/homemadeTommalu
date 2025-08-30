@@ -1,7 +1,8 @@
 import { Swiper, SwiperSlide } from "swiper/react";
-import headerImg from '../../assets/header_img.png';
+import headerImg from '../../assets/header_img.webp';
  // from src folder
-import deliveryGuyImg from '../../assets/happy-hard-working-handsome-male-driver-scooter-with-red-helmet-delivering-pizza.jpg';
+import deliveryGuyImg from '../../assets/happy-hard-working-handsome-male-driver-scooter-with-red-helmet-delivering-pizza.webp';
+
 
 import "swiper/css";
 import "swiper/css/autoplay";
@@ -22,6 +23,7 @@ export default function HeroSection() {
       <img
         src={headerImg}
         alt="Food"
+        loading="lazy"
         className="h-full w-full object-cover"
       />
     </SwiperSlide>
@@ -29,6 +31,7 @@ export default function HeroSection() {
       <img
        src={deliveryGuyImg}
         alt="Groceries"
+        loading="lazy"
         className="h-full w-full object-cover"
       />
     </SwiperSlide>
@@ -36,6 +39,7 @@ export default function HeroSection() {
       <img
         src="https://images.unsplash.com/photo-1504674900247-0877df9cc836"
         alt="Delivery"
+        loading="lazy"
         className="h-full w-full object-cover"
       />
     </SwiperSlide>
@@ -43,6 +47,7 @@ export default function HeroSection() {
       <img
         src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
         alt="Indian Cuisine"
+        loading="lazy"
         className="h-full w-full object-cover"
       />
     </SwiperSlide>

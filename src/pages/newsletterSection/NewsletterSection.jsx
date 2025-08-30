@@ -31,7 +31,7 @@ import { useState } from "react";
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Enter your email address"
-                                    className="flex-1 px-4 py-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                                    className="flex-1 px-4 py-3 rounded-lg text-white-800 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                                     required
                                 />
                                 <button

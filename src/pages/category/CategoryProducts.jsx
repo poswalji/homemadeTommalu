@@ -53,10 +53,24 @@ const { categoryName } = useParams();
                     </Link>
 
                     {/* Category Header */}
-                    <div className="text-center mb-8">
-                        <div className={`w-20 h-20 bg-gradient-to-r ${selectedCategory.color} rounded-full flex items-center justify-center text-4xl mx-auto mb-4`}>
-                            {selectedCategory.icon}
-                        </div>
+                    <div className="  text-center mb-8">
+                          <div
+      className={` items-center mx-auto
+        w-20 h-20 sm:w-24 sm:h-24  md:w-28 md:h-28
+        bg-gradient-to-r ${selectedCategory.color} 
+        rounded-full flex items-center justify-center
+        mb-2
+        group-hover:scale-110 transition-all duration-300
+        shadow-lg cursor-pointer
+        border-4 border-transparent hover:border-purple-500
+      `}
+    >
+      <img
+        src={selectedCategory.icon}
+        alt={selectedCategory.name}
+        className="w-full h-full object-cover rounded-full"
+      />
+    </div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2">{selectedCategory.name}</h1>
                         <p className="text-gray-600">Found {categoryItems.length} items in this category</p>
                     </div>

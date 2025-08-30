@@ -121,8 +121,8 @@ const Home = ({
                               {/* Stats Section */}
                               <StatsSection />
 
-                              {/* Newsletter Section */}
-                              <NewsletterSection />
+                              
+                              {/* <NewsletterSection /> */}
                               </>
   );
 };
