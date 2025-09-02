@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCallback,useReducer } from "react";
 
-const CartPage = ({ cart, onUpdateQuantity, onRemoveItem, onBack,calculateDeliveryFee,AVAILABLE_COUPONS }) => {
+const CartPage = ({ isSignedIn,cart, onUpdateQuantity, onRemoveItem, onBack,calculateDeliveryFee,AVAILABLE_COUPONS }) => {
             const [appliedCoupon, setAppliedCoupon] = useState(null);
             const [couponCode, setCouponCode] = useState('');
             const [couponError, setCouponError] = useState('');
@@ -216,7 +216,7 @@ const CartPage = ({ cart, onUpdateQuantity, onRemoveItem, onBack,calculateDelive
                                                     <p className="text-red-500 text-sm">{couponError}</p>
                                                 )}
                                                 
-                                                {/* Available Coupons */}
+                                                {/* Available Coupons */}{isSignedIn && (
                                                 <div className="space-y-2">
                                                     <p className="text-sm font-medium text-gray-700">Available Coupons:</p>
                                                     {AVAILABLE_COUPONS.map(coupon => (
@@ -238,7 +238,7 @@ const CartPage = ({ cart, onUpdateQuantity, onRemoveItem, onBack,calculateDelive
                                                             </div>
                                                         </div>
                                                     ))}
-                                                </div>
+                                                </div>)}
                                             </div>
                                         ) : (
                                             <div className="bg-green-50 p-3 rounded-lg">
@@ -298,14 +298,52 @@ const CartPage = ({ cart, onUpdateQuantity, onRemoveItem, onBack,calculateDelive
                                                 <span>₹{grandTotal}</span>
                                             </div>
                                         </div>
+                                        {!isSignedIn && (
+    <div className="mt-6 bg-red-50 p-4 rounded-lg">
+      <h3 className="text-lg font-semibold text-red-600 mb-2">Delivery Address</h3>
+      <input type="text" placeholder="Full Name" className="w-full border p-2 rounded mb-2"/>
+      <input type="text" placeholder="Phone Number" className="w-full border p-2 rounded mb-2"/>
+      <textarea placeholder="Enter your address" className="w-full border p-2 rounded"></textarea>
+    </div>
+  )}
                                     </div>
                                     
-                                    <Link
-  to="/checkout"
-  className="block w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-colors text-center"
->
-  Proceed to Checkout
-</Link>
+  {/* Place Order Button */}
+{isSignedIn ? (
+  <Link
+    to="/checkout"
+    className="block w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-colors text-center"
+  >
+    Place Order
+  </Link>
+) : (
+  <button
+    onClick={() => {
+      // collect guest info
+      const name = document.querySelector("input[placeholder='Full Name']").value;
+      const phone = document.querySelector("input[placeholder='Phone Number']").value;
+      const address = document.querySelector("textarea[placeholder='Enter your address']").value;
+
+      if (!name || !phone || !address) {
+        alert("Please fill Name, Phone and Address");
+        return;
+      }
+
+      const orderItems = cart.map(
+        (item) => `- ${item.quantity} × ${item.name} (₹${item.price * item.quantity})`
+      ).join("%0A");
+
+      const message = `Hello Tommalu,%0A%0AMera order:%0A${orderItems}%0A%0AName: ${name}%0APhone: ${phone}%0AAddress: ${address}%0ATotal: ₹${grandTotal}`;
+
+      const whatsappUrl = `https://wa.me/919358992352?text=${message}`;
+      window.open(whatsappUrl, "_blank");
+    }}
+    className="w-full bg-green-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-600 transition-colors"
+  >
+    Order on WhatsApp
+  </button>
+)}
+
 
                                 </div>
                             </div>

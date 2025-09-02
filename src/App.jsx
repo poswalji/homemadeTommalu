@@ -28,7 +28,7 @@ import ItemCard from './components/itemsCard/ItemCard';
 import CategoryProducts from './pages/category/CategoryProducts';
 import ScrollToTop from './components/scrollTop/ScrollTop';
 ///asset file////
-
+import { useNavigate } from 'react-router-dom';
 import indianIcon from './assets/indian.jpg';
 import pizzaIcon from './assets/pizza.jpg';
 import burgerIcon from './assets/burger.jpg';
@@ -153,14 +153,17 @@ useEffect(() => {
                 setSelectedCategory(null);
             };
 
-            const handleSearchChange = (query) => {
-                setSearchQuery(query);
-                if (query.trim()) {
-                    setCurrentPage('search');
-                } else if (currentPage === 'search') {
-                    setCurrentPage('home');
-                }
-            };
+           const navigate = useNavigate();
+
+const handleSearchChange = (query) => {
+  setSearchQuery(query);
+
+  if (query.trim()) {
+    navigate("/search");
+  } else {
+    navigate("/");
+  }
+};
 
             const handleRestaurantClick = (restaurant) => {
                 setSelectedRestaurant(restaurant);
@@ -775,7 +778,7 @@ useEffect(() => {
     element={
       <CartPage calculateDeliveryFee={calculateDeliveryFee}
                                 AVAILABLE_COUPONS={AVAILABLE_COUPONS}
-
+isSignedIn={isSignedIn}
        cart={cart}
                                 onUpdateQuantity={handleUpdateQuantity}
                                 onRemoveItem={handleRemoveItem}
@@ -790,7 +793,7 @@ useEffect(() => {
  {/* Restaurant Items */}
        <Route path="/items/:type/:slug" element={<RestaurantItemsPage GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} onAddToCart={handleAddToCart} />} />
         <Route path="/category/:categoryName" element={<CategoryProducts GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} CATEGORIES_DATA={CATEGORIES_DATA} onAddToCart={handleAddToCart} />} />
-        <Route path="/search" element={<SearchResults GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} searchQuery={searchQuery} onAddToCart={handleAddToCart} />} />
+        <Route path="/search" element={<SearchResults GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} searchQuery={searchQuery}  onAddToCart={handleAddToCart} />} />
         <Route path='/checkout'element={<TommaluCheckout cart={cart} user={user} onOrder={handleOrder} calculateDeliveryFee={calculateDeliveryFee} AVAILABLE_COUPONS={AVAILABLE_COUPONS}/>}/>
 {/* <Route path='/grocery/:itemId' element={<GroceryItemDetail groceryData={groceryData} onAddToCart={addToCart}/>}/> */}
   {/* ✅ 404 Fallback */}

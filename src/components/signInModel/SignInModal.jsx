@@ -9,6 +9,7 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
     name: "",
     email: "",
     phone: "",
+    address: "",
     password: ""
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +37,7 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
       if (!res.ok) throw new Error(data.message || "Something went wrong");
 
       onSignIn(data.user); // set user in frontend state
-      setFormData({ name: "", email: "", phone: "", password: "" });
+      setFormData({ name: "", email: "", phone: "",address:"", password: "" });
       onClose();
     } catch (err) {
       setError(err.message);
@@ -93,6 +94,18 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
                     required
                   />
                 </div>
+                 <div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+  <input
+    type="text"
+    name="address"
+    value={formData.address}
+    onChange={handleInputChange}
+    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+    placeholder="Enter your address"
+    required
+  />
+</div>
               </>
             )}
 
@@ -108,6 +121,7 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
                 required
               />
             </div>
+           
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>

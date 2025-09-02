@@ -1,8 +1,9 @@
 import React from "react";
 import ProfileDropdown from "../profileDropdown/ProfileDropdown";
 
-import { useState,useEffect } from "react";
-import { NavLink,useLocation } from "react-router-dom";
+import { useState,useEffect, } from "react";
+import { NavLink,useLocation,useNavigate } from "react-router-dom";
+
   const Header = ({
             isSignedIn,
             onSignIn,
@@ -27,6 +28,7 @@ import { NavLink,useLocation } from "react-router-dom";
             const toggleProfileDropdown = () => {
                 setIsProfileDropdownOpen(!isProfileDropdownOpen);
             };
+            const navigate = useNavigate();
 
             const handleLogout = () => {
                 onLogout();
@@ -50,6 +52,7 @@ import { NavLink,useLocation } from "react-router-dom";
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     onSearchChange(e.target.value);
+                    ;
                 }
               }
 
@@ -64,9 +67,12 @@ import { NavLink,useLocation } from "react-router-dom";
                 document.addEventListener('click', handleClickOutside);
                 return () => document.removeEventListener('click', handleClickOutside);
             }, []);
+            
 
             return (
                 <header className="gradient-bg text-white shadow-lg sticky top-0 z-30">
+                  
+
                     <div className="container mx-auto px-4">
                         {/* Desktop Header */}
                         <div className="hidden md:flex items-center justify-between py-4">
@@ -123,7 +129,8 @@ import { NavLink,useLocation } from "react-router-dom";
 
                             <div className="flex items-center space-x-6">
                               {/* Search Bar */}
-{location.pathname==='/' && (
+                              
+
   <div className="relative">
     <input
       type="text"
@@ -140,8 +147,9 @@ import { NavLink,useLocation } from "react-router-dom";
                        hover:text-yellow-300 transition-colors duration-200">
       <i className="fas fa-search"></i>
     </button>
+    
   </div>
-)}
+
 
 
                                 {/* Delivery Locations */}
@@ -211,15 +219,7 @@ import { NavLink,useLocation } from "react-router-dom";
                                 </div>
                                         
                                 {/* Language Toggle */}
-                                <select
-                                    value={language}
-                                    onChange={(e) => setLanguage(e.target.value)}
-                                    className=" bg-opacity-20 hover:border-yellow-300  hover:text-yellow-300 text-white border border-white border-opacity-30 rounded px-3 py-2 focus:outline-none"
-                                >
-                                    <option value="EN">EN</option>
-                                    <option value="HI">हिं</option>
-                                   
-                                </select>
+                                {/* <GoogleTranslate /> */}
 
                                 {/* Sign In Button / User Profile */}
                                 {!isSignedIn ? (
@@ -285,22 +285,26 @@ import { NavLink,useLocation } from "react-router-dom";
                     </div>
 
                     {/* Mobile Search Bar (Below Header) */}
-                    {location.pathname==="/"&& (
-                        <div className="md:hidden bg-white/10  px-4 py-3">
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search for food or groceries..."
-                                    value={searchQuery}
-                                    onChange={(e) => onSearchChange(e.target.value)}
-                                    className="w-full px-4 py-3 pr-12 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                                />
-                                <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-purple-600">
-                                    <i className="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                  {(location.pathname === '/' || location.pathname === '/search') && (
+  <div className="md:hidden px-4 py-3 bg-white shadow-md rounded-b-xl sticky top-16 z-20">
+    <div className="relative">
+      <input
+        type="text"
+        placeholder="Search for food or groceries..."
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="w-full pl-4 pr-12 py-3 rounded-full border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 placeholder-gray-400 text-gray-800 transition-all duration-200"
+      />
+      <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-yellow-400 transition-colors">
+        <i className="fas fa-search text-lg"></i>
+      </button>
+    </div>
+
+   
+  </div>
+)}
+
+
                 </header>
             );
         }
