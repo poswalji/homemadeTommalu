@@ -85,6 +85,77 @@ import meatIcon from './assets/meat.jpg';
             const [paymentMethod, setPaymentMethod] = useState('');
             const [orderDetails, setOrderDetails] = useState(null);
 
+   
+
+  // Geolocation fetch function
+  useEffect(() => {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        // Reverse Geocoding API
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`
+        );
+        const data = await res.json();
+
+        // Local Area (UI ke liye)
+       const areaName =
+  data.address?.neighbourhood ||
+  data.address?.suburb ||
+  data.address?.quarter ||
+  data.address?.locality ||
+  data.address?.hamlet ||
+  data.address?.village ||
+  data.address?.town ||
+  data.address?.district ||
+  data.address?.city_district ||
+  data.address?.city ||
+  "Unknown Area";
+        // City (DB ke liye)
+        const city =
+          data.address?.city ||
+          data.address?.state_district ||
+          data.address?.state ||
+          "Unknown City";
+
+        // UI pe sirf area dikhao
+      const finalLocation = areaName === "Unknown Area" ? cityName : areaName;
+setSelectedLocation(finalLocation);
+
+
+        // Backend ke liye ek object banao
+        const locationData = {
+          area: areaName,     // e.g. "Rana Pratap Nagar"
+          city: city,          // e.g. "Udaipur"
+          lat: latitude,
+          lon: longitude,
+        };
+
+        console.log("Location Data:", locationData);
+console.log("Full Address Data:", data.address);
+        // 👇 Ye backend ko bhejna (API call)
+        // await fetch("/api/save-location", {
+        //   method: "POST",
+        //   headers: { "Content-Type": "application/json" },
+        //   body: JSON.stringify(locationData),
+        // });
+      },
+      (error) => {
+        if (error.code === 1) {
+          return true
+        } else if (error.code === 2) {
+          alert("Location unavailable. Check your GPS or network.");
+        } else if (error.code === 3) {
+          alert("Location request timed out. Please try again.");
+        }
+        console.error("Geolocation error:", error);
+      }
+    );
+  }
+}, []);
+
             const handleNext = () => {
                 if (currentStep < 3) {
                     setCurrentStep(currentStep + 1);
@@ -499,6 +570,47 @@ const handleSearchChange = (query) => {
         //     { id: 'bakery', name: 'Bakery', icon: '🍞', color: 'from-amber-400 to-orange-500' },
         //     { id: 'meat', name: 'Meat', icon: '🍗', color: 'from-red-500 to-red-700' }
         // ];
+   
+
+const deliveryLocation = [
+  { name: "Achrol", time: "15-20 min", status: "active" },
+  { name: "Talamod", time: "20-25 min", status: "active" },
+  { name: "NIMS University", time: "10-15 min", status: "active" },
+  { name: "Amity University", time: "12-18 min", status: "active" },
+  { name: "Chandwaji", time: "25-30 min", status: "active" },
+  { name: "Syari", time: "8-12 min", status: "active" }, { name: "Udaipur", time: "8-12 min", status: "active" },
+  { name: "Jaipur City Center", time: "Coming Soon", status: "coming" },
+  { name: "Malviya Nagar", time: "Coming Soon", status: "coming" },
+];
+
+useEffect(() => {
+  if (!selectedLocation) return; // agar location empty ho to skip
+
+  const matchedLocation = deliveryLocation.find(
+    (loc) => loc.name.toLowerCase() === selectedLocation.toLowerCase()
+  );
+
+  if (matchedLocation) {
+    if (matchedLocation.status === "active") {
+      setNotification({
+        message: `🎉 Congratulations! We Are Available at your Area ${matchedLocation.name} `,
+        isVisible: true,
+      });
+    } else {
+      setNotification({
+        message: `⏳ ${matchedLocation.name} is Coming Soon!`,
+        isVisible: true,
+      });
+    }
+  } else {
+    setNotification({
+      message: `❌ Sorry! We Are not Available at your Area ${selectedLocation}`,
+      isVisible: true,
+    });
+  }
+}, [selectedLocation]); // 👈 ye sirf tab chalega jab selectedLocation change hoga
+
+
         const CATEGORIES_DATA = [
   { id: 'all', name: 'All', icon: '🏠', color: 'from-gray-400 to-gray-600' },
   { id: 'indian', name: 'Indian', icon: indianIcon, color: 'from-orange-400 to-red-500' },
@@ -710,6 +822,7 @@ const handleSearchChange = (query) => {
                   <div className="min-h-screen bg-gray-50">
                       {/* Mobile Menu */}
                       <MobileMenu
+                      notification={notification}
                           isOpen={isMobileMenuOpen}
                           isSignedIn={isSignedIn}
                           onSignIn={openSignInModal}
@@ -724,7 +837,7 @@ const handleSearchChange = (query) => {
                       />
 
                       {/* Header */}
-                      <Header RESTAURANTS_DATA={RESTAURANTS_DATA} GROCERY_DATA={GROCERY_DATA} 
+                      <Header RESTAURANTS_DATA={RESTAURANTS_DATA} GROCERY_DATA={GROCERY_DATA} deleveryLocation={deliveryLocation}
                           isSignedIn={isSignedIn}
                           onSignIn={openSignInModal}
                           onLogout={handleLogout}

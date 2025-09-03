@@ -15,7 +15,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
             searchQuery,
             onSearchChange,
             onNavigate,
-            
+            deleveryLocation,
             currentPage,
             user,
             onOpenProfile,
@@ -153,70 +153,60 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
 
 
                                 {/* Delivery Locations */}
-                                <div className="relative group">
-                                    <button className=" bg-opacity-20 text-white border border-white border-opacity-30 rounded px-3 py-2 focus:outline-none hover:bg-opacity-30 transition-colors flex items-center space-x-2">
-                                        <i className="fas fa-map-marker-alt"></i>
-                                        <span>{selectedLocation || 'Delivery Areas'}</span>
-                                        <i className="fas fa-chevron-down text-sm"></i>
-                                    </button>
+                               {/* Delivery Locations */}
+<div className="relative group">
+  <button className=" bg-opacity-20 text-white border border-white border-opacity-30 rounded px-3 py-2 focus:outline-none hover:bg-opacity-30 transition-colors flex items-center space-x-2">
+    <i className="fas fa-map-marker-alt"></i>
+    <span>{selectedLocation || 'Detecting Location...'}</span>
+    <i className="fas fa-chevron-down text-sm"></i>
+  </button>
 
-                                    {/* Dropdown */}
-                                    <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                        <div className="px-4 py-2 border-b">
-                                            <h4 className="font-semibold text-gray-800 flex items-center">
-                                                <i className="fas fa-shipping-fast text-green-500 mr-2"></i>
-                                                Delivery Available In
-                                            </h4>
-                                            <p className="text-sm text-gray-600">Limited locations currently served</p>
-                                        </div>
+  {/* Dropdown */}
+  <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+    <div className="px-4 py-2 border-b">
+      <h4 className="font-semibold text-gray-800 flex items-center">
+        <i className="fas fa-shipping-fast text-green-500 mr-2"></i>
+        Delivery Available In
+      </h4>
+      <p className="text-sm text-gray-600">Limited locations currently served</p>
+    </div>
 
-                                        <div className="max-h-64 overflow-y-auto">
-                                            {[
-                                                { name: 'Achrol', time: '15-20 min', status: 'active' },
-                                                { name: 'Talamod', time: '20-25 min', status: 'active' },
-                                                { name: 'NIMS University', time: '10-15 min', status: 'active' },
-                                                { name: 'Amity University', time: '12-18 min', status: 'active' },
-                                                { name: 'Chandwaji', time: '25-30 min', status: 'active' },
-                                                { name: 'Nearzone Mall', time: '8-12 min', status: 'active' },
-                                                { name: 'Jaipur City Center', time: 'Coming Soon', status: 'coming' },
-                                                { name: 'Malviya Nagar', time: 'Coming Soon', status: 'coming' }
-                                            ].map((location, index) => (
-                                                <button
-                                                    key={index}
-                                                    onClick={() => location.status === 'active' && onLocationChange(location.name)}
-                                                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center justify-between ${location.status === 'coming' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
-                                                        } ${selectedLocation === location.name ? 'bg-purple-50 border-r-4 border-purple-500' : ''}`}
-                                                    disabled={location.status === 'coming'}
-                                                >
-                                                    <div className="flex items-center space-x-3">
-                                                        <i className={`fas fa-map-marker-alt ${location.status === 'active' ? 'text-green-500' : 'text-gray-400'
-                                                            }`}></i>
-                                                        <div>
-                                                            <div className="font-medium text-gray-800">{location.name}</div>
-                                                            <div className={`text-sm ${location.status === 'active' ? 'text-green-600' : 'text-gray-500'
-                                                                }`}>
-                                                                {location.status === 'active' ? `🚚 ${location.time}` : location.time}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    {location.status === 'active' && selectedLocation === location.name && (
-                                                        <i className="fas fa-check text-purple-500"></i>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
+    <div className="max-h-64 overflow-y-auto">
+      {deleveryLocation.map((location, index) => (
+        <div
+          key={index}
+          className={`w-full px-4 py-3 text-left flex items-center justify-between 
+            ${location.status === 'coming' ? 'opacity-60' : ''}`}
+        >
+          <div className="flex items-center space-x-3">
+            <i className={`fas fa-map-marker-alt ${
+              location.status === 'active' ? 'text-green-500' : 'text-gray-400'
+            }`}></i>
+            <div>
+              <div className="font-medium text-gray-800">{location.name}</div>
+              <div className={`text-sm ${
+                location.status === 'active' ? 'text-green-600' : 'text-gray-500'
+              }`}>
+                {location.status === 'active' ? `🚚 ${location.time}` : location.time}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
 
-                                        <div className="px-4 py-3 border-t bg-gray-50">
-                                            <p className="text-xs text-gray-600 mb-2">
-                                                <i className="fas fa-info-circle mr-1"></i>
-                                                Don't see your area? We're expanding soon!
-                                            </p>
-                                            <button className="text-xs text-purple-600 hover:text-purple-800 font-medium">
-                                                Request New Location →
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+    <div className="px-4 py-3 border-t bg-gray-50">
+      <p className="text-xs text-gray-600 mb-2">
+        <i className="fas fa-info-circle mr-1"></i>
+        Don't see your area? We're expanding soon!
+      </p>
+      <button className="text-xs text-purple-600 hover:text-purple-800 font-medium">
+        Request New Location →
+      </button>
+    </div>
+  </div>
+</div>
+
                                         
                                 {/* Language Toggle */}
                                 {/* <GoogleTranslate /> */}
