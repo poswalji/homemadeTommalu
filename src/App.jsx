@@ -7,6 +7,9 @@ import Grocery from './pages/grocery/Grocery';
   import './index.css';
 import Home from './pages/home/Home';
   import './App.css'
+  import PrivacyPolicy from './links/PrivacyPolicy';
+  import TermsOfService from './links/TermsOfService';
+  import CookiePolicy from './links/CookiePolicy';
 // import CartModal from "./components/cartModal/CartModal";
 import CheckOut from './pages/checkout/CheckOut';
 import Header from "./components/header/Header";
@@ -110,8 +113,6 @@ import meatIcon from './assets/meat.jpg';
   data.address?.village ||
   data.address?.town ||
   data.address?.district ||
-  data.address?.city_district ||
-  data.address?.city ||
   "Unknown Area";
         // City (DB ke liye)
         const city =
@@ -121,7 +122,7 @@ import meatIcon from './assets/meat.jpg';
           "Unknown City";
 
         // UI pe sirf area dikhao
-      const finalLocation = areaName === "Unknown Area" ? cityName : areaName;
+      const finalLocation = areaName === "Unknown Area" ? city : areaName;
 setSelectedLocation(finalLocation);
 
 
@@ -908,6 +909,9 @@ isSignedIn={isSignedIn}
         <Route path="/category/:categoryName" element={<CategoryProducts GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} CATEGORIES_DATA={CATEGORIES_DATA} onAddToCart={handleAddToCart} />} />
         <Route path="/search" element={<SearchResults GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} searchQuery={searchQuery}  onAddToCart={handleAddToCart} />} />
         <Route path='/checkout'element={<TommaluCheckout cart={cart} user={user} onOrder={handleOrder} calculateDeliveryFee={calculateDeliveryFee} AVAILABLE_COUPONS={AVAILABLE_COUPONS}/>}/>
+        <Route path='/privacy-policy' element={<PrivacyPolicy/>}/>
+         <Route path="/terms-of-service" element={<TermsOfService />} />
+  <Route path="/cookie-policy" element={<CookiePolicy />} />
 {/* <Route path='/grocery/:itemId' element={<GroceryItemDetail groceryData={groceryData} onAddToCart={addToCart}/>}/> */}
   {/* ✅ 404 Fallback */}
   <Route
