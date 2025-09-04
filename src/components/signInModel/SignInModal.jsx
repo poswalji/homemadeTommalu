@@ -39,11 +39,18 @@ const VerifyMobileOverlay = ({ isOpen, onClose, onVerify }) => {
         {/* Buttons */}
         <div className="flex justify-between mt-6">
           <button
-            onClick={() => alert("OTP Resent")}
-            className="text-sm text-purple-600 hover:underline"
-          >
-            Resend OTP
-          </button>
+  onClick={async () => {
+    await fetch("https://backend-tommalu.onrender.com/api/auth/resend-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: tempUser.id }),
+    });
+    alert("OTP Resent ✅");
+  }}
+  className="text-sm text-purple-600 hover:underline"
+>
+  Resend OTP
+</button>
           <button
             onClick={() => onVerify(otp)}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -111,18 +118,28 @@ const SignInModal = ({ isOpen, onClose, onSignIn }) => {
     }
   };
 
-  const handleVerify = (otp) => {
-    if (otp === "123456") {
-      // TODO: Backend OTP verify API call
-      alert("✅ Mobile Verified Successfully!");
-      onSignIn(tempUser); // sign in user after verify
-      setShowVerifyOverlay(false);
-      setFormData({ name: "", email: "", phone: "", address: "", password: "" });
-      onClose();
-    } else {
-      alert("❌ Invalid OTP, try again.");
-    }
-  };
+  const handleVerify = async (otp) => {
+  try {
+    const res = await fetch("https://backend-tommalu.onrender.com/api/auth/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ userId: tempUser.id, otp }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Invalid OTP");
+
+    alert("✅ Mobile Verified Successfully!");
+    onSignIn(data.user); // verified user bhejna
+    setShowVerifyOverlay(false);
+    setFormData({ name: "", email: "", phone: "", address: "", password: "" });
+    onClose();
+  } catch (err) {
+    alert("❌ " + err.message);
+  }
+};
+
 
   if (!isOpen) return null;
 
