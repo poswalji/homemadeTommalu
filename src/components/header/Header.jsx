@@ -260,10 +260,10 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
 
                         {/* Mobile Header */}
                       <div className="md:hidden flex items-center justify-between py-4">
-  <button onClick={onToggleMobileMenu} className="text-white">
+  <button onClick={onToggleMobileMenu} className="text-black hover:text-[#ff6931] transition-colors">
     <i className="fas fa-bars text-xl"></i>
   </button>
-  <NavLink to="/" className="text-2xl font-bold">Tommalu</NavLink>
+  <NavLink to="/" className="text-2xl font-bold"> <img src={logo} alt="Tommalu Logo" className="h-6 w-auto object-fill"/></NavLink>
   <NavLink to="/cart" className="relative">
     <i className="fas fa-shopping-cart text-xl"></i>
     {cartCount > 0 && (
@@ -284,9 +284,9 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
         placeholder="Search for food or groceries..."
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full pl-4 pr-12 py-3 rounded-full border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 placeholder-gray-400 text-gray-800 transition-all duration-200"
+        className="w-full pl-4 pr-12 py-3 rounded-full border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#ff6931] focus:border-[#ff6a31] placeholder-gray-400 text-gray-800 transition-all duration-200"
       />
-      <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-yellow-400 transition-colors">
+      <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[#ff6932] transition-colors">
         <i className="fas fa-search text-lg"></i>
       </button>
     </div>
