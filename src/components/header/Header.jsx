@@ -1,5 +1,6 @@
 import React from "react";
 import ProfileDropdown from "../profileDropdown/ProfileDropdown";
+import logo from "../../assets/logo.jpg"
 
 import { useState,useEffect, } from "react";
 import { NavLink,useLocation,useNavigate } from "react-router-dom";
@@ -70,22 +71,22 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
             
 
             return (
-                <header className="gradient-bg text-white shadow-lg sticky top-0 z-30">
+                <header className="gradient-bg text-black shadow-lg sticky top-0 z-30">
                   
 
                     <div className="container mx-auto px-4">
                         {/* Desktop Header */}
                         <div className="hidden md:flex items-center justify-between py-4">
                             <div className="flex items-center space-x-8">
-                                <NavLink to="/" className="text-3xl font-bold hover:text-yellow-300 transition-colors">
-                                    Tommalu
+                                <NavLink to="/" className="text-3xl font-bold hover:text-[#ff6931] transition-colors">
+  <img src={logo} alt="Tommalu Logo" className="h-6 w-auto object-fill"/>
                                 </NavLink>
                                <nav className="flex space-x-6">
                                     <NavLink
     to="/"
     className={({ isActive }) =>
       `font-medium transition-colors ${
-        isActive ? "text-yellow-300" : "hover:text-yellow-300"
+        isActive ? "text-[#ff6931]" : "hover:text-[#ff6931]"
       }`
     }
   >
@@ -95,7 +96,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
     to="/food"
     className={({ isActive }) =>
       `font-medium transition-colors ${
-        isActive ? "text-yellow-300" : "hover:text-yellow-300"
+        isActive ? "text-[#ff6931]" : "hover:text-[#ff6931]"
       }`
     }
   >
@@ -105,7 +106,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
     to="/grocery"
     className={({ isActive }) =>
       `font-medium transition-colors ${
-        isActive ? "text-yellow-300" : "hover:text-yellow-300"
+        isActive ? "text-[#ff6931]" : "hover:text-[#ff6931]"
       }`
     }
   >
@@ -116,7 +117,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
       to="/orders"
       className={({ isActive }) =>
         `font-medium transition-colors ${
-          isActive ? "text-yellow-300" : "hover:text-yellow-300"
+          isActive ? "text-[#ff6931]" : "hover:text-[#ff6931]"
         }`
       }
     >
@@ -139,12 +140,12 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
                                         onChange={handleSearchInput}
                                         onKeyPress={handleSearchKeyPress}
       
-      className="w-96 px-4 py-2 pr-12 rounded-full text-white
-                 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-300 
+      className="w-96 px-4 py-2 pr-12 rounded-full text-gray-800
+                 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ff6931] 
                  transition-all duration-200"
     />
     <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 
-                       hover:text-yellow-300 transition-colors duration-200">
+                       hover:text-[#ff6931] transition-colors duration-200">
       <i className="fas fa-search"></i>
     </button>
     
@@ -155,7 +156,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
                                 {/* Delivery Locations */}
                                {/* Delivery Locations */}
 <div className="relative group">
-  <button className=" bg-opacity-20 text-white border border-white border-opacity-30 rounded px-3 py-2 focus:outline-none hover:bg-opacity-30 transition-colors flex items-center space-x-2">
+  <button className=" bg-opacity-20 text-black border border-[#ff6931] border-opacity-30 rounded px-3 py-2 focus:outline-none hover:bg-opacity-30 transition-colors flex items-center space-x-2">
     <i className="fas fa-map-marker-alt"></i>
     <span>{selectedLocation || 'Detecting Location...'}</span>
     <i className="fas fa-chevron-down text-sm"></i>
@@ -215,7 +216,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
                                 {!isSignedIn ? (
                                     <button
                                         onClick={onSignIn}
-                                        className="bg-yellow-400 text-purple-800 px-6 py-2 rounded-full font-semibold hover:bg-yellow-300 transition-colors"
+                                        className="bg-[#ff6931] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#ff6a32] transition-colors"
                                     >
                                         Sign In
                                     </button>
@@ -223,7 +224,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
                                     <div className="relative profile-container">
                                         <button
                                             onClick={toggleProfileDropdown}
-                                            className="w-10 h-10 border-2 bg-opacity-20 rounded-full flex items-center justify-center hover:border-yellow-300 hover:text-yellow-300 transition-colors"
+                                            className="w-10 h-10 border-2 bg-opacity-20 rounded-full flex items-center justify-center hover:border-yellow-300 hover:text-[#ff6931] transition-colors"
                                         >
                                             <i className="fas fa-user"></i>
                                         </button>
@@ -242,7 +243,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
   to="/cart"
   className={({ isActive }) =>
     `relative font-medium transition-colors ${
-      isActive ? "text-yellow-300" : "hover:text-yellow-300"
+      isActive ? "text-[#ff6931]" : "hover:text-[#ff6931]"
     }`
   }
 >

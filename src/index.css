@@ -1,9 +1,13 @@
 @import "tailwindcss";
 
-    .gradient-bg {
+    /* .gradient-bg {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-  
+   */
+                                     .gradient-bg {
+                                       background-color: #ffffff;
+                                     }
+     
     .card-hover {
       transition: all 0.3s ease;
     }
