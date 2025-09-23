@@ -32,7 +32,7 @@ const ItemCard = ({ item, restaurant, onAddToCart }) => {
                 <div className="bg-white rounded-lg shadow-md overflow-hidden card-hover">
                     <div className="p-4">
                         <div className="flex items-start space-x-4">
-                            <div className="w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg flex items-center justify-center text-3xl flex-shrink-0">
+                            <div className="w-20 h-20 bg-[#ff6931] rounded-lg flex items-center justify-center text-3xl flex-shrink-0">
                                 {item.image}
                             </div>
                             
@@ -106,7 +106,7 @@ const ItemCard = ({ item, restaurant, onAddToCart }) => {
                                         </div>
                                         <button 
                                             onClick={handleAddToCart}
-                                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors text-sm font-medium"
+                                            className="bg-[#ff6931] text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-colors text-sm font-medium"
                                         >
                                             Add
                                         </button>

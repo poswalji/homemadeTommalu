@@ -300,7 +300,7 @@ const CartPage = ({ isSignedIn,cart, onUpdateQuantity, onRemoveItem, onBack,calc
                                         </div>
                                         {!isSignedIn && (
     <div className="mt-6 bg-red-50 p-4 rounded-lg">
-      <h3 className="text-lg font-semibold text-red-600 mb-2">Delivery Address</h3>
+      <h3 className="text-lg font-semibold text-[#ff6931] mb-2">Delivery Address</h3>
       <input type="text" placeholder="Full Name" className="w-full border p-2 rounded mb-2"/>
       <input type="text" placeholder="Phone Number" className="w-full border p-2 rounded mb-2"/>
       <textarea placeholder="Enter your address" className="w-full border p-2 rounded"></textarea>
@@ -312,7 +312,7 @@ const CartPage = ({ isSignedIn,cart, onUpdateQuantity, onRemoveItem, onBack,calc
 {isSignedIn ? (
   <Link
     to="/checkout"
-    className="block w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-colors text-center"
+    className="block w-full bg-text-[#ff6931]  text-white py-4 rounded-xl font-bold text-lg hover:text-[#ff6931]  transition-colors text-center"
   >
     Place Order
   </Link>

@@ -13,18 +13,14 @@ const Footer = () => {
                                     Quality service, delivered with care.
                                 </p>
                                 <div className="flex space-x-4">
-                                    <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
+                                    <a href="https://www.facebook.com/share/18qRHC9V9m/" className="text-gray-400 hover:text-purple-400 transition-colors">
                                         <i className="fab fa-facebook-f text-xl"></i>
                                     </a>
-                                    <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
-                                        <i className="fab fa-twitter text-xl"></i>
-                                    </a>
-                                    <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
+                                    
+                                    <a href="https://www.instagram.com/tommalu_delivery?igsh=b3ZhZXV4eGd2YTRr" className="text-gray-400 hover:text-purple-400 transition-colors">
                                         <i className="fab fa-instagram text-xl"></i>
                                     </a>
-                                    <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
-                                        <i className="fab fa-linkedin-in text-xl"></i>
-                                    </a>
+                                   
                                 </div>
                             </div>
 
@@ -36,11 +32,11 @@ const Footer = () => {
                                 <div className="space-y-3">
                                     <div className="flex items-center space-x-3">
                                         <i className="fas fa-phone text-purple-400"></i>
-                                        <span className="text-gray-300">+91 9358992352</span>
+                                        <span className="text-gray-300">+91 7742894471</span>
                                     </div>
                                     <div className="flex items-center space-x-3">
                                         <i className="fas fa-envelope text-purple-400"></i>
-                                        <span className="text-gray-300">support@tommalu.com</span>
+                                        <span className="text-gray-300">tommaludelivery@gmail.com</span>
                                     </div>
                                     <div className="flex items-center space-x-3">
                                         <i className="fas fa-map-marker-alt text-purple-400"></i>

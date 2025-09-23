@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-const Food = ({ onAddToCart,RESTAURANTS_DATA, ItemCard}) => {
+import ItemCard from "../../components/itemsCard/ItemCard";
+const Food = ({ onAddToCart,RESTAURANTS_DATA}) => {
             const [allFoodItems, setAllFoodItems] = useState([]);
             const [filteredItems, setFilteredItems] = useState([]);
             const [selectedFilter, setSelectedFilter] = useState('all');
@@ -60,15 +61,15 @@ const Food = ({ onAddToCart,RESTAURANTS_DATA, ItemCard}) => {
             return (
                 <div className="container mx-auto px-4 py-8">
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Food Delivery</h1>
+                        <h1 className="text-3xl font-bold text-[#ff6931]  mb-2">Food Delivery</h1>
                         <p className="text-gray-600">Delicious meals from {RESTAURANTS_DATA.length} restaurants</p>
                     </div>
 
                     {/* Filters Section */}
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl shadow-lg border border-purple-100 p-8 mb-8">
+                    <div className="bgtext-[#ff6931]  rounded-2xl shadow-lg border border-purple-100 p-8 mb-8">
                         {/* Filter Header */}
                         <div className="flex items-center space-x-3 mb-6">
-                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <div className="w-10 h-10 bg-[#ff6931]  rounded-full flex items-center justify-center">
                                 <i className="fas fa-filter text-white text-sm"></i>
                             </div>
                             <h3 className="text-xl font-bold text-gray-800">Filter & Sort</h3>
@@ -97,7 +98,7 @@ const Food = ({ onAddToCart,RESTAURANTS_DATA, ItemCard}) => {
                                                 onClick={() => setSelectedFilter(category)}
                                                 className={`group flex items-center space-x-2 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 transform hover:scale-105 flex-shrink-0 ${
                                                     selectedFilter === category
-                                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                                                        ? 'bg-gtext-[#ff6931]   text-white shadow-lg'
                                                         : 'bg-white text-gray-700 hover:bg-purple-50 hover:text-purple-700 shadow-md border border-gray-200'
                                                 }`}
                                             >
@@ -115,7 +116,7 @@ const Food = ({ onAddToCart,RESTAURANTS_DATA, ItemCard}) => {
                             {/* Sort Filter */}
                             <div>
                                 <div className="flex items-center space-x-2 mb-4">
-                                    <i className="fas fa-sort text-purple-500"></i>
+                                    <i className="fas fa-sort text-[#ff6931] "></i>
                                     <span className="font-semibold text-gray-800">Sort By</span>
                                 </div>
                                 <div className="relative">
@@ -130,7 +131,7 @@ const Food = ({ onAddToCart,RESTAURANTS_DATA, ItemCard}) => {
                                         <option value="price-high">💎 Price: High to Low</option>
                                     </select>
                                     <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                        <i className="fas fa-chevron-down text-purple-500"></i>
+                                        <i className="fas fa-chevron-down text-[#ff6931] "></i>
                                     </div>
                                 </div>
                             </div>
@@ -140,16 +141,16 @@ const Food = ({ onAddToCart,RESTAURANTS_DATA, ItemCard}) => {
                         <div className="mt-6 pt-6 border-t border-purple-200">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
-                                    <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
+                                    <div className="w-8 h-8 bg-[#ff6931]  rounded-full flex items-center justify-center">
                                         <i className="fas fa-list text-white text-xs"></i>
                                     </div>
                                     <p className="text-gray-700 font-medium">
-                                        Showing <span className="text-purple-600 font-bold">{filteredItems.length}</span> of <span className="text-gray-500">{allFoodItems.length}</span> items
+                                        Showing <span className="text-[#ff6931]  font-bold">{filteredItems.length}</span> of <span className="text-gray-500">{allFoodItems.length}</span> items
                                     </p>
                                 </div>
                                 {selectedFilter !== 'all' && (
                                     <div className="flex items-center space-x-2">
-                                        <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-md">
+                                        <span className="bg-[#ff6931]  text-white px-4 py-2 rounded-full text-sm font-medium shadow-md">
                                             <i className="fas fa-tag mr-1"></i>
                                             {selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)}
                                         </span>

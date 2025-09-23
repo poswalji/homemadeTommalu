@@ -22,9 +22,7 @@ const RestaurantCard = ({  type,restaurant }) => {
                             <span className="text-green-600 font-medium">
                                 ⭐ {restaurant.rating}
                             </span>
-                            <span className="text-gray-500">
-                                🚚 {restaurant.deliveryTime}
-                            </span>
+                           
                             <span className="text-gray-500">
                                 📍 {restaurant.distance}km
                             </span>

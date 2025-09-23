@@ -46,7 +46,7 @@ const { categoryName } = useParams();
                     {/* Back Button */}
                     <Link
                         to='/'
-                        className="flex items-center space-x-2 text-purple-600 hover:text-purple-800 mb-6"
+                        className="flex items-center space-x-2text-[#ff6931]  hover:text-[#fa6934]  mb-6"
                     >
                         <i className="fas fa-arrow-left"></i>
                         <span>Back to Home</span>
@@ -62,7 +62,7 @@ const { categoryName } = useParams();
         mb-2
         group-hover:scale-110 transition-all duration-300
         shadow-lg cursor-pointer
-        border-4 border-transparent hover:border-purple-500
+        border-4 border-transparent hover:text-[#ff6931] 
       `}
     >
       <img

@@ -249,7 +249,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
 >
   <i className="fas fa-shopping-cart text-xl"></i>
   {cartCount > 0 && (
-    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+    <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
       {cartCount}
     </span>
   )}
@@ -267,7 +267,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
   <NavLink to="/cart" className="relative">
     <i className="fas fa-shopping-cart text-xl"></i>
     {cartCount > 0 && (
-      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+      <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
         {cartCount}
       </span>
     )}

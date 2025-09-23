@@ -6,6 +6,7 @@ import Grocery from './pages/grocery/Grocery';
  import Food from './pages/food/Food';
   import './index.css';
 import Home from './pages/home/Home';
+
   import './App.css'
   import PrivacyPolicy from './links/PrivacyPolicy';
   import TermsOfService from './links/TermsOfService';
@@ -43,6 +44,7 @@ import dairyIcon from './assets/Dairy.jpg';
 import grainsIcon from './assets/grains.jpg';
 import bakeryIcon from './assets/bakery.jpg';
 import meatIcon from './assets/meat.jpg';
+import ComingSoonTimer from './components/comingSoon/ComingSoonTimer';
 
 
   const App = () => {
@@ -855,6 +857,7 @@ useEffect(() => {
                           selectedLocation={selectedLocation}
                           onLocationChange={handleLocationChange}
                       />
+                      <ComingSoonTimer/>
 <ScrollToTop />
    <Routes>
   {/* ✅ Home */}
