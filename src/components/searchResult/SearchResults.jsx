@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ItemCard from '../itemsCard/ItemCard';
 
-const SearchResults = ({ searchQuery, onAddToCart, RESTAURANTS_DATA, GROCERY_DATA }) => {
+const SearchResults = ({ searchQuery, onAddToCart, stores }) => {
   const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
@@ -14,42 +14,42 @@ const SearchResults = ({ searchQuery, onAddToCart, RESTAURANTS_DATA, GROCERY_DAT
     const searchTerm = searchQuery.toLowerCase();
 
     // Search in restaurants
-    RESTAURANTS_DATA.forEach(restaurant => {
+    stores.forEach(restaurant => {
       restaurant.items.forEach(item => {
         if (
           item.name.toLowerCase().includes(searchTerm) ||
           item.description.toLowerCase().includes(searchTerm) ||
           item.category.toLowerCase().includes(searchTerm) ||
           restaurant.name.toLowerCase().includes(searchTerm) ||
-          restaurant.cuisine.toLowerCase().includes(searchTerm)
+          restaurant.address.toLowerCase().includes(searchTerm)
         ) {
           allItems.push({
             ...item,
-            restaurant: restaurant,
-            source: 'restaurant'
+            restaurant: restaurant
+            
           });
         }
       });
     });
 
     // Search in grocery stores
-    GROCERY_DATA.forEach(store => {
-      store.items.forEach(item => {
-        if (
-          item.name.toLowerCase().includes(searchTerm) ||
-          item.description.toLowerCase().includes(searchTerm) ||
-          item.category.toLowerCase().includes(searchTerm) ||
-          store.name.toLowerCase().includes(searchTerm) ||
-          store.category.toLowerCase().includes(searchTerm)
-        ) {
-          allItems.push({
-            ...item,
-            restaurant: store,
-            source: 'grocery'
-          });
-        }
-      });
-    });
+    // stores.forEach(store => {
+    //   store.items.forEach(item => {
+    //     if (
+    //       item.name.toLowerCase().includes(searchTerm) ||
+    //       item.description.toLowerCase().includes(searchTerm) ||
+    //       item.category.toLowerCase().includes(searchTerm) ||
+    //       store.name.toLowerCase().includes(searchTerm) ||
+    //       store.category.toLowerCase().includes(searchTerm)
+    //     ) {
+    //       allItems.push({
+    //         ...item,
+    //         restaurant: store,
+    //         source: 'grocery'
+    //       });
+    //     }
+    //   });
+    // });
 
     // Sort by popularity and rating
     allItems.sort((a, b) => {
@@ -59,7 +59,7 @@ const SearchResults = ({ searchQuery, onAddToCart, RESTAURANTS_DATA, GROCERY_DAT
     });
 
     setSearchResults(allItems);
-  }, [searchQuery, RESTAURANTS_DATA, GROCERY_DATA]);
+  }, [searchQuery, stores]);
 
   // 👉 If query is empty, show placeholder
   if (!searchQuery.trim()) {

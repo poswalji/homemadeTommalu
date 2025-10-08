@@ -1,17 +1,15 @@
-  import { useState,useEffect,useCallback } from 'react'
-  import reactLogo from './assets/react.svg'
-  import {TommaluCheckout, DeliveryAddress, Payment, OrderConfirmation, CheckoutHeader, SAMPLE_ADDRESSES, SAMPLE_CART} from './pages/checkout/TommaluCheckout';
- import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useState, useEffect, useCallback } from 'react'
+import reactLogo from './assets/react.svg'
+import { TommaluCheckout, DeliveryAddress, Payment, OrderConfirmation, CheckoutHeader, SAMPLE_ADDRESSES, SAMPLE_CART } from './pages/checkout/TommaluCheckout';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import Grocery from './pages/grocery/Grocery';
- import Food from './pages/food/Food';
-  import './index.css';
+import Food from './pages/food/Food';
+import './index.css';
 import Home from './pages/home/Home';
-
-  import './App.css'
-  import PrivacyPolicy from './links/PrivacyPolicy';
-  import TermsOfService from './links/TermsOfService';
-  import CookiePolicy from './links/CookiePolicy';
-// import CartModal from "./components/cartModal/CartModal";
+import './App.css'
+import PrivacyPolicy from './links/PrivacyPolicy';
+import TermsOfService from './links/TermsOfService';
+import CookiePolicy from './links/CookiePolicy';
 import CheckOut from './pages/checkout/CheckOut';
 import Header from "./components/header/Header";
 import MenuModal from "./components/menuModal/MenuModal";
@@ -21,8 +19,20 @@ import Notification from "./components/notifications/Notification";
 import OrderTrackingModal from "./components/orderTrakingModel/OrderTrackingModal";
 import ProfileDropdown from "./components/profileDropdown/ProfileDropdown";
 import ProfileModal from "./components/profileModel/ProfileModal";
-
 import SignInModal from "./components/signInModel/SignInModal";
+
+// Service API
+import { 
+  authService, 
+  storeService, 
+  menuService, 
+  orderService,
+  cartService,
+
+  setAuthData,
+  clearAuthData,
+  getCurrentUser
+} from './services/api';
 
 import Footer from "./pages/footer/Footer";
 import RestaurantItemsPage from './pages/restaurantItems/RestaurantItemsPage';
@@ -31,8 +41,8 @@ import CartPage from './pages/cart/CartPage';
 import ItemCard from './components/itemsCard/ItemCard';
 import CategoryProducts from './pages/category/CategoryProducts';
 import ScrollToTop from './components/scrollTop/ScrollTop';
-///asset file////
-import { useNavigate } from 'react-router-dom';
+
+// Asset files
 import indianIcon from './assets/indian.jpg';
 import pizzaIcon from './assets/pizza.jpg';
 import burgerIcon from './assets/burger.jpg';
@@ -46,920 +56,786 @@ import bakeryIcon from './assets/bakery.jpg';
 import meatIcon from './assets/meat.jpg';
 import ComingSoonTimer from './components/comingSoon/ComingSoonTimer';
 
-
-  const App = () => {
+const App = () => {
+  const navigate = useNavigate();
   
-    
-              // Load saved user locations from localStorage on app start
-              useEffect(() => {
-                  const savedLocations = localStorage.getItem('tommaluUserLocations');
-                  if (savedLocations) {
-                      try {
-                          setUserLocations(JSON.parse(savedLocations));
-                      } catch (error) {
-                          console.log('Error loading saved locations');
-                      }
-                  }
-              }, []);
+  // State Management
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [activeSection, setActiveSection] = useState('food');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [notification, setNotification] = useState({ message: '', isVisible: false });
+  const [currentPage, setCurrentPage] = useState('home');
+  const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [userLocations, setUserLocations] = useState({});
+  
+  // Backend Data States
+  const [stores, setStores] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [popularRestaurants, setPopularRestaurants] = useState([]);
+  const [popularGroceryStores, setPopularGroceryStores] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-              const [isSignedIn, setIsSignedIn] = useState(false);
-              const [user, setUser] = useState(null);
-              
-              const [cartItems, setCartItems] = useState([]);
-              const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-              const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-             (false);
-             
-              const [activeSection, setActiveSection] = useState('food'); // 'food' or 'grocery'
-              const [searchQuery, setSearchQuery] = useState('');
-              const [selectedCategory, setSelectedCategory] = useState('');
-              const [notification, setNotification] = useState({ message: '', isVisible: false });
-              const [currentPage, setCurrentPage] = useState('home'); // 'home' or 'orders'
-              const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
-              const [selectedOrder, setSelectedOrder] = useState(null);
-              const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
-              const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-              const [selectedLocation, setSelectedLocation] = useState('');
-              const [userLocations, setUserLocations] = useState({});
-              
-               const [currentStep, setCurrentStep] = useState(1);
-          
-            const [selectedAddress, setSelectedAddress] = useState(SAMPLE_ADDRESSES[0]);
-            const [deliveryTime, setDeliveryTime] = useState('standard');
-            const [instructions, setInstructions] = useState('');
-            const [paymentMethod, setPaymentMethod] = useState('');
-            const [orderDetails, setOrderDetails] = useState(null);
-
-   
-
-  // Geolocation fetch function
+  // ✅ FIXED: Load initial data from backend
   useEffect(() => {
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-
-        // Reverse Geocoding API
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`
-        );
-        const data = await res.json();
-
-        // Local Area (UI ke liye)
-       const areaName =
-  data.address?.neighbourhood ||
-  data.address?.suburb ||
-  data.address?.quarter ||
-  data.address?.locality ||
-  data.address?.hamlet ||
-  data.address?.village ||
-  data.address?.town ||
-  data.address?.district ||
-  "Unknown Area";
-        // City (DB ke liye)
-        const city =
-          data.address?.city ||
-          data.address?.state_district ||
-          data.address?.state ||
-          "Unknown City";
-
-        // UI pe sirf area dikhao
-      const finalLocation = areaName === "Unknown Area" ? city : areaName;
-setSelectedLocation(finalLocation);
-
-
-        // Backend ke liye ek object banao
-        const locationData = {
-          area: areaName,     // e.g. "Rana Pratap Nagar"
-          city: city,          // e.g. "Udaipur"
-          lat: latitude,
-          lon: longitude,
-        };
-
-        console.log("Location Data:", locationData);
-console.log("Full Address Data:", data.address);
-        // 👇 Ye backend ko bhejna (API call)
-        // await fetch("/api/save-location", {
-        //   method: "POST",
-        //   headers: { "Content-Type": "application/json" },
-        //   body: JSON.stringify(locationData),
-        // });
-      },
-      (error) => {
-        if (error.code === 1) {
-          return true
-        } else if (error.code === 2) {
-          alert("Location unavailable. Check your GPS or network.");
-        } else if (error.code === 3) {
-          alert("Location request timed out. Please try again.");
-        }
-        console.error("Geolocation error:", error);
-      }
-    );
-  }
-}, []);
-
-            const handleNext = () => {
-                if (currentStep < 3) {
-                    setCurrentStep(currentStep + 1);
-                    if (currentStep === 2) {
-                        // Place order
-                        const subtotal = cart.reduce((sum, item) => {
-                            const itemPrice = item.discount ? item.price * (1 - item.discount / 100) : item.price;
-                            return sum + (itemPrice * item.quantity);
-                        }, 0);
-                        const deliveryFee = deliveryTime === 'express' ? 25 : 40;
-                        const total = subtotal + deliveryFee + Math.round(subtotal * 0.05);
-                        
-                        setOrderDetails({
-                            total: Math.round(total),
-                            paymentMethod,
-                            deliveryTime,
-                            address: selectedAddress,
-                            items: cart,
-                            instructions
-                        });
-                    }
-                }
-            };
-
-
-              // Store locations per user
-    const [isSignInOpen, setIsSignInOpen] = useState(false);
-              // Save user locations to localStorage whenever it changes
-              useEffect(() => {
-                const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
-      setIsSignedIn(true)}
-                  if (Object.keys(userLocations).length > 0) {
-                      localStorage.setItem('tommaluUserLocations', JSON.stringify(userLocations));
-                  }
-              }, [userLocations]);
-
-                // Load cart from localStorage on component mount
-            const [cart, setCart] = useState(() => {
-  try {
-    const savedCart = localStorage.getItem("tommaluCart");
-    return savedCart ? JSON.parse(savedCart) : [];
-  } catch (error) {
-    console.error("Error parsing cart from localStorage:", error);
-    return [];
-  }
-});
-
-useEffect(() => {
-  try {
-    localStorage.setItem("tommaluCart", JSON.stringify(cart));
-  } catch (error) {
-    console.error("Error saving cart:", error);
-  }
-}, [cart]);     
-
-            const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-            const handleNavigate = (page) => {
-                setCurrentPage(page);
-                if (page !== 'search') {
-                    setSearchQuery('');
-                }
-                setSelectedRestaurant(null);
-                setSelectedCategory(null);
-            };
-
-           const navigate = useNavigate();
-
-const handleSearchChange = (query) => {
-  setSearchQuery(query);
-
-  if (query.trim()) {
-    navigate("/search");
-  } else {
-    navigate("/");
-  }
-};
-
-            const handleRestaurantClick = (restaurant) => {
-                setSelectedRestaurant(restaurant);
-                setCurrentPage('restaurant-items');
-                setSearchQuery('');
-                setSelectedCategory(null);
-            };
-
-            const handleCategoryClick = (category) => {
-                setSelectedCategory(category);
-                setCurrentPage('category-products');
-                setSearchQuery('');
-                setSelectedRestaurant(null);
-            };
-
-            const handleAddToCart = (item, restaurant) => {
-                setCart(prevCart => {
-                    // For items with weight options, check both item ID and selected weight
-                    const existingItemIndex = prevCart.findIndex(
-                        cartItem => cartItem.id === item.id && 
-                        cartItem.restaurant.id === restaurant.id &&
-                        (item.selectedWeight ? 
-                            cartItem.selectedWeight?.label === item.selectedWeight.label : 
-                            !cartItem.selectedWeight)
-                    );
-
-                    if (existingItemIndex >= 0) {
-                        // Item with same weight already exists, increase quantity
-                        const updatedCart = [...prevCart];
-                        updatedCart[existingItemIndex].quantity += 1;
-                        return updatedCart;
-                    } else {
-                        // New item or different weight, add to cart
-                        return [...prevCart, {
-                            ...item,
-                            restaurant: restaurant,
-                            quantity: 1
-                        }];
-                    }
-                });
-                
-                const itemName = item.selectedWeight ? 
-                    `${item.name} (${item.selectedWeight.label})` : 
-                    item.name;
-              setNotification({
-      isVisible: true,
-      message: `${itemName} added to cart!`,
-    });
-            };
-
-            const handleUpdateQuantity = (restaurantId, itemId, newQuantity, selectedWeight = null) => {
-                if (newQuantity <= 0) {
-                    handleRemoveItem(restaurantId, itemId, selectedWeight);
-                    return;
-                }
-
-                setCart(prevCart => 
-                    prevCart.map(item => 
-                        item.id === itemId && 
-                        item.restaurant.id === restaurantId &&
-                        (selectedWeight ? 
-                            item.selectedWeight?.label === selectedWeight.label : 
-                            !item.selectedWeight)
-                            ? { ...item, quantity: newQuantity }
-                            : item
-                    )
-                );
-            };
-
-            const handleRemoveItem = (restaurantId, itemId, selectedWeight = null) => {
-                setCart(prevCart => 
-                    prevCart.filter(item => 
-                        !(item.id === itemId && 
-                          item.restaurant.id === restaurantId &&
-                          (selectedWeight ? 
-                            item.selectedWeight?.label === selectedWeight.label : 
-                            !item.selectedWeight))
-                    )
-                );
-            };
-
-            const handleCartClick = () => {
-                setCurrentPage('cart');
-                setSearchQuery('');
-                setSelectedRestaurant(null);
-                setSelectedCategory(null);
-            };
-
-           
-
-  // Verify token on page load
-  useEffect(() => {
-    const verifyUser = async () => {
-      try {
-        const res = await fetch("https://backend-tommalu.onrender.com/api/auth/verify", {
-          method: "GET",
-          credentials: "include", // include HttpOnly cookie
-        });
-        const data = await res.json();
-        if (data.success) setUser(data.user);
-      } catch (err) {
-        console.log("Not logged in");
-      }
-    };
-    verifyUser();
+    console.log('🚀 App mounted - loading initial data');
+    loadInitialData();
+    loadUserData();
   }, []);
 
-    
-
-        // Delivery fee calculation based on distance
-        const calculateDeliveryFee = (distance) => {
-            if (distance <= 2) return 15;
-            if (distance <= 3) return 25;
-            if (distance <= 5) return 35;
-            return 45;
-        };
-
-        // Available coupons
-        const AVAILABLE_COUPONS = [
-            { code: 'SAVE50', discount: 50, minOrder: 149, type: 'fixed', description: 'Save ₹50 on orders above ₹149' },
-            { code: 'FIRST20', discount: 20, minOrder: 99, type: 'percentage', description: '20% off on orders above ₹99 (max ₹100)' },
-            { code: 'WELCOME30', discount: 30, minOrder: 199, type: 'fixed', description: 'Save ₹30 on orders above ₹199' }
-        ];
-
-        // Sample Data
-        const RESTAURANTS_DATA = [
-            {
-                id: 1,
-                slug: 'spice-garden',
-                name: "Spice Garden",
-                type: "restaurant",
-                cuisine: "Indian",
-                rating: 4.8,
-                deliveryTime: "25-30 min",
-                distance: 2.5,
-                image: "🍛",
-                items: [
-                    { id: 101, name: "Butter Chicken", price: 280, category: "Indian", description: "Creamy tomato-based chicken curry", image: "🍛", popular: true },
-                    { id: 102, name: "Paneer Tikka", price: 220, category: "Indian", description: "Grilled cottage cheese with spices", image: "🧀", popular: true },
-                    { id: 103, name: "Chicken Biryani", price: 320, category: "Indian", description: "Fragrant basmati rice with chicken", image: "🍚", popular: true },
-                    { id: 104, name: "Garlic Naan", price: 45, category: "Indian", description: "Fresh baked Indian bread", image: "🫓" },
-                    { id: 105, name: "Dal Makhani", price: 180, category: "Indian", description: "Rich black lentil curry", image: "🍲" }
-                ]
-            },
-            {
-                id: 2,
-                slug: 'pizza-corner',
-                name: "Pizza Corner",
-                type: "restaurant",
-                cuisine: "Italian",
-                rating: 4.6,
-                deliveryTime: "20-25 min",
-                distance: 3.2,
-                image: "🍕",
-                items: [
-                    { id: 201, name: "Margherita Pizza", price: 250, category: "Pizza", description: "Classic tomato and mozzarella", image: "🍕", popular: true },
-                    { id: 202, name: "Pepperoni Pizza", price: 320, category: "Pizza", description: "Spicy pepperoni with cheese", image: "🍕", popular: true },
-                    { id: 203, name: "Chicken Pasta Alfredo", price: 280, category: "Italian", description: "Creamy white sauce pasta", image: "🍝" },
-                    { id: 204, name: "Garlic Bread", price: 120, category: "Italian", description: "Buttery garlic bread sticks", image: "🥖" }
-                ]
-            },
-            {
-                id: 3,
-                slug: 'burger-hub',
-                name: "Burger Hub",
-                type: "restaurant",
-                cuisine: "Fast Food",
-                rating: 4.7,
-                deliveryTime: "15-20 min",
-                distance: 1.8,
-                image: "🍔",
-                items: [
-                    { id: 301, name: "Classic Chicken Burger", price: 180, category: "Burgers", description: "Beef patty with lettuce and tomato", image: "🍔", popular: true },
-                    { id: 302, name: "Chicken Burger Deluxe", price: 200, category: "Burgers", description: "Grilled chicken breast burger", image: "🍔", popular: true },
-                    { id: 303, name: "French Fries", price: 80, category: "Fast Food", description: "Crispy golden potato fries", image: "🍟", popular: true },
-                    { id: 304, name: "Chicken Wings", price: 220, category: "Fast Food", description: "Spicy buffalo chicken wings", image: "🍗" }
-                ]
-            }
-        ];
-
-        const GROCERY_DATA = [
-            {
-                id: 4,
-                slug: 'fresh-mart',
-                name: "Fresh Mart",
-                type: "grocery",
-                category: "Supermarket",
-                rating: 4.5,
-                deliveryTime: "30-40 min",
-                distance: 2.1,
-                image: "🛒",
-                items: [
-                    { id: 401, name: "Basmati Rice", price: 120, category: "Grains", description: "Premium quality basmati rice 1kg", image: "🌾", popular: true },
-                    { id: 402, name: "Fresh Milk", price: 60, category: "Dairy", description: "Full cream fresh milk 1L", image: "🥛", popular: true },
-                    { id: 403, name: "Whole Wheat Bread", price: 40, category: "Bakery", description: "Fresh whole wheat bread loaf", image: "🍞" },
-                    { 
-                        id: 404, 
-                        name: "Fresh Bananas", 
-                        basePrice: 100, 
-                        category: "Fruits", 
-                        description: "Fresh ripe bananas", 
-                        image: "🍌", 
-                        popular: true,
-                        hasWeightOptions: true,
-                        weightOptions: [
-                            { weight: 0.25, label: "250g", price: 25 },
-                            { weight: 0.5, label: "500g", price: 50 },
-                            { weight: 1, label: "1kg", price: 100 },
-                            { weight: 2, label: "2kg", price: 190 }
-                        ]
-                    },
-                    { 
-                        id: 405, 
-                        name: "Organic Tomatoes", 
-                        basePrice: 60, 
-                        category: "Vegetables", 
-                        description: "Fresh red tomatoes", 
-                        image: "🍅",
-                        hasWeightOptions: true,
-                        weightOptions: [
-                            { weight: 0.25, label: "250g", price: 15 },
-                            { weight: 0.5, label: "500g", price: 30 },
-                            { weight: 1, label: "1kg", price: 60 },
-                            { weight: 2, label: "2kg", price: 110 }
-                        ]
-                    },
-                    { 
-                        id: 406, 
-                        name: "Red Onions", 
-                        basePrice: 40, 
-                        category: "Vegetables", 
-                        description: "Fresh red onions", 
-                        image: "🧅",
-                        hasWeightOptions: true,
-                        weightOptions: [
-                            { weight: 0.5, label: "500g", price: 20 },
-                            { weight: 1, label: "1kg", price: 40 },
-                            { weight: 2, label: "2kg", price: 75 }
-                        ]
-                    },
-                    { 
-                        id: 407, 
-                        name: "Potatoes", 
-                        basePrice: 30, 
-                        category: "Vegetables", 
-                        description: "Fresh potatoes", 
-                        image: "🥔",
-                        hasWeightOptions: true,
-                        weightOptions: [
-                            { weight: 0.5, label: "500g", price: 15 },
-                            { weight: 1, label: "1kg", price: 30 },
-                            { weight: 2, label: "2kg", price: 55 },
-                            { weight: 5, label: "5kg", price: 125 }
-                        ]
-                    },
-                    { id: 408, name: "Chicken Breast", price: 250, category: "Meat", description: "Fresh chicken breast 500g", image: "🍗" }
-                ]
-            },
-            {
-                id: 5,
-                slug: 'organic-store',
-                name: "Organic Store",
-                type: "grocery",
-                category: "Organic",
-                rating: 4.3,
-                deliveryTime: "35-45 min",
-                distance: 4.1,
-                image: "🌱",
-                items: [
-                    { 
-                        id: 501, 
-                        name: "Organic Apples", 
-                        basePrice: 180, 
-                        category: "Fruits", 
-                        description: "Certified organic red apples", 
-                        image: "🍎", 
-                        popular: true,
-                        hasWeightOptions: true,
-                        weightOptions: [
-                            { weight: 0.25, label: "250g", price: 45 },
-                            { weight: 0.5, label: "500g", price: 90 },
-                            { weight: 1, label: "1kg", price: 180 },
-                            { weight: 2, label: "2kg", price: 340 }
-                        ]
-                    },
-                    { id: 502, name: "Quinoa Seeds", price: 320, category: "Grains", description: "Organic quinoa seeds 500g", image: "🌾" },
-                    { id: 503, name: "Almond Milk", price: 150, category: "Dairy", description: "Unsweetened almond milk 1L", image: "🥛" },
-                    { 
-                        id: 504, 
-                        name: "Fresh Spinach", 
-                        basePrice: 160, 
-                        category: "Vegetables", 
-                        description: "Fresh organic spinach", 
-                        image: "🥬", 
-                        popular: true,
-                        hasWeightOptions: true,
-                        weightOptions: [
-                            { weight: 0.25, label: "250g", price: 40 },
-                            { weight: 0.5, label: "500g", price: 80 },
-                            { weight: 1, label: "1kg", price: 160 }
-                        ]
-                    },
-                    { 
-                        id: 505, 
-                        name: "Organic Carrots", 
-                        basePrice: 80, 
-                        category: "Vegetables", 
-                        description: "Fresh organic carrots", 
-                        image: "🥕",
-                        hasWeightOptions: true,
-                        weightOptions: [
-                            { weight: 0.5, label: "500g", price: 40 },
-                            { weight: 1, label: "1kg", price: 80 },
-                            { weight: 2, label: "2kg", price: 150 }
-                        ]
-                    },
-                    { id: 506, name: "Organic Chicken", price: 350, category: "Meat", description: "Free-range organic chicken 1kg", image: "🍗" }
-                ]
-            }
-        ];
-
-        //  const CATEGORIES_DATA = [
-        //     { id: 'all', name: 'All', icon: '🏠', color: 'from-gray-400 to-gray-600' },
-        //     { id: 'indian', name: 'Indian', icon: '🍛', color: 'from-orange-400 to-red-500' },
-        //     { id: 'pizza', name: 'Pizza', icon: '🍕', color: 'from-red-400 to-pink-500' },
-        //     { id: 'burgers', name: 'Burgers', icon: '🍔', color: 'from-yellow-400 to-orange-500' },
-        //     { id: 'italian', name: 'Italian', icon: '🍝', color: 'from-green-400 to-blue-500' },
-        //     { id: 'fast-food', name: 'Fast Food', icon: '🍟', color: 'from-purple-400 to-pink-500' },
-        //     { id: 'fruits', name: 'Fruits', icon: '🍎', color: 'from-green-400 to-green-600' },
-        //     { id: 'vegetables', name: 'Vegetables', icon: '🥬', color: 'from-green-500 to-emerald-600' },
-        //     { id: 'dairy', name: 'Dairy', icon: '🥛', color: 'from-blue-400 to-blue-600' },
-        //     { id: 'grains', name: 'Grains', icon: '🌾', color: 'from-yellow-500 to-amber-600' },
-        //     { id: 'bakery', name: 'Bakery', icon: '🍞', color: 'from-amber-400 to-orange-500' },
-        //     { id: 'meat', name: 'Meat', icon: '🍗', color: 'from-red-500 to-red-700' }
-        // ];
-   
-
-const deliveryLocation = [
-  { name: "Achrol", time: "15-20 min", status: "active" },
-  { name: "Talamod", time: "20-25 min", status: "active" },
-  { name: "NIMS University", time: "10-15 min", status: "active" },
-  { name: "Amity University", time: "12-18 min", status: "active" },
-  { name: "Chandwaji", time: "25-30 min", status: "active" },
-  { name: "Syari", time: "8-12 min", status: "active" }, { name: "Udaipur", time: "8-12 min", status: "active" },
-  { name: "Jaipur City Center", time: "Coming Soon", status: "coming" },
-  { name: "Malviya Nagar", time: "Coming Soon", status: "coming" },
-];
-
-useEffect(() => {
-  if (!selectedLocation) return; // agar location empty ho to skip
-
-  const matchedLocation = deliveryLocation.find(
-    (loc) => loc.name.toLowerCase() === selectedLocation.toLowerCase()
-  );
-
-  if (matchedLocation) {
-    if (matchedLocation.status === "active") {
-      setNotification({
-        message: `🎉 Congratulations! We Are Available at your Area ${matchedLocation.name} `,
-        isVisible: true,
-      });
-    } else {
-      setNotification({
-        message: `⏳ ${matchedLocation.name} is Coming Soon!`,
-        isVisible: true,
-      });
+  // ✅ FIXED: Save cart to localStorage
+  useEffect(() => {
+    console.log('💾 Saving cart to localStorage:', cart);
+    try {
+      localStorage.setItem("tommaluCart", JSON.stringify(cart));
+    } catch (error) {
+      console.error("Error saving cart:", error);
     }
-  } else {
+  }, [cart]);
+
+  // ✅ FIXED: Debug states
+  useEffect(() => {
+    console.log('🔍 State Debug:', {
+      isSignedIn,
+      user: user ? `${user.name || user.email} (${user._id})` : 'null',
+      cartItems: cart.length,
+      guestId: localStorage.getItem('guestId'),
+      token: localStorage.getItem('token') ? 'exists' : 'null'
+    });
+  }, [isSignedIn, user, cart]);
+
+  // ✅ FIXED: Load user data from localStorage and verify token
+  
+
+  // Load stores and categories from backend
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load all stores
+      const storesResponse = await storeService.getStores();
+      console.log('🔍 Stores Response:', storesResponse);
+
+      // ✅ FIXED: Flexible response handling
+      let storesArray = [];
+      
+      if (Array.isArray(storesResponse)) {
+        storesArray = storesResponse;
+      } else if (storesResponse?.success && storesResponse.data?.stores) {
+        storesArray = storesResponse.data.stores;
+      } else if (storesResponse?.success && Array.isArray(storesResponse.data)) {
+        storesArray = storesResponse.data;
+      } else if (storesResponse?.stores) {
+        storesArray = storesResponse.stores;
+      } else if (Array.isArray(storesResponse?.data)) {
+        storesArray = storesResponse.data;
+      } else if (storesResponse?.status === 'success' && storesResponse.data?.stores) {
+        storesArray = storesResponse.data.stores;
+      } else {
+        storesArray = [];
+      }
+
+      console.log('📦 Stores Array:', storesArray);
+      setStores(storesArray);
+      
+      // ✅ FIXED: Categorize stores with new array
+      const restaurants = storesArray.filter(store => 
+        store.category === 'Restaurant' || store.timesOrdered > 10
+      );
+      const groceryStores = storesArray.filter(store => 
+        store.category === 'Grocery Store' || store.timesOrdered > 5
+      );
+      
+      setPopularRestaurants(restaurants);
+      setPopularGroceryStores(groceryStores);
+
+      // Load categories from backend and map to frontend
+      const backendCategories = [
+        "North Indian", "South Indian", "Chinese", "Italian", "Mexican", "Desserts",
+        "Dairy & Eggs", "Fruits", "Vegetables", "Bakery", "Beverages", "Snacks",
+        "Kitchen Essentials", "Personal Care", "Household", "Frozen Foods"
+      ];
+      
+      const mappedCategories = mapCategories(backendCategories);
+      setCategories(mappedCategories);
+
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      setNotification({
+        message: 'Error loading data. Please try again.',
+        isVisible: true
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Map backend categories to frontend categories
+  const mapCategories = (backendCategories) => {
+    const categoryMap = [
+      { 
+        id: 'all', 
+        name: 'All', 
+        icon: '🏠', 
+        color: 'from-gray-400 to-gray-600',
+        backendCategory: null
+      },
+      { 
+        id: 'indian', 
+        name: 'Indian', 
+        icon: indianIcon, 
+        color: 'from-orange-400 to-red-500',
+        backendCategory: ['North Indian', 'South Indian']
+      },
+      { 
+        id: 'pizza', 
+        name: 'Pizza', 
+        icon: pizzaIcon, 
+        color: 'from-red-400 to-pink-500',
+        backendCategory: 'Italian'
+      },
+      { 
+        id: 'burgers', 
+        name: 'Burgers', 
+        icon: burgerIcon, 
+        color: 'from-yellow-400 to-orange-500',
+        backendCategory: 'Fast Food'
+      },
+      { 
+        id: 'italian', 
+        name: 'Italian', 
+        icon: italianIcon, 
+        color: 'from-green-400 to-blue-500',
+        backendCategory: 'Italian'
+      },
+      { 
+        id: 'fast-food', 
+        name: 'Fast Food', 
+        icon: fastFoodIcon, 
+        color: 'from-purple-400 to-pink-500',
+        backendCategory: 'Snacks'
+      },
+      { 
+        id: 'fruits', 
+        name: 'Fruits', 
+        icon: fruitsIcon, 
+        color: 'from-green-400 to-green-600',
+        backendCategory: 'Fruits'
+      },
+      { 
+        id: 'vegetables', 
+        name: 'Vegetables', 
+        icon: vegetablesIcon, 
+        color: 'from-green-500 to-emerald-600',
+        backendCategory: 'Vegetables'
+      },
+      { 
+        id: 'dairy', 
+        name: 'Dairy', 
+        icon: dairyIcon, 
+        color: 'from-blue-400 to-blue-600',
+        backendCategory: 'Dairy & Eggs'
+      },
+      { 
+        id: 'grains', 
+        name: 'Grains', 
+        icon: grainsIcon, 
+        color: 'from-yellow-500 to-amber-600',
+        backendCategory: 'Kitchen Essentials'
+      },
+      { 
+        id: 'bakery', 
+        name: 'Bakery', 
+        icon: bakeryIcon, 
+        color: 'from-amber-400 to-orange-500',
+        backendCategory: 'Bakery'
+      },
+      { 
+        id: 'meat', 
+        name: 'Meat', 
+        icon: meatIcon, 
+        color: 'from-red-500 to-red-700',
+        backendCategory: 'Non-Veg Food'
+      }
+    ];
+    
+    return categoryMap;
+  };
+
+  // Geolocation
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`
+            );
+            const data = await res.json();
+
+            const areaName = data.address?.neighbourhood ||
+              data.address?.suburb ||
+              data.address?.quarter ||
+              data.address?.locality ||
+              data.address?.hamlet ||
+              data.address?.village ||
+              data.address?.town ||
+              data.address?.district ||
+              "Unknown Area";
+
+            const city = data.address?.city ||
+              data.address?.state_district ||
+              data.address?.state ||
+              "Unknown City";
+
+            const finalLocation = areaName === "Unknown Area" ? city : areaName;
+            setSelectedLocation(finalLocation);
+
+          } catch (error) {
+            console.error("Geolocation error:", error);
+          }
+        },
+        (error) => {
+          if (error.code === 1) {
+            return true;
+          }
+          console.error("Geolocation error:", error);
+        }
+      );
+    }
+  }, []);
+
+  const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+  // Navigation Handlers
+  const handleNavigate = (page) => {
+    setCurrentPage(page);
+    if (page !== 'search') {
+      setSearchQuery('');
+    }
+    setSelectedRestaurant(null);
+    setSelectedCategory(null);
+  };
+
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      navigate("/search");
+    } else {
+      navigate("/");
+    }
+  };
+
+  const handleRestaurantClick = (restaurant) => {
+    setSelectedRestaurant(restaurant);
+    setCurrentPage('restaurant-items');
+    setSearchQuery('');
+    setSelectedCategory(null);
+  };
+
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage('category-products');
+    setSearchQuery('');
+    setSelectedRestaurant(null);
+  };
+
+  // ✅ FIXED: Cart Handlers - Updated for backend integration
+  
+
+  const handleUpdateQuantity = (restaurantId, itemId, newQuantity) => {
+    if (newQuantity <= 0) {
+      handleRemoveItem(restaurantId, itemId);
+      return;
+    }
+
+    setCart(prevCart => 
+      prevCart.map(item => 
+        (item._id === itemId || item.id === itemId) && 
+        (item.restaurant?._id === restaurantId || item.restaurant?.id === restaurantId)
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
+  };
+
+  const handleRemoveItem = (restaurantId, itemId) => {
+    setCart(prevCart => 
+      prevCart.filter(item => 
+        !((item._id === itemId || item.id === itemId) && 
+          (item.restaurant?._id === restaurantId || item.restaurant?.id === restaurantId))
+      )
+    );
+  };
+
+  const handleCartClick = () => {
+    setCurrentPage('cart');
+    setSearchQuery('');
+    setSelectedRestaurant(null);
+    setSelectedCategory(null);
+  };
+
+  // ✅ FIXED: Authentication Handlers
+ // App.jsx - FIXED handleAddToCart
+
+const handleAddToCart = async (item, restaurant) => {
+  try {
+    // Check availability
+    if (item.available === false || item.isAvailable === false) {
+      setNotification({
+        isVisible: true,
+        message: 'This item is currently unavailable',
+        type: 'error'
+      });
+      return;
+    }
+
+    console.log('🎯 ADD TO CART - User:', isSignedIn ? 'Logged In' : 'Guest');
+
+    const cartData = {
+      menuItemId: item._id || item.id,
+      quantity: 1
+    };
+
+    if (restaurant?._id || restaurant?.id) {
+      cartData.storeId = restaurant._id || restaurant.id;
+    }
+
+    console.log('🛒 Sending to backend:', cartData);
+
+    // ✅ ONLY backend call - frontend state will be updated via loadCartFromBackend
+    const response = await cartService.addToCart(cartData);
+    
+    if (response.success) {
+      // ✅ IMPORTANT: Don't update frontend state manually
+      // Instead, reload cart from backend to get consistent state
+      await loadCartFromBackend();
+      
+      // ✅ Success message
+      const itemName = item.selectedWeight ? 
+        `${item.name} (${item.selectedWeight.label})` : 
+        item.name;
+      
+      setNotification({
+        isVisible: true,
+        message: `${itemName} added to cart!`,
+        type: 'success'
+      });
+
+    } else {
+      throw new Error(response.message || 'Failed to add to cart');
+    }
+
+  } catch (error) {
+    console.error('❌ Cart error:', error);
     setNotification({
-      message: `❌ Sorry! We Are not Available at your Area ${selectedLocation}`,
       isVisible: true,
+      message: error.message || 'Error adding item to cart',
+      type: 'error'
     });
   }
-}, [selectedLocation]); // 👈 ye sirf tab chalega jab selectedLocation change hoga
+};
+  // ✅ SIMPLIFIED: Load cart from backend
+  // App.jsx - FIXED loadCartFromBackend
 
+const loadCartFromBackend = async () => {
+  try {
+    console.log('🔄 Loading cart from backend...');
+    
+    const response = await cartService.getCart();
+    console.log('📦 Backend cart response:', response);
 
-        const CATEGORIES_DATA = [
-  { id: 'all', name: 'All', icon: '🏠', color: 'from-gray-400 to-gray-600' },
-  { id: 'indian', name: 'Indian', icon: indianIcon, color: 'from-orange-400 to-red-500' },
-  { id: 'pizza', name: 'Pizza', icon: pizzaIcon, color: 'from-red-400 to-pink-500' },
-  { id: 'burgers', name: 'Burgers', icon: burgerIcon, color: 'from-yellow-400 to-orange-500' },
-  { id: 'italian', name: 'Italian', icon: italianIcon, color: 'from-green-400 to-blue-500' },
-  { id: 'fast-food', name: 'Fast Food', icon: fastFoodIcon, color: 'from-purple-400 to-pink-500' },
-  { id: 'fruits', name: 'Fruits', icon: fruitsIcon, color: 'from-green-400 to-green-600' },
-  { id: 'vegetables', name: 'Vegetables', icon: vegetablesIcon, color: 'from-green-500 to-emerald-600' },
-  { id: 'dairy', name: 'Dairy', icon: dairyIcon, color: 'from-blue-400 to-blue-600' },
-  { id: 'grains', name: 'Grains', icon: grainsIcon, color: 'from-yellow-500 to-amber-600' },
-  { id: 'bakery', name: 'Bakery', icon: bakeryIcon, color: 'from-amber-400 to-orange-500' },
-  { id: 'meat', name: 'Meat', icon: meatIcon, color: 'from-red-500 to-red-700' }
-];
-              const handleSignIn = (userData) => {
-                  setIsSignedIn(true);
-                  setUser(userData);
-                  setIsSignInModalOpen(false);
-                   localStorage.setItem("user", JSON.stringify(userData));
- 
-                  // Load user's saved location
-                  const savedLocation = userLocations[userData.email];
-                  if (savedLocation) {
-                      setSelectedLocation(savedLocation);
-                      setNotification({
-                          message: `Welcome back! Delivery set to ${savedLocation}`,
-                          isVisible: true
-                      });
-                  }
-              };
+    if (response.success && response.data) {
+      if (response.data.items && response.data.items.length > 0) {
+        // ✅ PROPERLY format cart items with ALL required fields
+        const backendCart = response.data.items.map(item => {
+          const menuItem = item.menuItemId || item;
+          return {
+            _id: menuItem._id || item.menuItemId,
+            id: menuItem._id || item.menuItemId,
+            name: menuItem.name || item.itemName,
+            price: menuItem.price || item.price,
+            image: menuItem.image ,
+            quantity: item.quantity,
+            restaurant: item.storeId || item.restaurantId || menuItem.storeId,
+            // Add other necessary fields
+            description: menuItem.description,
+            category: menuItem.category
+          };
+        });
+        
+        setCart(backendCart);
+        localStorage.setItem("tommaluCart", JSON.stringify(backendCart));
+        console.log('✅ Cart loaded with images:', backendCart);
+      } else {
+        setCart([]);
+        localStorage.setItem("tommaluCart", JSON.stringify([]));
+        console.log('🛒 Cart is empty');
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error loading cart:', error);
+    // Fallback to localStorage
+    const localCart = JSON.parse(localStorage.getItem('tommaluCart') || '[]');
+    setCart(localCart);
+  }
+};
+  // ✅ SIMPLIFIED: Authentication handler
+  const handleSignIn = async (userData, token) => {
+    console.log('🎯 SignIn with cookies');
+    
+    try {
+      // Set auth data
+      setAuthData(token, userData);
+      setIsSignedIn(true);
+      setUser(userData);
+      
+      // ✅ Auto-merge happens via cookies - no manual merge needed
+      console.log('🔄 Auto-merging cart via cookies...');
+      
+      // Load updated cart
+      await loadCartFromBackend();
+      
+      setNotification({
+        message: `Welcome ${userData.name || userData.email}!`,
+        isVisible: true,
+        type: 'success'
+      });
+      
+    } catch (error) {
+      console.error('❌ SignIn error:', error);
+    }
+  };
 
-              const handleLogout = () => {
-                  setIsSignedIn(false);
-                  setUser(null);
-                  setCurrentPage('home');
-                localStorage.removeItem('user')
-                  setSelectedLocation(''); // Clear location on logout
-              };
+  // ✅ Remove guest ID related code from loadUserData
+  const loadUserData = async () => {
+    try {
+      const savedUser = localStorage.getItem("user");
+      const savedToken = localStorage.getItem("token");
 
-              const openSignInModal = () => {
-                  setIsSignInModalOpen(true);
-              };
+      console.log('🔄 Loading user data...');
 
-              const closeSignInModal = () => {
-                  setIsSignInModalOpen(false);
-              };
+      if (savedUser && savedToken) {
+        try {
+          const userData = await authService.getProfile();
+          if (userData.status === 'success' || userData.success) {
+            const user = userData.data?.user || userData.data;
+            setUser(user);
+            setIsSignedIn(true);
+            console.log('✅ User authenticated');
+          }
+        } catch (error) {
+          console.log('❌ Token verification failed:', error.message);
+          // Fallback to localStorage
+          try {
+            const userData = JSON.parse(savedUser);
+            setUser(userData);
+            setIsSignedIn(true);
+          } catch (parseError) {
+            clearAuthData();
+          }
+        }
+      }
+      
+      // ✅ Always load cart (cookies handle anonymous vs logged-in)
+      await loadCartFromBackend();
 
-              const openProfileModal = () => {
-                  setIsProfileModalOpen(true);
-              };
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+  const handleLogout = async () => {
+    try {
+      // ✅ Backend logout call karo
+      await authService.logout();
+    } catch (error) {
+      console.log('⚠️ Backend logout failed:', error.message);
+    } finally {
+      // ✅ Frontend state clear karo
+      setIsSignedIn(false);
+      setUser(null);
+      setCart([]);
+      setCurrentPage('home');
+      
+      // ✅ Clear all auth data
+      clearAuthData();
+      
+      // ✅ Create new guest ID for anonymous browsing
+      const newGuestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('guestId', newGuestId);
+      
+      setNotification({
+        message: 'Logged out successfully',
+        isVisible: true
+      });
+      
+      console.log('✅ Logout completed, new guest ID:', newGuestId);
+    }
+  };
 
-              const closeProfileModal = () => {
-                  setIsProfileModalOpen(false);
-              };
+  const openSignInModal = () => {
+    setIsSignInModalOpen(true);
+  };
 
-              const handleUpdateProfile = (updatedData) => {
-                  setUser(prevUser => ({
-                      ...prevUser,
-                      ...updatedData
-                  }));
-                  setNotification({
-                      message: 'Profile updated successfully!',
-                      isVisible: true
-                  });
-              };
+  const closeSignInModal = () => {
+    setIsSignInModalOpen(false);
+  };
 
-              const toggleMobileMenu = () => {
-                  setIsMobileMenuOpen(!isMobileMenuOpen);
-              };
+  const openProfileModal = () => {
+    setIsProfileModalOpen(true);
+  };
 
-              const closeMobileMenu = () => {
-                  setIsMobileMenuOpen(false);
-              };
+  const closeProfileModal = () => {
+    setIsProfileModalOpen(false);
+  };
 
-              
-                      
-              
+  const handleUpdateProfile = async (updatedData) => {
+    try {
+      const response = await authService.updateProfile(updatedData);
+      // ✅ SUPPORT BOTH RESPONSE FORMATS
+      if (response.status === 'success' || response.success) {
+        const updatedUser = response.data?.user || response.data;
+        setUser(prevUser => ({
+          ...prevUser,
+          ...updatedUser
+        }));
+        setNotification({
+          message: 'Profile updated successfully!',
+          isVisible: true
+        });
+      }
+    } catch (error) {
+      setNotification({
+        message: 'Error updating profile',
+        isVisible: true
+      });
+    }
+  };
 
-              
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
-            
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
 
-            //   const addToCart = (item, restaurantName) => {
-            //       const cartItem = {
-            //           id: Date.now() + Math.random(),
-            //           name: item.name,
-            //           price: item.price,
-            //           restaurant: restaurantName,
-            //           quantity: 1
-            //       };
+  // ✅ FIXED: Order Handlers
+  const handleOrder = async (orderData) => {
+    try {
+      const response = await orderService.createOrderFromCart(orderData);
+      // ✅ SUPPORT BOTH RESPONSE FORMATS
+      if (response.status === 'success' || response.success) {
+        setNotification({
+          message: 'Order placed successfully!',
+          isVisible: true
+        });
+        setCart([]); // Clear cart after successful order
+        
+        // Clear backend cart as well
+        await cartService.clearCart();
+        
+        navigate('/orders');
+      }
+    } catch (error) {
+      setNotification({
+        message: error.message || 'Error placing order',
+        isVisible: true
+      });
+    }
+  };
 
-            //       setCartItems(prevItems => [...prevItems, cartItem]);
-            //       setCartCount(prevCount => prevCount + 1);
+  // Location data
+  const deliveryLocation = [
+    { name: "Achrol", time: "15-20 min", status: "active" },
+    { name: "Talamod", time: "20-25 min", status: "active" },
+    { name: "NIMS University", time: "10-15 min", status: "active" },
+    { name: "Amity University", time: "12-18 min", status: "active" },
+    { name: "Chandwaji", time: "25-30 min", status: "active" },
+    { name: "Syari", time: "8-12 min", status: "active" },
+    { name: "Udaipur", time: "8-12 min", status: "active" },
+    { name: "Jaipur City Center", time: "Coming Soon", status: "coming" },
+    { name: "Malviya Nagar", time: "Coming Soon", status: "coming" },
+  ];
 
-            //       // Show notification
-            //       setNotification({
-            //           message: `${item.name} added to cart!`,
-            //           isVisible: true
-            //       });
-            //   };
+  useEffect(() => {
+    if (!selectedLocation) return;
 
-              
+    const matchedLocation = deliveryLocation.find(
+      (loc) => loc.name.toLowerCase() === selectedLocation.toLowerCase()
+    );
 
-              const openCart = () => {
-                  setIsCartModalOpen(true);
-              };
+    if (matchedLocation) {
+      if (matchedLocation.status === "active") {
+        setNotification({
+          message: `🎉 Congratulations! We Are Available at your Area ${matchedLocation.name}`,
+          isVisible: true,
+        });
+      } else {
+        setNotification({
+          message: `⏳ ${matchedLocation.name} is Coming Soon!`,
+          isVisible: true,
+        });
+      }
+    } else {
+      setNotification({
+        message: `❌ Sorry! We Are not Available at your Area ${selectedLocation}`,
+        isVisible: true,
+      });
+    }
+  }, [selectedLocation]);
 
-              const closeCart = () => {
-                  setIsCartModalOpen(false);
-              };
+  const [orders, setOrders] = useState([]);
 
-              const handleCheckout = () => {
-                  // Create a new order from cart items
-                  const newOrder = {
-                      id: `ORD${String(orders.length + 1).padStart(3, '0')}`,
-                      restaurant: cartItems[0]?.restaurant || 'Mixed Order',
-                      status: 'preparing',
-                      date: 'Today',
-                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                      total: cartItems.reduce((total, item) => {
-                          const price = parseFloat(item.price.replace('$', '').replace('/lb', ''));
-                          return total + (price * item.quantity);
-                      }, 0).toFixed(2),
-                      items: cartItems.map(item => ({
-                          name: item.name,
-                          price: item.price,
-                          quantity: item.quantity
-                      })),
-                      confirmedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  };
+  // ✅ Temporary: Check localStorage on page load
+  useEffect(() => {
+    console.log('📋 Initial localStorage state:', {
+      token: localStorage.getItem('token'),
+      user: localStorage.getItem('user'),
+      guestId: localStorage.getItem('guestId'),
+      cart: localStorage.getItem('tommaluCart')
+    });
+  }, []);
 
-                  setOrders(prevOrders => [newOrder, ...prevOrders]);
-                  setCartItems([]);
-                  setCartCount(0);
-                  setIsCartModalOpen(false);
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Menu */}
+      <MobileMenu
+        notification={notification}
+        isOpen={isMobileMenuOpen}
+        isSignedIn={isSignedIn}
+        onSignIn={openSignInModal}
+        onLogout={handleLogout}
+        onClose={closeMobileMenu}
+        onOpenProfile={openProfileModal}
+        selectedLocation={selectedLocation}
+        onLocationChange={setSelectedLocation}
+        onNavigate={handleNavigate}
+        user={user}
+      />
 
-                  // Show success notification
-                  setNotification({
-                      message: 'Order placed successfully!',
-                      isVisible: true
-                  });
+      {/* Header */}
+      <Header
+        stores={stores}
+        deliveryLocation={deliveryLocation}
+        isSignedIn={isSignedIn}
+        onSignIn={openSignInModal}
+        onLogout={handleLogout}
+        cartCount={cartCount}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={toggleMobileMenu}
+        onCartClick={handleCartClick}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        onNavigate={handleNavigate}
+        currentPage={currentPage}
+        user={user}
+        onOpenProfile={openProfileModal}
+        selectedLocation={selectedLocation}
+        onLocationChange={setSelectedLocation}
+      />
 
-                  // Navigate to orders page
-                  setCurrentPage('orders');
-              };
-               const handleOrder = (orderData) => {
-  console.log("Order Placed:", orderData);
-  // yaha backend API call ya cart clear karna add kar sakte ho
-  alert("Order Placed Successfully ✅");
+      <ScrollToTop />
+      
+      <Routes>
+        {/* Home with real data from backend */}
+        <Route
+          path="/"
+          element={
+            <Home
+              onRestaurantClick={handleRestaurantClick}
+              onCategoryClick={handleCategoryClick}
+              onNavigate={handleNavigate}
+              stores={stores}
+              popularRestaurants={popularRestaurants}
+              popularGroceryStores={popularGroceryStores}
+              activeSection={activeSection}
+              setActiveSection={setActiveSection}
+              categories={categories}
+            />
+          }
+        />
+
+        {/* Other routes */}
+        <Route path="/orders" element={<MyOrdersPage />} />
+        <Route path="/cart" element={
+          <CartPage 
+            cart={cart} 
+            onUpdateQuantity={handleUpdateQuantity} 
+            onRemoveItem={handleRemoveItem} 
+            user={user}
+          />} 
+        />
+        <Route path='/grocery' element={
+          <Grocery 
+            stores={stores} 
+            onAddToCart={handleAddToCart} 
+          />} 
+        />
+        <Route path='/food' element={
+          <Food 
+             stores={stores} 
+            onAddToCart={handleAddToCart} 
+          />} 
+        />
+        <Route path="/items/:type/:slug" element={
+          <RestaurantItemsPage 
+            onAddToCart={handleAddToCart}
+            stores={stores}
+          />} 
+        />
+        <Route path="/category/:categoryName" element={
+          <CategoryProducts 
+            categories={categories} 
+            onAddToCart={handleAddToCart} 
+          />} 
+        />
+        <Route path="/search" element={
+          <SearchResults 
+          stores={stores}
+            searchQuery={searchQuery} 
+            onAddToCart={handleAddToCart} 
+          />} 
+        />
+        <Route path='/checkout' element={
+          <TommaluCheckout 
+            cart={cart} 
+            user={user} 
+            onOrder={handleOrder} 
+          />} 
+        />
+        <Route path='/privacy-policy' element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/cookie-policy" element={<CookiePolicy />} />
+        <Route path="*" element={<h1 className="mt-8 mb-22 text-center text-3xl">404 Page Not Found</h1>} />
+      </Routes>
+
+      <Footer />
+
+      {/* Modals */}
+      <OrderTrackingModal isOpen={isTrackingModalOpen} order={selectedOrder} onClose={() => setIsTrackingModalOpen(false)} />
+      
+      {/* ✅ UPDATED: SignInModal with proper handlers */}
+      <SignInModal 
+        isOpen={isSignInModalOpen} 
+        onClose={closeSignInModal} 
+        onSignIn={handleSignIn}
+      />
+      
+      <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} user={user} onUpdateProfile={handleUpdateProfile} />
+      <Notification message={notification.message} isVisible={notification.isVisible} onClose={() => setNotification({ message: '', isVisible: false })} />
+    </div>
+  );
 };
 
-              const handleReorder = (order) => {
-                  // Add all items from the order back to cart
-                  order.items.forEach(item => {
-                      const cartItem = {
-                          id: Date.now() + Math.random(),
-                          name: item.name,
-                          price: item.price,
-                          restaurant: order.restaurant,
-                          quantity: item.quantity
-                      };
-                      setCartItems(prevItems => [...prevItems, cartItem]);
-                      setCartCount(prevCount => prevCount + item.quantity);
-                  });
-
-                  setNotification({
-                      message: 'Items added to cart for reorder!',
-                      isVisible: true
-                  });
-              };
-
-              const handleTrackOrder = (order) => {
-                  setSelectedOrder(order);
-                  setIsTrackingModalOpen(true);
-              };
-
-              const closeTrackingModal = () => {
-                  setIsTrackingModalOpen(false);
-                  setSelectedOrder(null);
-              };
-
-              const handleLocationChange = (location) => {
-                  setSelectedLocation(location);
-
-                  // Save location for signed-in users
-                  if (isSignedIn && user && location) {
-                      setUserLocations(prev => ({
-                          ...prev,
-                          [user.email]: location
-                      }));
-
-                      setNotification({
-                          message: `Delivery location set to ${location}`,
-                          isVisible: true
-                      });
-                  } else if (location) {
-                      setNotification({
-                          message: `Delivery location set to ${location}`,
-                          isVisible: true
-                      });
-                  }
-              };
-              
-              const [orders, setOrders] = useState([]);
-// 
-
-              return (
-
-                  <div className="min-h-screen bg-gray-50">
-                      {/* Mobile Menu */}
-                      <MobileMenu
-                      notification={notification}
-                          isOpen={isMobileMenuOpen}
-                          isSignedIn={isSignedIn}
-                          onSignIn={openSignInModal}
-                          onLogout={handleLogout}
-                          onClose={closeMobileMenu}
-                          onOpenProfile={openProfileModal}
-                          selectedLocation={selectedLocation}
-                          onLocationChange={handleLocationChange}
-                          onNavigate={handleNavigate}
-                          user={user}
-    
-                      />
-
-                      {/* Header */}
-                      <Header RESTAURANTS_DATA={RESTAURANTS_DATA} GROCERY_DATA={GROCERY_DATA} deleveryLocation={deliveryLocation}
-                          isSignedIn={isSignedIn}
-                          onSignIn={openSignInModal}
-                          onLogout={handleLogout}
-                          cartCount={cartCount}
-                          isMobileMenuOpen={isMobileMenuOpen}
-                          onToggleMobileMenu={toggleMobileMenu}
-                          onCartClick={openCart}
-                          searchQuery={searchQuery}
-                          onSearchChange={handleSearchChange}
-                          onNavigate={handleNavigate}
-                          currentPage={currentPage}
-                          user={user}
-                          onOpenProfile={openProfileModal}
-                          selectedLocation={selectedLocation}
-                          onLocationChange={handleLocationChange}
-                      />
-                      <ComingSoonTimer/>
-<ScrollToTop />
-   <Routes>
-  {/* ✅ Home */}
-  <Route
-    path="/"
-    element={
-       <Home
-      onRestaurantClick={handleRestaurantClick}
-      onCategoryClick={handleCategoryClick}
-      onNavigate={handleNavigate}
-      RESTAURANTS_DATA={RESTAURANTS_DATA}
-      GROCERY_DATA={GROCERY_DATA}
-      activeSection={activeSection}
-      setActiveSection={setActiveSection}
-      CATEGORIES_DATA={CATEGORIES_DATA}   // ✅ make sure yeh exist karta hai
-    />
-    }
-  />
-
-  {/* ✅ Orders */}
-  <Route
-    path="/orders"
-    element={
-      <MyOrdersPage
-        orders={orders}
-        onReorder={handleReorder}
-        onTrackOrder={handleTrackOrder}
-      />
-    }
-  />
-
-  {/* ✅ Cart */}
-  <Route
-    path="/cart"
-    element={
-      <CartPage calculateDeliveryFee={calculateDeliveryFee}
-                                AVAILABLE_COUPONS={AVAILABLE_COUPONS}
-isSignedIn={isSignedIn}
-       cart={cart}
-                                onUpdateQuantity={handleUpdateQuantity}
-                                onRemoveItem={handleRemoveItem}
-                                onBack={() => handleNavigate('home')}
-        onCheckout={handleCheckout}
-      />
-    }
-  />
-  {/* <Route path='/cart/checkout'element={<CheckOut cartItems={cart} userData={user} onPlaceOrder={handleOrder}/>}/> */}
-  <Route path='/grocery' element={<Grocery GROCERY_DATA={GROCERY_DATA}  onAddToCart={handleAddToCart} ItemCard={ItemCard} />}/>
-  <Route path='/food' element={<Food RESTAURANTS_DATA={RESTAURANTS_DATA} onAddToCart={handleAddToCart} ItemCard={ItemCard} />}/>
- {/* Restaurant Items */}
-       <Route path="/items/:type/:slug" element={<RestaurantItemsPage GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} onAddToCart={handleAddToCart} />} />
-        <Route path="/category/:categoryName" element={<CategoryProducts GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} CATEGORIES_DATA={CATEGORIES_DATA} onAddToCart={handleAddToCart} />} />
-        <Route path="/search" element={<SearchResults GROCERY_DATA={GROCERY_DATA} RESTAURANTS_DATA={RESTAURANTS_DATA} searchQuery={searchQuery}  onAddToCart={handleAddToCart} />} />
-        <Route path='/checkout'element={<TommaluCheckout cart={cart} user={user} onOrder={handleOrder} calculateDeliveryFee={calculateDeliveryFee} AVAILABLE_COUPONS={AVAILABLE_COUPONS}/>}/>
-        <Route path='/privacy-policy' element={<PrivacyPolicy/>}/>
-         <Route path="/terms-of-service" element={<TermsOfService />} />
-  <Route path="/cookie-policy" element={<CookiePolicy />} />
-{/* <Route path='/grocery/:itemId' element={<GroceryItemDetail groceryData={groceryData} onAddToCart={addToCart}/>}/> */}
-  {/* ✅ 404 Fallback */}
-  <Route
-    path="*"
-    element={
-      <h1 className="mt-8 mb-22 text-center text-3xl">404 Page Not Found</h1>
-    }
-  />
-</Routes>
-<Footer/>
-            
-           {/* Menu Modal */}
-                     
-
-
-                      {/* Order Tracking Modal */}
-                      <OrderTrackingModal
-                          isOpen={isTrackingModalOpen}
-                          order={selectedOrder}
-                          onClose={closeTrackingModal}
-                      />
-
-                      {/* Sign In Modal */}
-                      <SignInModal
-                          isOpen={isSignInModalOpen}
-                          onClose={closeSignInModal}
-                          onSignIn={handleSignIn}
-                      />
-
-                      {/* Profile Modal */}
-                      <ProfileModal
-                          isOpen={isProfileModalOpen}
-                          onClose={closeProfileModal}
-                          user={user}
-                          onUpdateProfile={handleUpdateProfile}
-                      />
-
-                      {/* Notification */}
-                      <Notification
-                          message={notification.message}
-                          isVisible={notification.isVisible}
-                          onClose={() => setNotification({ message: '', isVisible: false })}
-                      />
-                  </div>
-              );
-          }
-        ;
-  export default App
+export default App;

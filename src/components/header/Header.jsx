@@ -16,7 +16,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
             searchQuery,
             onSearchChange,
             onNavigate,
-            deleveryLocation,
+            deliveryLocation,
             currentPage,
             user,
             onOpenProfile,
@@ -173,7 +173,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
     </div>
 
     <div className="max-h-64 overflow-y-auto">
-      {deleveryLocation.map((location, index) => (
+      {deliveryLocation.map((location, index) => (
         <div
           key={index}
           className={`w-full px-4 py-3 text-left flex items-center justify-between 

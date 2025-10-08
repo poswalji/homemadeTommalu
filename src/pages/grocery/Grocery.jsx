@@ -1,193 +1,166 @@
-import React, { useEffect, useState } from "react";
-const Grocery = ({ onAddToCart,GROCERY_DATA, ItemCard}) => {
-            const [allGroceryItems, setAllGroceryItems] = useState([]);
-            const [filteredItems, setFilteredItems] = useState([]);
-            const [selectedFilter, setSelectedFilter] = useState('all');
-            const [sortBy, setSortBy] = useState('popular');
+import React, { useEffect, useState, useMemo } from "react";
+import ItemCard from "../../components/itemsCard/ItemCard";
 
-            // Get unique grocery categories
-            const groceryCategories = ['all', ...new Set(
-                GROCERY_DATA.flatMap(store => 
-                    store.items.map(item => item.category.toLowerCase())
-                )
-            )];
+const Grocery = ({ stores, onAddToCart }) => {
+  const [allGroceryItems, setAllGroceryItems] = useState([]);
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('popular');
 
-            useEffect(() => {
-                const items = [];
-                GROCERY_DATA.forEach(store => {
-                    store.items.forEach(item => {
-                        items.push({
-                            ...item,
-                            restaurant: store
-                        });
-                    });
-                });
-                setAllGroceryItems(items);
-                setFilteredItems(items);
-            }, []);
+  // ✅ Only include Grocery Store category
+  const groceryStores = useMemo(() => 
+    stores.filter(store => store.category === "Grocery Store"), 
+    [stores]
+  );
 
-            useEffect(() => {
-                let filtered = [...allGroceryItems];
+  // ✅ Grocery-only categories
+  const allowedGroceryCategories = [
+    "Dairy",
+    "Groceries", 
+    "Fruits",
+    "Vegetables",
+    "Bakery",
+    "Grains",
+    "Meat"
+  ];
 
-                // Apply category filter
-                if (selectedFilter !== 'all') {
-                    filtered = filtered.filter(item => 
-                        item.category.toLowerCase() === selectedFilter
-                    );
-                }
+  // Flatten items from GROCERY stores only
+  useEffect(() => {
+    const items = [];
+    groceryStores.forEach(store => {
+      store.menu?.forEach(item => {
+        if (allowedGroceryCategories.includes(item.category)) {
+          items.push({
+            ...item,
+            store: store
+          });
+        }
+      });
+    });
+    setAllGroceryItems(items);
+  }, [groceryStores]); // ✅ Dependency on groceryStores
 
-                // Apply sorting
-                filtered.sort((a, b) => {
-                    switch (sortBy) {
-                        case 'popular':
-                            if (a.popular && !b.popular) return -1;
-                            if (!a.popular && b.popular) return 1;
-                            return b.restaurant.rating - a.restaurant.rating;
-                        case 'price-low':
-                            return a.price - b.price;
-                        case 'price-high':
-                            return b.price - a.price;
-                        case 'rating':
-                            return b.restaurant.rating - a.restaurant.rating;
-                        default:
-                            return 0;
-                    }
-                });
+  // ✅ Replace the problematic useEffect with useMemo
+  const filteredItems = useMemo(() => {
+    let filtered = [...allGroceryItems];
 
-                setFilteredItems(filtered);
-            }, [allGroceryItems, selectedFilter, sortBy]);
+    if (selectedFilter !== 'all') {
+      filtered = filtered.filter(
+        item => item.category?.toLowerCase() === selectedFilter.toLowerCase()
+      );
+    }
 
-            return (
-                <div className="container mx-auto px-4 py-8">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Grocery Delivery</h1>
-                        <p className="text-gray-600">Fresh groceries from {GROCERY_DATA.length} stores</p>
-                    </div>
+    // Create a new array before sorting to avoid mutating the original
+    const sortedItems = [...filtered];
+    
+    sortedItems.sort((a, b) => {
+      switch (sortBy) {
+        case 'popular':
+          if (a.popular && !b.popular) return -1;
+          if (!a.popular && b.popular) return 1;
+          return (b.store?.rating || 0) - (a.store?.rating || 0);
+        case 'price-low':
+          return a.price - b.price;
+        case 'price-high':
+          return b.price - a.price;
+        case 'rating':
+          return (b.store?.rating || 0) - (a.store?.rating || 0);
+        default:
+          return 0;
+      }
+    });
 
-                    {/* Filters Section */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl shadow-lg border border-green-100 p-8 mb-8">
-                        {/* Filter Header */}
-                        <div className="flex items-center space-x-3 mb-6">
-                            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                                <i className="fas fa-filter text-white text-sm"></i>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-800">Filter & Sort</h3>
-                        </div>
+    return sortedItems;
+  }, [allGroceryItems, selectedFilter, sortBy]);
 
-                        <div className="space-y-6">
-                            {/* Category Filter */}
-                            <div>
-                                <div className="flex items-center space-x-2 mb-4">
-                                    <i className="fas fa-tags text-green-500"></i>
-                                    <span className="font-semibold text-gray-800">Categories</span>
-                                </div>
-                                <div className="flex space-x-3 overflow-x-auto pb-4 scrollbar-hide">
-                                    {groceryCategories.map(category => {
-                                        const categoryIcons = {
-                                            'all': '🏠',
-                                            'fruits': '🍎',
-                                            'vegetables': '🥬',
-                                            'dairy': '🥛',
-                                            'grains': '🌾',
-                                            'bakery': '🍞',
-                                            'meat': '🍗'
-                                        };
-                                        return (
-                                            <button
-                                                key={category}
-                                                onClick={() => setSelectedFilter(category)}
-                                                className={`group flex items-center space-x-2 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 transform hover:scale-105 flex-shrink-0 ${
-                                                    selectedFilter === category
-                                                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                                                        : 'bg-white text-gray-700 hover:bg-green-50 hover:text-green-700 shadow-md border border-gray-200'
-                                                }`}
-                                            >
-                                                <span className="text-lg">{categoryIcons[category] || '🛒'}</span>
-                                                <span className="whitespace-nowrap">{category === 'all' ? 'All Items' : category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                                                {selectedFilter === category && (
-                                                    <i className="fas fa-check text-xs"></i>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+  // Unique categories from items
+  const groceryCategories = useMemo(() => [
+    'all',
+    ...new Set(
+      allGroceryItems
+        .map(item => item.category)
+        .filter(cat => allowedGroceryCategories.includes(cat))
+    )
+  ], [allGroceryItems]);
 
-                            {/* Sort Filter */}
-                            <div>
-                                <div className="flex items-center space-x-2 mb-4">
-                                    <i className="fas fa-sort text-green-500"></i>
-                                    <span className="font-semibold text-gray-800">Sort By</span>
-                                </div>
-                                <div className="relative">
-                                    <select
-                                        value={sortBy}
-                                        onChange={(e) => setSortBy(e.target.value)}
-                                        className="w-full md:w-64 px-5 py-3 bg-white border-2 border-green-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-700 font-medium shadow-md appearance-none cursor-pointer"
-                                    >
-                                        <option value="popular">🔥 Most Popular</option>
-                                        <option value="rating">⭐ Highest Rated</option>
-                                        <option value="price-low">💰 Price: Low to High</option>
-                                        <option value="price-high">💎 Price: High to Low</option>
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                        <i className="fas fa-chevron-down text-green-500"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-green-600 mb-2">Grocery Delivery</h1>
+      <p className="text-gray-600">
+        Fresh groceries from {groceryStores.length} stores
+      </p>
 
-                        {/* Results Count */}
-                        <div className="mt-6 pt-6 border-t border-green-200">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
-                                        <i className="fas fa-list text-white text-xs"></i>
-                                    </div>
-                                    <p className="text-gray-700 font-medium">
-                                        Showing <span className="text-green-600 font-bold">{filteredItems.length}</span> of <span className="text-gray-500">{allGroceryItems.length}</span> items
-                                    </p>
-                                </div>
-                                {selectedFilter !== 'all' && (
-                                    <div className="flex items-center space-x-2">
-                                        <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-md">
-                                            <i className="fas fa-tag mr-1"></i>
-                                            {selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)}
-                                        </span>
-                                        <button
-                                            onClick={() => setSelectedFilter('all')}
-                                            className="text-gray-500 hover:text-red-500 transition-colors"
-                                            title="Clear filter"
-                                        >
-                                            <i className="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+      {/* Store Type Info */}
+      <div className="mt-2 text-sm text-gray-500">
+        Showing items from grocery stores only
+      </div>
 
-                    {/* Items Grid */}
-                    {filteredItems.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredItems.map(item => (
-                                <ItemCard
-                                    key={item.id}
-                                    item={item}
-                                    restaurant={item.restaurant}
-                                    onAddToCart={onAddToCart}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-12">
-                            <i className="fas fa-shopping-basket text-6xl text-gray-300 mb-4"></i>
-                            <h3 className="text-xl font-semibold text-gray-800 mb-2">No items found</h3>
-                            <p className="text-gray-600">Try selecting a different category or sorting option</p>
-                        </div>
-                    )}
-                </div>
-            );
-        };
+      {/* Category Filters */}
+      <div className="flex flex-wrap gap-2 my-4">
+        {groceryCategories.map(category => (
+          <button
+            key={category}
+            onClick={() => setSelectedFilter(category.toLowerCase())}
+            className={`px-4 py-2 rounded-full transition-colors ${
+              selectedFilter.toLowerCase() === category.toLowerCase()
+                ? 'bg-green-600 text-white shadow-md'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {category === 'all' ? 'All Items' : category}
+          </button>
+        ))}
+      </div>
 
-        export default Grocery;
+      {/* Sort and Stats */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 my-6">
+        <div className="text-sm text-gray-600">
+          {filteredItems.length} items found
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">
+            Sort by:
+          </label>
+          <select
+            id="sort-select"
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+          >
+            <option value="popular">Most Popular</option>
+            <option value="rating">Highest Rated</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Items Grid */}
+      {filteredItems.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredItems.map(item => (
+            <ItemCard
+              key={item._id || item.id}
+              item={item}
+              restaurant={item.store}
+              onAddToCart={onAddToCart}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center mt-16">
+          <div className="text-gray-400 text-6xl mb-4">🛒</div>
+          <p className="text-gray-500 text-lg mb-2">No grocery items found</p>
+          <p className="text-gray-400 text-sm">
+            {selectedFilter !== 'all' 
+              ? `Try changing the filter or check back later for ${selectedFilter} items.`
+              : 'No grocery items available from grocery stores at the moment.'
+            }
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Grocery;
