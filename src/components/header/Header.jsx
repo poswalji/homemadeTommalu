@@ -263,7 +263,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
   <button onClick={onToggleMobileMenu} className="text-black hover:text-[#ff6931] transition-colors">
     <i className="fas fa-bars text-xl"></i>
   </button>
-  <NavLink to="/" className="text-2xl font-bold"> <img src={logo} alt="Tommalu Logo" className="h-6 w-auto object-fill"/></NavLink>
+  <NavLink to="/" className="text-2xl font-bold"> <img src={logo} alt="Tommalu Logo" className="h-12 w-auto object-fill"/></NavLink>
   <NavLink to="/cart" className="relative">
     <i className="fas fa-shopping-cart text-xl"></i>
     {cartCount > 0 && (
