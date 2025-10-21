@@ -1,7 +1,9 @@
 // services/api.jsx
 import { cookieService } from '../utills/cookies';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production'  ? 'https://your-backend-domain.com/api/v1' : 'http://localhost:3000/api';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-backend-domain.com/api' 
+  : 'http://localhost:3000/api';
 
 // Common headers for API requests
 const getHeaders = (includeAuth = true) => {
@@ -28,43 +30,264 @@ const handleResponse = async (response) => {
   return response.json();
 };
 
-// ✅ IMPROVED: Authentication check with guest support
-
-
-
-
-
-// ✅ IMPROVED: Get headers with guest support for CART requests only
-const getCartHeaders = () => {
-  const isLoggedIn = isAuthenticated();
-  const headers = getHeaders(isLoggedIn);
-  
-  // Add guest ID for non-logged-in users in CART requests
-  
-  
-  return headers;
-};
-
-// ✅ IMPROVED: Get cart URL with guest ID for GET requests
-const getCartUrl = () => {
-  const isLoggedIn = isAuthenticated();
-  let url = `${API_BASE_URL}/cart`;
-  
-  // Add guestId query parameter for guests in GET requests
-  if (!isLoggedIn) {
-    const guestId = guestCartService.getOrCreateGuestId();
-    url += `?guestId=${guestId}`;
-  }
-  
-  return url;
-};
-
-// Authentication Service
+// Authentication check
 export const isAuthenticated = () => {
   return cookieService.isAuthenticated();
 };
 
-// ✅ SIMPLE: Authentication Service
+// ✅ UPDATED: Cart Service for Separate Cart Model
+export const cartService = {
+  // Add item to cart
+  addToCart: async (itemData) => {
+    try {
+      const isLoggedIn = isAuthenticated();
+      
+      console.log('🛒 Add to Cart - User Status:', isLoggedIn ? 'Logged In' : 'Guest');
+      console.log('📦 Item Data:', itemData);
+
+      const response = await fetch(`${API_BASE_URL}/cart/add`, {
+        method: 'POST',
+        headers: getHeaders(isLoggedIn),
+        body: JSON.stringify(itemData),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Add to cart success:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Add to cart error:', error);
+      throw error;
+    }
+  },
+
+  // Get cart details
+  getCart: async () => {
+    try {
+      const isLoggedIn = isAuthenticated();
+      
+      console.log('🛒 Get Cart - User Status:', isLoggedIn ? 'Logged In' : 'Guest');
+
+      const response = await fetch(`${API_BASE_URL}/cart`, {
+        method: 'GET',
+        headers: getHeaders(isLoggedIn),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Get cart success:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Get cart error:', error);
+      // Return empty cart structure on error
+      return {
+        success: true,
+        data: {
+          items: [],
+          storeId: null,
+          storeName: null,
+          totalAmount: 0,
+          deliveryCharge: 0,
+          discountAmount: 0,
+          finalAmount: 0
+        },
+        userType: isAuthenticated() ? 'authenticated' : 'guest'
+      };
+    }
+  },
+
+  // Update item quantity
+  updateCartQuantity: async (menuItemId, quantity) => {
+    try {
+      const isLoggedIn = isAuthenticated();
+      
+      console.log('🛒 Update Quantity:', { menuItemId, quantity });
+
+      const response = await fetch(`${API_BASE_URL}/cart/update`, {
+        method: 'PATCH',
+        headers: getHeaders(isLoggedIn),
+        body: JSON.stringify({ menuItemId, quantity }),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Update quantity success:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Update quantity error:', error);
+      throw error;
+    }
+  },
+
+  // Remove item from cart
+  removeFromCart: async (menuItemId) => {
+    try {
+      const isLoggedIn = isAuthenticated();
+      
+      console.log('🛒 Remove Item:', menuItemId);
+
+      const response = await fetch(`${API_BASE_URL}/cart/remove`, {
+        method: 'DELETE',
+        headers: getHeaders(isLoggedIn),
+        body: JSON.stringify({ menuItemId }),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Remove item success:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Remove item error:', error);
+      throw error;
+    }
+  },
+
+  // Clear entire cart
+  clearCart: async () => {
+    try {
+      const isLoggedIn = isAuthenticated();
+      
+      console.log('🛒 Clear Cart');
+
+      const response = await fetch(`${API_BASE_URL}/cart/clear`, {
+        method: 'DELETE',
+        headers: getHeaders(isLoggedIn),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Clear cart success:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Clear cart error:', error);
+      throw error;
+    }
+  },
+
+  // Merge guest cart with user cart (after login)
+  mergeCart: async () => {
+    try {
+      if (!isAuthenticated()) {
+        throw new Error('User must be logged in to merge cart');
+      }
+
+      console.log('🛒 Merging Guest Cart with User Cart');
+
+      const response = await fetch(`${API_BASE_URL}/cart/merge`, {
+        method: 'POST',
+        headers: getHeaders(true),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Merge cart success:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Merge cart error:', error);
+      throw error;
+    }
+  },
+
+  // Apply discount code
+  applyDiscount: async (discountCode) => {
+    try {
+      if (!isAuthenticated()) {
+        throw new Error('User must be logged in to apply discount');
+      }
+
+      console.log('🛒 Applying Discount:', discountCode);
+
+      const response = await fetch(`${API_BASE_URL}/cart/apply-discount`, {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify({ discountCode }),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Apply discount success:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Apply discount error:', error);
+      throw error;
+    }
+  },
+
+  // Remove discount
+  removeDiscount: async () => {
+    try {
+      if (!isAuthenticated()) {
+        throw new Error('User must be logged in to remove discount');
+      }
+
+      console.log('🛒 Removing Discount');
+
+      const response = await fetch(`${API_BASE_URL}/cart/remove-discount`, {
+        method: 'DELETE',
+        headers: getHeaders(true),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Remove discount success:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Remove discount error:', error);
+      throw error;
+    }
+  },
+
+  // Get cart status (health check)
+  getCartStatus: async () => {
+    try {
+      if (!isAuthenticated()) {
+        // For guests, just return basic cart info
+        return await cartService.getCart();
+      }
+
+      console.log('🛒 Getting Cart Status');
+
+      const response = await fetch(`${API_BASE_URL}/cart/status`, {
+        method: 'GET',
+        headers: getHeaders(true),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Cart status:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Get cart status error:', error);
+      throw error;
+    }
+  },
+
+  // Clean cart (remove invalid items)
+  cleanCart: async () => {
+    try {
+      if (!isAuthenticated()) {
+        throw new Error('User must be logged in to clean cart');
+      }
+
+      console.log('🛒 Cleaning Cart');
+
+      const response = await fetch(`${API_BASE_URL}/cart/clean`, {
+        method: 'POST',
+        headers: getHeaders(true),
+        credentials: 'include',
+      });
+      
+      const result = await handleResponse(response);
+      console.log('✅ Clean cart success:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Clean cart error:', error);
+      throw error;
+    }
+  }
+};
+
+// ✅ UPDATED: Auth Service with automatic cart merging
 export const authService = {
   login: async (credentials) => {
     try {
@@ -77,9 +300,17 @@ export const authService = {
       
       const result = await handleResponse(response);
       
-      // ✅ Save user data in cookies
+      // Save user data and automatically merge cart
       if (result.success && result.data?.token) {
         cookieService.setAuthData(result.data.token, result.data.user);
+        
+        // Auto-merge guest cart with user cart after login
+        try {
+          await cartService.mergeCart();
+          console.log('✅ Cart automatically merged after login');
+        } catch (mergeError) {
+          console.warn('⚠️ Cart merge failed after login:', mergeError);
+        }
       }
       
       return result;
@@ -100,14 +331,75 @@ export const authService = {
       
       const result = await handleResponse(response);
       
-      // ✅ Save user data in cookies
+      // Save user data and automatically merge cart
       if (result.success && result.data?.token) {
         cookieService.setAuthData(result.data.token, result.data.user);
+        
+        // Auto-merge guest cart with user cart after registration
+        try {
+          await cartService.mergeCart();
+          console.log('✅ Cart automatically merged after registration');
+        } catch (mergeError) {
+          console.warn('⚠️ Cart merge failed after registration:', mergeError);
+        }
       }
       
       return result;
     } catch (error) {
       console.error('Registration error:', error);
+      throw error;
+    }
+  },
+
+  googleLogin: async (googleToken) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: getHeaders(false),
+        body: JSON.stringify({ token: googleToken }),
+        credentials: 'include'
+      });
+      
+      const result = await handleResponse(response);
+      
+      if (result.success && result.data?.token) {
+        cookieService.setAuthData(result.data.token, result.data.user);
+        
+        // Auto-merge cart after Google login
+        try {
+          await cartService.mergeCart();
+          console.log('✅ Cart automatically merged after Google login');
+        } catch (mergeError) {
+          console.warn('⚠️ Cart merge failed after Google login:', mergeError);
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    try {
+      // Clear cart before logout
+      await cartService.clearCart();
+      
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: getHeaders(),
+        credentials: 'include'
+      });
+      
+      // ALWAYS clear frontend cookies
+      cookieService.clearAuthData();
+      
+      return await handleResponse(response);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear frontend data
+      cookieService.clearAuthData();
       throw error;
     }
   },
@@ -122,7 +414,6 @@ export const authService = {
       
       const result = await handleResponse(response);
       
-      // ✅ Update cookies with fresh user data
       if (result.success && result.data) {
         const user = result.data.user || result.data;
         const token = cookieService.getCurrentToken();
@@ -149,7 +440,6 @@ export const authService = {
       
       const result = await handleResponse(response);
       
-      // ✅ Update cookies with updated user data
       if (result.success && result.data) {
         const user = result.data.user || result.data;
         const token = cookieService.getCurrentToken();
@@ -161,49 +451,6 @@ export const authService = {
       return result;
     } catch (error) {
       console.error('Update profile error:', error);
-      throw error;
-    }
-  },
-
-  googleLogin: async (googleToken) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/google`, {
-        method: 'POST',
-        headers: getHeaders(false),
-        body: JSON.stringify({ token: googleToken }),
-        credentials: 'include'
-      });
-      
-      const result = await handleResponse(response);
-      
-      // ✅ Save user data in cookies
-      if (result.success && result.data?.token) {
-        cookieService.setAuthData(result.data.token, result.data.user);
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Google login error:', error);
-      throw error;
-    }
-  },
-
-  logout: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: getHeaders(),
-        credentials: 'include'
-      });
-      
-      // ✅ ALWAYS clear frontend cookies
-      cookieService.clearAuthData();
-      
-      return await handleResponse(response);
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still clear frontend data
-      cookieService.clearAuthData();
       throw error;
     }
   }
@@ -219,7 +466,7 @@ export const storeService = {
       const response = await fetch(url, {
         method: 'GET',
         headers: getHeaders(),
-         credentials: 'include'
+        credentials: 'include'
       });
       
       return await handleResponse(response);
@@ -234,7 +481,7 @@ export const storeService = {
       const response = await fetch(`${API_BASE_URL}/public/stores/${storeId}`, {
         method: 'GET',
         headers: getHeaders(),
-         credentials: 'include'
+        credentials: 'include'
       });
       
       return await handleResponse(response);
@@ -249,7 +496,7 @@ export const storeService = {
       const response = await fetch(`${API_BASE_URL}/public/stores/category/${category}`, {
         method: 'GET',
         headers: getHeaders(),
-         credentials: 'include'
+        credentials: 'include'
       });
       
       return await handleResponse(response);
@@ -265,7 +512,7 @@ export const storeService = {
       const response = await fetch(`${API_BASE_URL}/public/stores/search?${searchParams}`, {
         method: 'GET',
         headers: getHeaders(),
-         credentials: 'include'
+        credentials: 'include'
       });
       
       return await handleResponse(response);
@@ -280,7 +527,7 @@ export const storeService = {
       const response = await fetch(`${API_BASE_URL}/public/stores?limit=${limit}&sort=popular`, {
         method: 'GET',
         headers: getHeaders(),
-         credentials: 'include'
+        credentials: 'include'
       });
       
       return await handleResponse(response);
@@ -298,7 +545,7 @@ export const menuService = {
       const response = await fetch(`${API_BASE_URL}/public/stores/${storeId}/menu`, {
         method: 'GET',
         headers: getHeaders(),
-         credentials: 'include'
+        credentials: 'include'
       });
       
       return await handleResponse(response);
@@ -330,7 +577,7 @@ export const menuService = {
       const response = await fetch(`${API_BASE_URL}/public/menu/search?${params}`, {
         method: 'GET',
         headers: getHeaders(),
-         credentials: 'include'
+        credentials: 'include'
       });
       
       return await handleResponse(response);
@@ -341,123 +588,6 @@ export const menuService = {
   }
 };
 
-// ✅ FIXED: Cart Service with proper guest ID handling
-export const cartService = {
-  addToCart: async (itemData) => {
-    try {
-      const isLoggedIn = isAuthenticated();
-      
-      console.log('🍪 Cookie Based - Add to Cart');
-      console.log('🔐 User Status:', isLoggedIn ? 'Logged In' : 'Anonymous');
-      console.log('🛒 Item Data:', itemData);
-
-      const response = await fetch(`${API_BASE_URL}/cart/add`, {
-        method: 'POST',
-        headers: getHeaders(isLoggedIn),
-        body: JSON.stringify(itemData),
-        credentials: 'include', // ✅ IMPORTANT: This sends cookies automatically
-      });
-      
-      const result = await handleResponse(response);
-      console.log('✅ Add to cart response:', result);
-      return result;
-    } catch (error) {
-      console.error('❌ Add to cart error:', error);
-      throw error;
-    }
-  },
-
-  getCart: async () => {
-    try {
-      const isLoggedIn = isAuthenticated();
-      
-      console.log('🍪 Cookie Based - Get Cart');
-      console.log('🔐 User Status:', isLoggedIn ? 'Logged In' : 'Anonymous');
-
-      const response = await fetch(`${API_BASE_URL}/cart`, {
-        method: 'GET',
-        headers: getHeaders(isLoggedIn),
-        credentials: 'include', // ✅ IMPORTANT: This sends cookies automatically
-      });
-      
-      const result = await handleResponse(response);
-      console.log('✅ Get cart response:', result);
-      return result;
-    } catch (error) {
-      console.error('❌ Get cart error:', error);
-      throw error;
-    }
-  },
-
-  updateCartQuantity: async (menuItemId, quantity) => {
-    try {
-      const isLoggedIn = isAuthenticated();
-      
-      const response = await fetch(`${API_BASE_URL}/cart/update`, {
-        method: 'PATCH',
-        headers: getHeaders(isLoggedIn),
-        body: JSON.stringify({ menuItemId, quantity }),
-        credentials: 'include', // ✅ IMPORTANT
-      });
-      
-      return await handleResponse(response);
-    } catch (error) {
-      console.error('Update cart error:', error);
-      throw error;
-    }
-  },
-
-  removeFromCart: async (menuItemId) => {
-    try {
-      const isLoggedIn = isAuthenticated();
-      
-      const response = await fetch(`${API_BASE_URL}/cart/remove`, {
-        method: 'DELETE',
-        headers: getHeaders(isLoggedIn),
-        body: JSON.stringify({ menuItemId }),
-        credentials: 'include', // ✅ IMPORTANT
-      });
-      
-      return await handleResponse(response);
-    } catch (error) {
-      console.error('Remove from cart error:', error);
-      throw error;
-    }
-  },
-
-  clearCart: async () => {
-    try {
-      const isLoggedIn = isAuthenticated();
-      
-      const response = await fetch(`${API_BASE_URL}/cart/clear`, {
-        method: 'DELETE',
-        headers: getHeaders(isLoggedIn),
-        credentials: 'include', // ✅ IMPORTANT
-      });
-      
-      return await handleResponse(response);
-    } catch (error) {
-      console.error('Clear cart error:', error);
-      throw error;
-    }
-  },
-
-  mergeCart: async () => {
-    try {
-      // ✅ Cookie based - no need for guest ID, backend automatically merges
-      const response = await fetch(`${API_BASE_URL}/cart/merge-from-cart`, {
-        method: 'POST',
-        headers: getHeaders(true), // Must be logged in
-        credentials: 'include', // ✅ IMPORTANT
-      });
-      
-      return await handleResponse(response);
-    } catch (error) {
-      console.error('Merge cart error:', error);
-      throw error;
-    }
-  }
-};
 // Order Service
 export const orderService = {
   createOrder: async (orderData) => {
@@ -640,24 +770,19 @@ export const customerService = {
 
 // Utility functions
 export const getCurrentToken = () => {
-  return localStorage.getItem('token');
+  return cookieService.getCurrentToken();
 };
 
 export const getCurrentUser = () => {
-  const user = localStorage.getItem('user');
-  return user ? JSON.parse(user) : null;
+  return cookieService.getCurrentUser();
 };
 
 export const setAuthData = (token, user) => {
-  localStorage.setItem('token', token);
-  localStorage.setItem('user', JSON.stringify(user));
-  // ✅ Clear guest ID when user logs in
-  guestCartService.clearGuestId();
+  cookieService.setAuthData(token, user);
 };
 
 export const clearAuthData = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  cookieService.clearAuthData();
 };
 
 export default {

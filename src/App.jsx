@@ -20,6 +20,7 @@ import OrderTrackingModal from "./components/orderTrakingModel/OrderTrackingModa
 import ProfileDropdown from "./components/profileDropdown/ProfileDropdown";
 import ProfileModal from "./components/profileModel/ProfileModal";
 import SignInModal from "./components/signInModel/SignInModal";
+import { cookieService } from './utills/cookies';
 
 // Service API
 import { 
@@ -54,7 +55,7 @@ import dairyIcon from './assets/Dairy.jpg';
 import grainsIcon from './assets/grains.jpg';
 import bakeryIcon from './assets/bakery.jpg';
 import meatIcon from './assets/meat.jpg';
-import ComingSoonTimer from './components/comingSoon/ComingSoonTimer';
+
 
 const App = () => {
   const navigate = useNavigate();
@@ -86,190 +87,259 @@ const App = () => {
 
   // ✅ FIXED: Load initial data from backend
   useEffect(() => {
-    console.log('🚀 App mounted - loading initial data');
+   
     loadInitialData();
     loadUserData();
   }, []);
 
   // ✅ FIXED: Save cart to localStorage
   useEffect(() => {
-    console.log('💾 Saving cart to localStorage:', cart);
-    try {
-      localStorage.setItem("tommaluCart", JSON.stringify(cart));
-    } catch (error) {
-      console.error("Error saving cart:", error);
-    }
-  }, [cart]);
+  const savedCart = JSON.parse(localStorage.getItem("tommaluCart") || "[]");
+  if (savedCart.length > 0) {
+    setCart(savedCart);
+   
+  } else {
+    // Optionally, load from backend if user is signed in
+    if (isSignedIn) loadCartFromBackend();
+  }
+}, []);
 
-  // ✅ FIXED: Debug states
-  useEffect(() => {
-    console.log('🔍 State Debug:', {
-      isSignedIn,
-      user: user ? `${user.name || user.email} (${user._id})` : 'null',
-      cartItems: cart.length,
-      guestId: localStorage.getItem('guestId'),
-      token: localStorage.getItem('token') ? 'exists' : 'null'
-    });
-  }, [isSignedIn, user, cart]);
 
-  // ✅ FIXED: Load user data from localStorage and verify token
-  
+
 
   // Load stores and categories from backend
-  const loadInitialData = async () => {
-    try {
-      setLoading(true);
-      
-      // Load all stores
-      const storesResponse = await storeService.getStores();
-      console.log('🔍 Stores Response:', storesResponse);
-
-      // ✅ FIXED: Flexible response handling
-      let storesArray = [];
-      
-      if (Array.isArray(storesResponse)) {
-        storesArray = storesResponse;
-      } else if (storesResponse?.success && storesResponse.data?.stores) {
-        storesArray = storesResponse.data.stores;
-      } else if (storesResponse?.success && Array.isArray(storesResponse.data)) {
-        storesArray = storesResponse.data;
-      } else if (storesResponse?.stores) {
-        storesArray = storesResponse.stores;
-      } else if (Array.isArray(storesResponse?.data)) {
-        storesArray = storesResponse.data;
-      } else if (storesResponse?.status === 'success' && storesResponse.data?.stores) {
-        storesArray = storesResponse.data.stores;
-      } else {
-        storesArray = [];
-      }
-
-      console.log('📦 Stores Array:', storesArray);
-      setStores(storesArray);
-      
-      // ✅ FIXED: Categorize stores with new array
-      const restaurants = storesArray.filter(store => 
-        store.category === 'Restaurant' || store.timesOrdered > 10
-      );
-      const groceryStores = storesArray.filter(store => 
-        store.category === 'Grocery Store' || store.timesOrdered > 5
-      );
-      
-      setPopularRestaurants(restaurants);
-      setPopularGroceryStores(groceryStores);
-
-      // Load categories from backend and map to frontend
-      const backendCategories = [
-        "North Indian", "South Indian", "Chinese", "Italian", "Mexican", "Desserts",
-        "Dairy & Eggs", "Fruits", "Vegetables", "Bakery", "Beverages", "Snacks",
-        "Kitchen Essentials", "Personal Care", "Household", "Frozen Foods"
-      ];
-      
-      const mappedCategories = mapCategories(backendCategories);
-      setCategories(mappedCategories);
-
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-      setNotification({
-        message: 'Error loading data. Please try again.',
-        isVisible: true
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Map backend categories to frontend categories
-  const mapCategories = (backendCategories) => {
-    const categoryMap = [
-      { 
-        id: 'all', 
-        name: 'All', 
-        icon: '🏠', 
-        color: 'from-gray-400 to-gray-600',
-        backendCategory: null
-      },
-      { 
-        id: 'indian', 
-        name: 'Indian', 
-        icon: indianIcon, 
-        color: 'from-orange-400 to-red-500',
-        backendCategory: ['North Indian', 'South Indian']
-      },
-      { 
-        id: 'pizza', 
-        name: 'Pizza', 
-        icon: pizzaIcon, 
-        color: 'from-red-400 to-pink-500',
-        backendCategory: 'Italian'
-      },
-      { 
-        id: 'burgers', 
-        name: 'Burgers', 
-        icon: burgerIcon, 
-        color: 'from-yellow-400 to-orange-500',
-        backendCategory: 'Fast Food'
-      },
-      { 
-        id: 'italian', 
-        name: 'Italian', 
-        icon: italianIcon, 
-        color: 'from-green-400 to-blue-500',
-        backendCategory: 'Italian'
-      },
-      { 
-        id: 'fast-food', 
-        name: 'Fast Food', 
-        icon: fastFoodIcon, 
-        color: 'from-purple-400 to-pink-500',
-        backendCategory: 'Snacks'
-      },
-      { 
-        id: 'fruits', 
-        name: 'Fruits', 
-        icon: fruitsIcon, 
-        color: 'from-green-400 to-green-600',
-        backendCategory: 'Fruits'
-      },
-      { 
-        id: 'vegetables', 
-        name: 'Vegetables', 
-        icon: vegetablesIcon, 
-        color: 'from-green-500 to-emerald-600',
-        backendCategory: 'Vegetables'
-      },
-      { 
-        id: 'dairy', 
-        name: 'Dairy', 
-        icon: dairyIcon, 
-        color: 'from-blue-400 to-blue-600',
-        backendCategory: 'Dairy & Eggs'
-      },
-      { 
-        id: 'grains', 
-        name: 'Grains', 
-        icon: grainsIcon, 
-        color: 'from-yellow-500 to-amber-600',
-        backendCategory: 'Kitchen Essentials'
-      },
-      { 
-        id: 'bakery', 
-        name: 'Bakery', 
-        icon: bakeryIcon, 
-        color: 'from-amber-400 to-orange-500',
-        backendCategory: 'Bakery'
-      },
-      { 
-        id: 'meat', 
-        name: 'Meat', 
-        icon: meatIcon, 
-        color: 'from-red-500 to-red-700',
-        backendCategory: 'Non-Veg Food'
-      }
-    ];
+  // ✅ UPDATED: Load categories from stores' menuItems
+const loadInitialData = async () => {
+  try {
+    setLoading(true);
     
-    return categoryMap;
-  };
+    // Load all stores
+    const storesResponse = await storeService.getStores();
+    
 
+    // ✅ FIXED: Flexible response handling
+    let storesArray = [];
+    
+    if (Array.isArray(storesResponse)) {
+      storesArray = storesResponse;
+    } else if (storesResponse?.success && storesResponse.data?.stores) {
+      storesArray = storesResponse.data.stores;
+    } else if (storesResponse?.success && Array.isArray(storesResponse.data)) {
+      storesArray = storesResponse.data;
+    } else if (storesResponse?.stores) {
+      storesArray = storesResponse.stores;
+    } else if (Array.isArray(storesResponse?.data)) {
+      storesArray = storesResponse.data;
+    } else if (storesResponse?.status === 'success' && storesResponse.data?.stores) {
+      storesArray = storesResponse.data.stores;
+    } else {
+      storesArray = [];
+    }
+
+    setStores(storesArray);
+    
+    // ✅ FIXED: Categorize stores with new array
+    const restaurants = storesArray.filter(store => 
+      store.category === 'Restaurant' || store.timesOrdered > 10
+    );
+    const groceryStores = storesArray.filter(store => 
+      store.category === 'Grocery Store' || store.timesOrdered > 5
+    );
+    
+    setPopularRestaurants(restaurants);
+    setPopularGroceryStores(groceryStores);
+
+    // ✅ UPDATED: Extract categories from stores' menuItems
+    const backendCategories = await extractCategoriesFromMenuItems(storesArray);
+   
+    
+    const mappedCategories = mapCategories(backendCategories);
+    setCategories(mappedCategories);
+
+  } catch (error) {
+    console.error('Error loading initial data:', error);
+    setNotification({
+      message: 'Error loading data. Please try again.',
+      isVisible: true
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+// ✅ NEW: Extract categories from stores' menuItems
+const extractCategoriesFromMenuItems = async (stores) => {
+  const categoriesSet = new Set();
+  
+  // Har store ke menuItems fetch karna
+  for (const store of stores) {
+    try {
+      // Store ka menu fetch karna
+      const menuResponse = await menuService.getMenuByStoreId(store._id || store.id);
+      
+      if (menuResponse.success && menuResponse.data) {
+        const menuItems = menuResponse.data.menuItems || menuResponse.data;
+        
+        // Har menu item ki category extract karna
+        menuItems.forEach(item => {
+          if (item.category && item.category.trim() !== '') {
+            categoriesSet.add(item.category);
+          }
+        });
+      }
+    } catch (menuError) {
+      console.warn(`⚠️ Menu fetch failed for store ${store.name}:`, menuError);
+      // Continue with next store
+    }
+  }
+
+  // Common categories ensure karna
+  const commonCategories = [
+    "Veg Food", "Non-Veg Food", "Snacks", "Drinks", 
+    "Dairy", "Groceries", "Fruits", "Vegetables",
+    "Sweets", "Fast Food", "Bakery", "Grains", "Meat"
+  ];
+
+  commonCategories.forEach(cat => categoriesSet.add(cat));
+  
+  const categoriesArray = Array.from(categoriesSet).filter(cat => cat);
+  
+  return categoriesArray;
+};
+
+// ✅ UPDATED: Map backend categories to frontend categories
+const mapCategories = (backendCategories) => {
+  // Frontend categories ka base structure - aapke menuItem categories ke according
+  const categoryMap = [
+    { 
+      id: 'all', 
+      name: 'All', 
+      icon: '🏠', 
+      color: 'from-gray-400 to-gray-600',
+      backendCategory: null
+    },
+    { 
+      id: 'veg-food', 
+      name: 'Veg Food', 
+      icon: indianIcon,
+      color: 'from-green-400 to-green-600',
+      backendCategory: 'Veg Food'
+    },
+    { 
+      id: 'non-veg-food', 
+      name: 'Non-Veg Food', 
+      icon: meatIcon, 
+      color: 'from-red-400 to-red-600',
+      backendCategory: 'Non-Veg Food'
+    },
+    { 
+      id: 'snacks', 
+      name: 'Snacks', 
+      icon: fastFoodIcon, 
+      color: 'from-yellow-400 to-orange-500',
+      backendCategory: 'Snacks'
+    },
+    { 
+      id: 'drinks', 
+      name: 'Drinks', 
+      icon: '🥤', 
+      color: 'from-blue-400 to-cyan-500',
+      backendCategory: 'Drinks'
+    },
+    { 
+      id: 'dairy', 
+      name: 'Dairy', 
+      icon: dairyIcon, 
+      color: 'from-blue-300 to-blue-500',
+      backendCategory: 'Dairy'
+    },
+    { 
+      id: 'fruits', 
+      name: 'Fruits', 
+      icon: fruitsIcon, 
+      color: 'from-green-400 to-emerald-500',
+      backendCategory: 'Fruits'
+    },
+    { 
+      id: 'vegetables', 
+      name: 'Vegetables', 
+      icon: vegetablesIcon, 
+      color: 'from-green-500 to-teal-500',
+      backendCategory: 'Vegetables'
+    },
+    { 
+      id: 'sweets', 
+      name: 'Sweets', 
+      icon: '🍰', 
+      color: 'from-pink-400 to-rose-500',
+      backendCategory: 'Sweets'
+    },
+    { 
+      id: 'fast-food', 
+      name: 'Fast Food', 
+      icon: burgerIcon, 
+      color: 'from-orange-400 to-red-500',
+      backendCategory: 'Fast Food'
+    },
+    { 
+      id: 'bakery', 
+      name: 'Bakery', 
+      icon: bakeryIcon, 
+      color: 'from-amber-400 to-orange-500',
+      backendCategory: 'Bakery'
+    },
+    { 
+      id: 'grains', 
+      name: 'Grains', 
+      icon: grainsIcon, 
+      color: 'from-yellow-500 to-amber-500',
+      backendCategory: 'Grains'
+    },
+    { 
+      id: 'meat', 
+      name: 'Meat', 
+      icon: meatIcon, 
+      color: 'from-red-500 to-pink-500',
+      backendCategory: 'Meat'
+    }
+  ];
+
+  // ✅ Dynamic categories jo menuItems se aayi hain
+  const dynamicCategories = backendCategories
+    .filter(backendCat => {
+      // Pehle se defined categories ko exclude karna
+      const isAlreadyMapped = categoryMap.some(frontendCat => 
+        frontendCat.backendCategory === backendCat
+      );
+      return !isAlreadyMapped;
+    })
+    .map((backendCat, index) => ({
+      id: `dynamic-${index}-${backendCat.toLowerCase().replace(/\s+/g, '-')}`,
+      name: backendCat,
+      icon: '🍽️', // Default icon
+      color: getDynamicColor(index),
+      backendCategory: backendCat
+    }));
+
+  console.log('🎯 All Mapped Categories:', [...categoryMap, ...dynamicCategories]);
+  
+  return [...categoryMap, ...dynamicCategories];
+};
+
+// ✅ NEW: Dynamic colors for new categories
+const getDynamicColor = (index) => {
+  const colors = [
+    'from-purple-400 to-indigo-500',
+    'from-teal-400 to-cyan-500',
+    'from-rose-400 to-pink-500',
+    'from-violet-400 to-purple-500',
+    'from-amber-400 to-yellow-500',
+    'from-emerald-400 to-green-500',
+    'from-blue-400 to-indigo-500',
+    'from-orange-400 to-red-500'
+  ];
+  return colors[index % colors.length];
+};
   // Geolocation
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -315,8 +385,7 @@ const App = () => {
     }
   }, []);
 
-  const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-
+ 
   // Navigation Handlers
   const handleNavigate = (page) => {
     setCurrentPage(page);
@@ -349,45 +418,47 @@ const App = () => {
     setSearchQuery('');
     setSelectedRestaurant(null);
   };
-
-  // ✅ FIXED: Cart Handlers - Updated for backend integration
-  
-
-  const handleUpdateQuantity = (restaurantId, itemId, newQuantity) => {
-    if (newQuantity <= 0) {
-      handleRemoveItem(restaurantId, itemId);
-      return;
-    }
-
-    setCart(prevCart => 
-      prevCart.map(item => 
-        (item._id === itemId || item.id === itemId) && 
-        (item.restaurant?._id === restaurantId || item.restaurant?.id === restaurantId)
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
-  };
-
-  const handleRemoveItem = (restaurantId, itemId) => {
-    setCart(prevCart => 
-      prevCart.filter(item => 
-        !((item._id === itemId || item.id === itemId) && 
-          (item.restaurant?._id === restaurantId || item.restaurant?.id === restaurantId))
-      )
-    );
-  };
-
-  const handleCartClick = () => {
+ const handleCartClick = () => {
     setCurrentPage('cart');
     setSearchQuery('');
     setSelectedRestaurant(null);
     setSelectedCategory(null);
   };
+  // ✅ FIXED: Cart Handlers - Updated for backend integration
+  
 
-  // ✅ FIXED: Authentication Handlers
- // App.jsx - FIXED handleAddToCart
+  // App.jsx - OPTIMIZED CART HANDLERS
 
+const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+// ✅ UPDATED: Cart Handlers - Only frontend state management
+const handleUpdateQuantity = (restaurantId, itemId, newQuantity) => {
+  if (newQuantity <= 0) {
+    handleRemoveItem(restaurantId, itemId);
+    return;
+  }
+
+  setCart(prevCart => 
+    prevCart.map(item => 
+      (item._id === itemId || item.id === itemId) && 
+      (item.restaurant?._id === restaurantId || item.restaurant?.id === restaurantId)
+        ? { ...item, quantity: newQuantity }
+        : item
+    )
+  );
+};
+
+const handleRemoveItem = (restaurantId, itemId) => {
+  setCart(prevCart => 
+    prevCart.filter(item => 
+      !((item._id === itemId || item.id === itemId) && 
+        (item.restaurant?._id === restaurantId || item.restaurant?.id === restaurantId))
+    )
+  );
+};
+// Save cart
+
+// ✅ UPDATED: Add to Cart with immediate frontend feedback
 const handleAddToCart = async (item, restaurant) => {
   try {
     // Check availability
@@ -402,6 +473,40 @@ const handleAddToCart = async (item, restaurant) => {
 
     console.log('🎯 ADD TO CART - User:', isSignedIn ? 'Logged In' : 'Guest');
 
+    // ✅ IMMEDIATE frontend update for better UX
+    const newCartItem = {
+      _id: item._id || item.id,
+      id: item._id || item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image || item.images?.[0],
+      quantity: 1,
+      restaurant: restaurant,
+      description: item.description,
+      category: item.category
+    };
+
+    // Check if item already exists in cart
+    const existingItemIndex = cart.findIndex(cartItem => 
+      cartItem._id === newCartItem._id && 
+      cartItem.restaurant?._id === restaurant?._id
+    );
+
+    if (existingItemIndex > -1) {
+      // Update quantity if item exists
+      setCart(prevCart => 
+        prevCart.map((cartItem, index) => 
+          index === existingItemIndex 
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        )
+      );
+    } else {
+      // Add new item to cart
+      setCart(prevCart => [...prevCart, newCartItem]);
+    }
+
+    // ✅ Backend sync (non-blocking)
     const cartData = {
       menuItemId: item._id || item.id,
       quantity: 1
@@ -411,53 +516,54 @@ const handleAddToCart = async (item, restaurant) => {
       cartData.storeId = restaurant._id || restaurant.id;
     }
 
-    console.log('🛒 Sending to backend:', cartData);
+    console.log('🛒 Syncing with backend:', cartData);
 
-    // ✅ ONLY backend call - frontend state will be updated via loadCartFromBackend
-    const response = await cartService.addToCart(cartData);
-    
-    if (response.success) {
-      // ✅ IMPORTANT: Don't update frontend state manually
-      // Instead, reload cart from backend to get consistent state
-      await loadCartFromBackend();
-      
-      // ✅ Success message
-      const itemName = item.selectedWeight ? 
-        `${item.name} (${item.selectedWeight.label})` : 
-        item.name;
-      
-      setNotification({
-        isVisible: true,
-        message: `${itemName} added to cart!`,
-        type: 'success'
+    // Backend call - don't wait for response for immediate UX
+    cartService.addToCart(cartData)
+      .then(response => {
+        if (response.success) {
+          console.log('✅ Backend cart updated successfully');
+          // Refresh cart from backend to ensure consistency
+          loadCartFromBackend();
+        }
+      })
+      .catch(error => {
+        console.error('❌ Backend sync failed:', error);
+        // Don't show error to user - frontend state is already updated
       });
 
-    } else {
-      throw new Error(response.message || 'Failed to add to cart');
-    }
+    // ✅ Success message
+    const itemName = item.selectedWeight ? 
+      `${item.name} (${item.selectedWeight.label})` : 
+      item.name;
+    
+    setNotification({
+      isVisible: true,
+      message: `${itemName} added to cart!`,
+      type: 'success'
+    });
 
   } catch (error) {
     console.error('❌ Cart error:', error);
     setNotification({
       isVisible: true,
-      message: error.message || 'Error adding item to cart',
+      message: 'Error adding item to cart',
       type: 'error'
     });
   }
 };
-  // ✅ SIMPLIFIED: Load cart from backend
-  // App.jsx - FIXED loadCartFromBackend
 
+// ✅ UPDATED: Load cart from backend with better error handling
 const loadCartFromBackend = async () => {
   try {
     console.log('🔄 Loading cart from backend...');
     
     const response = await cartService.getCart();
-    console.log('📦 Backend cart response:', response);
+    
 
     if (response.success && response.data) {
       if (response.data.items && response.data.items.length > 0) {
-        // ✅ PROPERLY format cart items with ALL required fields
+        // ✅ IMPROVED: Better item mapping
         const backendCart = response.data.items.map(item => {
           const menuItem = item.menuItemId || item;
           return {
@@ -465,10 +571,9 @@ const loadCartFromBackend = async () => {
             id: menuItem._id || item.menuItemId,
             name: menuItem.name || item.itemName,
             price: menuItem.price || item.price,
-            image: menuItem.image ,
-            quantity: item.quantity,
+            image: menuItem.image || menuItem.images?.[0] || item.image,
+            quantity: item.quantity || 1,
             restaurant: item.storeId || item.restaurantId || menuItem.storeId,
-            // Add other necessary fields
             description: menuItem.description,
             category: menuItem.category
           };
@@ -476,112 +581,123 @@ const loadCartFromBackend = async () => {
         
         setCart(backendCart);
         localStorage.setItem("tommaluCart", JSON.stringify(backendCart));
-        console.log('✅ Cart loaded with images:', backendCart);
+        
       } else {
+        // Clear cart if backend returns empty
         setCart([]);
         localStorage.setItem("tommaluCart", JSON.stringify([]));
         console.log('🛒 Cart is empty');
       }
     }
   } catch (error) {
-    console.error('❌ Error loading cart:', error);
+    console.error('❌ Error loading cart from backend:', error);
     // Fallback to localStorage
-    const localCart = JSON.parse(localStorage.getItem('tommaluCart') || '[]');
-    setCart(localCart);
+    try {
+      const localCart = JSON.parse(localStorage.getItem('tommaluCart') || '[]');
+      setCart(localCart);
+      console.log('🔄 Using local storage cart:', localCart.length, 'items');
+    } catch (parseError) {
+      console.error('❌ Error parsing local cart:', parseError);
+      setCart([]);
+    }
   }
 };
-  // ✅ SIMPLIFIED: Authentication handler
-  const handleSignIn = async (userData, token) => {
-    console.log('🎯 SignIn with cookies');
+
+// ✅ NEW: Clear cart function
+const handleClearCart = async () => {
+  try {
+    setCart([]);
+    localStorage.setItem("tommaluCart", JSON.stringify([]));
     
+    // Clear backend cart if user is signed in
+    if (isSignedIn) {
+      await cartService.clearCart();
+    }
+    
+    setNotification({
+      isVisible: true,
+      message: 'Cart cleared successfully',
+      type: 'success'
+    });
+  } catch (error) {
+    console.error('Error clearing cart:', error);
+  }
+};  // ✅ SIMPLIFIED: Authentication handler
+  const handleSignIn = async (userData, token) => {
+  console.log('🎯 SignIn with cookies');
+
+  try {
+    // ✅ Save token & user to cookies
+    cookieService.set('token', token, { path: '/', expires: 7 }); // 7 days
+    cookieService.set('user', JSON.stringify(userData), { path: '/', expires: 7 });
+
+    // ✅ Update states
+    setAuthData(token, userData);
+    setIsSignedIn(true);
+    setUser(userData);
+
+    console.log('🔄 Auto-merging cart via cookies...');
+    await loadCartFromBackend();
+
+    setNotification({
+      message: `Welcome ${userData.name || userData.email}!`,
+      isVisible: true,
+      type: 'success'
+    });
+
+  } catch (error) {
+    console.error('❌ SignIn error:', error);
+  }
+};
+
+
+ const loadUserData = async () => {
+  const savedUser = cookieService.get('user');
+  const savedToken = cookieService.get('token');
+
+  if (savedUser && savedToken) {
     try {
-      // Set auth data
-      setAuthData(token, userData);
+      // Parse saved cookie
+      const userFromCookie = JSON.parse(savedUser);
+      setUser(userFromCookie);
       setIsSignedIn(true);
-      setUser(userData);
-      
-      // ✅ Auto-merge happens via cookies - no manual merge needed
-      console.log('🔄 Auto-merging cart via cookies...');
-      
-      // Load updated cart
-      await loadCartFromBackend();
-      
-      setNotification({
-        message: `Welcome ${userData.name || userData.email}!`,
-        isVisible: true,
-        type: 'success'
-      });
-      
-    } catch (error) {
-      console.error('❌ SignIn error:', error);
-    }
-  };
 
-  // ✅ Remove guest ID related code from loadUserData
-  const loadUserData = async () => {
-    try {
-      const savedUser = localStorage.getItem("user");
-      const savedToken = localStorage.getItem("token");
-
-      console.log('🔄 Loading user data...');
-
-      if (savedUser && savedToken) {
-        try {
-          const userData = await authService.getProfile();
-          if (userData.status === 'success' || userData.success) {
-            const user = userData.data?.user || userData.data;
-            setUser(user);
-            setIsSignedIn(true);
-            console.log('✅ User authenticated');
-          }
-        } catch (error) {
-          console.log('❌ Token verification failed:', error.message);
-          // Fallback to localStorage
-          try {
-            const userData = JSON.parse(savedUser);
-            setUser(userData);
-            setIsSignedIn(true);
-          } catch (parseError) {
-            clearAuthData();
-          }
-        }
+      // Optional: Refresh from backend
+      const userData = await authService.getProfile();
+      if (userData?.data?.user) {
+        setUser(userData.data.user);
       }
-      
-      // ✅ Always load cart (cookies handle anonymous vs logged-in)
-      await loadCartFromBackend();
+    } catch (error) {
+      console.error('Error loading user data from cookie or backend:', error);
+    }
+  }
+};
 
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
-  const handleLogout = async () => {
-    try {
-      // ✅ Backend logout call karo
-      await authService.logout();
-    } catch (error) {
-      console.log('⚠️ Backend logout failed:', error.message);
-    } finally {
-      // ✅ Frontend state clear karo
-      setIsSignedIn(false);
-      setUser(null);
-      setCart([]);
-      setCurrentPage('home');
-      
-      // ✅ Clear all auth data
-      clearAuthData();
-      
-      // ✅ Create new guest ID for anonymous browsing
-      const newGuestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem('guestId', newGuestId);
-      
-      setNotification({
-        message: 'Logged out successfully',
-        isVisible: true
-      });
-      
-      console.log('✅ Logout completed, new guest ID:', newGuestId);
-    }
-  };
+
+ const handleLogout = async () => {
+  try {
+    await authService.logout();
+  } catch (error) {
+    console.log('⚠️ Backend logout failed:', error.message);
+  } finally {
+    setIsSignedIn(false);
+    setUser(null);
+    setCart([]);
+    setCurrentPage('home');
+
+    clearAuthData();
+    cookieService.remove('user');
+    cookieService.remove('token');
+
+    const newGuestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('guestId', newGuestId);
+
+    setNotification({
+      message: 'Logged out successfully',
+      isVisible: true
+    });
+  }
+};
 
   const openSignInModal = () => {
     setIsSignInModalOpen(true);
@@ -697,15 +813,7 @@ const loadCartFromBackend = async () => {
 
   const [orders, setOrders] = useState([]);
 
-  // ✅ Temporary: Check localStorage on page load
-  useEffect(() => {
-    console.log('📋 Initial localStorage state:', {
-      token: localStorage.getItem('token'),
-      user: localStorage.getItem('user'),
-      guestId: localStorage.getItem('guestId'),
-      cart: localStorage.getItem('tommaluCart')
-    });
-  }, []);
+ 
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -795,7 +903,8 @@ const loadCartFromBackend = async () => {
           />} 
         />
         <Route path="/category/:categoryName" element={
-          <CategoryProducts 
+          <CategoryProducts  
+          stores={stores}
             categories={categories} 
             onAddToCart={handleAddToCart} 
           />} 
@@ -832,7 +941,7 @@ const loadCartFromBackend = async () => {
         onSignIn={handleSignIn}
       />
       
-      <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} user={user} onUpdateProfile={handleUpdateProfile} />
+      <ProfileModal isOpen={isProfileModalOpen} user={user} onClose={closeProfileModal} updateProfile={handleUpdateProfile} />
       <Notification message={notification.message} isVisible={notification.isVisible} onClose={() => setNotification({ message: '', isVisible: false })} />
     </div>
   );

@@ -1,6 +1,6 @@
 import React from "react";
 import ProfileDropdown from "../profileDropdown/ProfileDropdown";
-import logo from "../../assets/logo.jpg"
+import logo from "../../assets/logo.png"
 
 import { useState,useEffect, } from "react";
 import { NavLink,useLocation,useNavigate } from "react-router-dom";
@@ -79,7 +79,7 @@ import { NavLink,useLocation,useNavigate } from "react-router-dom";
                         <div className="hidden md:flex items-center justify-between py-4">
                             <div className="flex items-center space-x-8">
                                 <NavLink to="/" className="text-3xl font-bold hover:text-[#ff6931] transition-colors">
-  <img src={logo} alt="Tommalu Logo" className="h-6 w-auto object-fill"/>
+  <img src={logo} alt="Tommalu Logo" className="h-12 w-auto object-fill"/>
                                 </NavLink>
                                <nav className="flex space-x-6">
                                     <NavLink
