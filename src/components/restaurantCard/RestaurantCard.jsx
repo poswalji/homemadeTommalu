@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+"use client";
+import Link from "next/link";
 
 const RestaurantCard = ({ type, restaurant, onRestaurantClick }) => {
   
@@ -28,9 +29,8 @@ const RestaurantCard = ({ type, restaurant, onRestaurantClick }) => {
 
   return (
     <Link 
-      to={`/items/${type}/${createSlug(getStoreName(restaurant))}`}
+      href={`/items/${type}/${createSlug(getStoreName(restaurant))}`}
       onClick={handleClick}
-      state={{ restaurant }}
     >
       <div className="bg-white rounded-lg shadow-md overflow-hidden card-hover cursor-pointer flex-shrink-0 w-80 hover:shadow-lg transition-shadow duration-300 border border-gray-200">
         <div className="p-6">

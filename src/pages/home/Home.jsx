@@ -1,9 +1,10 @@
+"use client";
 import React from "react";
 import FeaturesSection from "../featuresSection/FeaturesSection";
 import StatsSection from "../statsSection/StatsSection";
 import RestaurantCard from "../../components/restaurantCard/RestaurantCard";
-import HeroSection from "../../components/hero/HeroSection";
-import { Link, NavLink } from "react-router-dom";
+import HeroSection from "../../components/HeroSection";
+import Link from "next/link";
 
 const Home = ({
   onRestaurantClick,
@@ -43,7 +44,7 @@ const Home = ({
           <div className="flex space-x-4 overflow-x-auto pb-4 pt-2 scrollbar-hide px-2">
             {categories.map((category) => (
               <Link
-                to={`/category/${category.name.toLowerCase()}`}
+                href={`/category/${category.name.toLowerCase()}`}
                 key={category.id}
                 className="flex-shrink-0 text-center group"
                 onClick={() => onCategoryClick && onCategoryClick(category)}
@@ -82,12 +83,12 @@ const Home = ({
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Popular Restaurants</h2>
-              <NavLink 
-                to={'/food'}
+              <Link 
+                href={'/food'}
                 className="text-purple-600 hover:text-purple-800 font-medium"
               >
                 View All <i className="fas fa-arrow-right ml-1"></i>
-              </NavLink>
+              </Link>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -108,12 +109,12 @@ const Home = ({
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Popular Grocery Stores</h2>
-              <NavLink
-                to={'/grocery'}
+              <Link
+                href={'/grocery'}
                 className="text-green-600 hover:text-green-800 font-medium"
               >
                 View All <i className="fas fa-arrow-right ml-1"></i>
-              </NavLink>
+              </Link>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
