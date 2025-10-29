@@ -1,5 +1,5 @@
 export const appConfig = {
-  name: "TomMalu",
+  name: "Tommalu",
   description: "Your trusted partner for fresh groceries and delicious food delivery in Jaipur",
   url: process.env.NEXT_PUBLIC_APP_URL || "https://tommalu.com",
   keywords: [

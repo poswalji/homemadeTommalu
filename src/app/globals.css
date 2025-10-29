@@ -30,7 +30,7 @@
       display: none;
     }
   
-    .circular-item {
+     .circular-item {
       min-width: 120px;
       height: 120px;
       border-radius: 50%;
@@ -38,7 +38,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(45deg, #ff6b6b, #feca57);
+      background-color: lab(66% 50.34 52.19);
       color: white;
       cursor: pointer;
       transition: transform 0.3s ease;
@@ -58,19 +58,19 @@
     }
   
     .order-status-preparing {
-      background: linear-gradient(45deg, #f59e0b, #f97316);
+      background-color: #f97316;
     }
   
     .order-status-on-way {
-      background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+      background-color: #3b82f6;
     }
   
     .order-status-delivered {
-      background: linear-gradient(45deg, #10b981, #059669);
+      background-color: #10b981;
     }
   
     .order-status-cancelled {
-      background: linear-gradient(45deg, #ef4444, #dc2626);
+      background-color: #ef4444;
     }
         /* index.css ya globals.css me */
         .scrollbar-hide::-webkit-scrollbar {

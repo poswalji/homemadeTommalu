@@ -36,7 +36,7 @@ const RestaurantCard = ({ type, restaurant, onRestaurantClick }) => {
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center space-x-4 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+            <div className="w-16 h-16 bg-[lab(66%_50.34_52.19)] rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
               <span>{getStoreImage(restaurant)}</span>
             </div>
 

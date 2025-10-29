@@ -6,7 +6,7 @@ import { Mail } from "lucide-react";
 
 export function NewsletterSection() {
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-r from-[#FF6B6B] to-[#FECA57] text-white">
+    <section className="py-16 md:py-24 bg-[lab(66%_50.34_52.19)] text-white">
       <div className="container px-4 md:px-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -41,7 +41,7 @@ export function NewsletterSection() {
             />
             <Button 
               size="lg" 
-              className="bg-white h-10 text-[#FF6B6B] hover:bg-gray-100 font-semibold"
+              className="bg-white h-10 text-[lab(66%_50.34_52.19)] hover:bg-gray-100 font-semibold"
             >
               Subscribe
             </Button>

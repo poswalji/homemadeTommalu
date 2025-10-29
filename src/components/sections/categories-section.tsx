@@ -46,11 +46,11 @@ const categories = [
 
 export function CategoriesSection() {
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-white relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-[#FF6B6B] rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#FECA57] rounded-full blur-3xl"></div>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-[lab(66%_50.34_52.19)] rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[lab(70%_50.34_52.19)] rounded-full blur-3xl"></div>
       </div>
       
       <div className="container px-4 md:px-20 relative z-10">
@@ -62,7 +62,7 @@ export function CategoriesSection() {
           className="text-center mb-16"
         >
           <Badge className="mb-6 text-sm px-6 py-2">Shop by Category</Badge>
-          <h2 className="text-4xl md:text-5xl p-2 font-bold mb-6 bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl p-2 font-bold mb-6 text-gray-900">
             Browse Our Categories
           </h2>
           <p className="text-gray-600 max-w-3xl mx-auto text-lg">
@@ -107,7 +107,7 @@ export function CategoriesSection() {
           <p className="text-gray-600 mb-4">
             Don&apos;t see what you&apos;re looking for?
           </p>
-          <button className="text-[#FF6B6B] font-semibold hover:text-[#FF5252] transition-colors flex items-center gap-2 mx-auto">
+          <button className="text-[lab(66%_50.34_52.19)] font-semibold hover:text-[lab(60%_50.34_52.19)] transition-colors flex items-center gap-2 mx-auto">
             View All Categories
             <ArrowRight className="h-4 w-4" />
           </button>

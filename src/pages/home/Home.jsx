@@ -52,7 +52,7 @@ const Home = ({
                 <div
                   className={`
                     w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28
-                    bg-gradient-to-r ${category.color} 
+                    ${category.color.replace('from-', '').replace('to-', '').split(' ')[0]} 
                     rounded-full flex items-center justify-center
                     mb-2
                     group-hover:scale-110 transition-all duration-300

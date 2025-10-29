@@ -36,7 +36,7 @@ const stats = [
 
 export function StatsSection() {
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-r from-[#FF6B6B] to-[#FECA57] text-white">
+    <section className="py-16 md:py-24 bg-[lab(66%_50.34_52.19)] text-white">
       <div className="container px-4 md:px-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
