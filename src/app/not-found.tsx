@@ -22,7 +22,7 @@ export default function Page() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-yellow-50">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
       <main className="flex-1 flex items-center justify-center py-12 px-4">
@@ -39,7 +39,7 @@ export default function Page() {
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
               Something{" "}
-              <span className="bg-gradient-to-r from-[#FF6B6B] to-[#FECA57] bg-clip-text text-transparent">
+              <span className="text-[lab(66%_50.34_52.19)]">
                 Amazing
               </span>{" "}
               is Coming!
@@ -54,7 +54,7 @@ export default function Page() {
               {!subscribed ? (
                 <>
                   <div className="flex justify-center mb-6">
-                    <div className="bg-gradient-to-br from-[#FF6B6B] to-[#FECA57] rounded-full p-4">
+                    <div className="bg-[lab(66%_50.34_52.19)] rounded-full p-4">
                       <Bell className="h-8 w-8 text-white" />
                     </div>
                   </div>
@@ -69,11 +69,11 @@ export default function Page() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       required
-                      className="flex-1 px-6 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]"
+                      className="flex-1 px-6 py-4 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[lab(66%_50.34_52.19)]"
                     />
                     <button
                       type="submit"
-                      className="px-8 py-4 bg-gradient-to-r from-[#FF6B6B] to-[#FECA57] text-white rounded-lg font-semibold hover:shadow-lg transition-shadow"
+                      className="px-8 py-4 bg-[lab(66%_50.34_52.19)] text-white rounded-lg font-semibold hover:shadow-lg transition-shadow"
                     >
                       Notify Me
                     </button>

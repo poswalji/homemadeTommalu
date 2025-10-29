@@ -1,5 +1,5 @@
 export const appConfig = {
-  name: "TomMalu",
+  name: "Tommalu",
   description: "Your trusted partner for fresh groceries and delicious food delivery in Jaipur",
   url: process.env.NEXT_PUBLIC_APP_URL || "https://tommalu.com",
   keywords: [
@@ -18,7 +18,7 @@ export const appConfig = {
   },
   contact: {
     phone: "+91 1234567890",
-    whatsapp: "1234567890", // WhatsApp number without country code prefix
+    whatsapp: "1234567890", 
     email: "support@tommalu.com",
     address: "Jaipur, Rajasthan, India",
   },
