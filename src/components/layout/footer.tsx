@@ -80,7 +80,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t text-center text-sm text-gray-600">
-          <p>© 2025 TomMalu. All rights reserved.</p>
+          <p>© 2025 Tommalu. All rights reserved.</p>
         </div>
       </div>
     </footer>

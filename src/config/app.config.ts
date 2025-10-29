@@ -3,11 +3,12 @@ export const appConfig = {
   description: "Your trusted partner for fresh groceries and delicious food delivery in Jaipur",
   url: process.env.NEXT_PUBLIC_APP_URL || "https://tommalu.com",
   keywords: [
-    "food delivery Jaipur",
-    "fresh groceries Jaipur",
+    "food delivery nims",
+    "food delivery Achrol",
+    "fresh groceries Achrol",
     "online grocery shopping",
     "restaurant food delivery",
-    "TomMalu food delivery",
+    "Tommalu food delivery",
     "fast delivery Jaipur",
     "best grocery delivery",
   ],
@@ -17,8 +18,8 @@ export const appConfig = {
     twitter: "https://twitter.com/tommalu",
   },
   contact: {
-    phone: "+91 1234567890",
-    whatsapp: "1234567890", // WhatsApp number without country code prefix
+    phone: "+91 7742892352",
+    whatsapp: "7742892352", // WhatsApp number without country code prefix
     email: "support@tommalu.com",
     address: "Jaipur, Rajasthan, India",
   },
