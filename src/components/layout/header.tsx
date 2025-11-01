@@ -6,13 +6,14 @@ import { useApp } from "@/context/app-context";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function Header() {
   const { cartCount } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+  const router = useRouter();
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/60">
       <div className="container flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center space-x-2" aria-label="TomMalu Home">
           <Image src="/logo.png" alt="TomMalu" width={120} height={32} priority  />
@@ -45,7 +46,7 @@ export function Header() {
               )}
             </Button>
           </Link>
-          <Button variant="default" className="hidden md:inline-flex">Sign In</Button>
+          <Button onClick={() => router.push('/login')} variant="default" className="hidden md:inline-flex">Sign In</Button>
           
           {/* Mobile Menu Button */}
           <Button
@@ -93,7 +94,7 @@ export function Header() {
               My Orders
             </Link>
             <div className="pt-4 border-t">
-              <Button variant="default" className="w-full">Sign In</Button>
+              <Button onClick={() => router.push('/login')} variant="default" className="w-full">Sign In</Button>
             </div>
           </nav>
         </div>

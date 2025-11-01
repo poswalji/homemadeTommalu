@@ -63,32 +63,32 @@ export function HeroSection() {
                         </span>
                      </motion.div>
 
-                    <motion.h1
+                   <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: 0.15 }}
                         className='text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight'>
                         <span className='text-white'>
-                           Your Trusted
+                           Order food & groceries.
                         </span>
                         <br />
                         <span className='text-[lab(66%_50.34_52.19)]'>
-                           Food & Grocery
+                           Discover the best restaurants.
                         </span>
                         <br />
                         <span className='text-[lab(66%_50.34_52.19)]'>
-                           Partner
+                           Delivered fast.
                         </span>
                      </motion.h1>
 
-                    <motion.p
+                   <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: 0.2 }}
                         className='text-xl md:text-2xl text-white mb-8 leading-relaxed'>
-                        Fast delivery, fresh produce, and great prices. Order now and
-                        get your groceries and favorite meals delivered in{' '}
-                        <span className="font-bold text-[lab(66%_50.34_52.19)]">20-30 minutes</span>.
+                        Cravings, essentials, and everything in between—on demand. Fresh, affordable,
+                        and at your door in{' '}
+                        <span className="font-bold text-[lab(66%_50.34_52.19)]">20–30 minutes</span>.
                      </motion.p>
 
                     <motion.div

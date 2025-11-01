@@ -5,6 +5,9 @@ import "./globals.css";
 import { AppProvider } from "@/context/app-context";
 import { appConfig } from "@/config/app.config";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
+import { QueryProvider } from "@/providers/query-provider";
+import { Toaster } from "sonner";
+import { AuthProvider } from "@/providers/auth-provider";
 
 const figtree = Figtree({
   subsets: ["latin"],
@@ -125,8 +128,13 @@ export default function RootLayout({
       <body
         className={`${figtree.className} antialiased`}
       >
-        <AppProvider>{children}</AppProvider>
-        <WhatsAppButton />
+        <QueryProvider>
+          <AppProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </AppProvider>
+          <WhatsAppButton />
+          <Toaster position="top-right" richColors />
+        </QueryProvider>
       </body>
     </html>
   );

@@ -3,7 +3,7 @@ import React from "react";
 import FeaturesSection from "../featuresSection/FeaturesSection";
 import StatsSection from "../statsSection/StatsSection";
 import RestaurantCard from "../../components/restaurantCard/RestaurantCard";
-import HeroSection from "../../components/HeroSection";
+import { HeroSection } from "../../components/sections/hero-section";
 import Link from "next/link";
 
 const Home = ({

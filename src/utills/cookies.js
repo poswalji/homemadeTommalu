@@ -1,7 +1,13 @@
-// Cookie utility functions
+// Cookie utility functions - Works in browser only
 class CookieService {
+  // Check if we're in browser
+  _isBrowser() {
+    return typeof window !== 'undefined' && typeof document !== 'undefined';
+  }
+
   // Set cookie
   set(name, value, days = 7) {
+    if (!this._isBrowser()) return;
     const expires = new Date();
     expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
     const secure = process.env.NODE_ENV === 'production' ? ';secure' : '';
@@ -10,6 +16,7 @@ class CookieService {
 
   // Get cookie
   get(name) {
+    if (!this._isBrowser()) return null;
     const nameEQ = name + "=";
     const ca = document.cookie.split(';');
     for(let i = 0; i < ca.length; i++) {
@@ -22,6 +29,7 @@ class CookieService {
 
   // Delete cookie
   delete(name) {
+    if (!this._isBrowser()) return;
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
   }
 
