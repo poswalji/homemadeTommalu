@@ -40,7 +40,15 @@ export const useAddToCart = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: AddToCartData) => cartApi.addToCart(data),
+    mutationFn: async (data: AddToCartData) => {
+      const isAuthed = typeof window !== 'undefined' && cookieService.isAuthenticated();
+      if (!isAuthed) {
+        const err = new Error('Please log in to add items to cart');
+        (err as unknown as { code?: number }).code = 401;
+        throw err;
+      }
+      return cartApi.addToCart(data);
+    },
     onSuccess: (response) => {
       // If authenticated, refetch server cart; otherwise, set cache from response to avoid 401
       const isAuthed = typeof window !== 'undefined' && cookieService.isAuthenticated();
