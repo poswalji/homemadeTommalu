@@ -38,11 +38,29 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Handle 401 Unauthorized - Clear auth and redirect to login
+    // Handle 401 Unauthorized - Try refresh once, then clear
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // Only clear auth if this was an authenticated call (had Bearer) or an auth endpoint
+      try {
+        const resp = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
+        const newToken = (resp.data as { token?: string })?.token;
+        if (newToken) {
+          cookieService.setAuthData(newToken);
+          // retry original request with new token
+          originalRequest.headers = originalRequest.headers || {};
+          (originalRequest.headers as Record<string, string>).Authorization = `Bearer ${newToken}`;
+          return apiClient(originalRequest);
+        }
+      } catch {
+        // fallthrough to clear
+      }
+
+      // If refresh failed, clear auth if it was an authenticated request or auth endpoint
       const hadAuthHeader = !!(
         originalRequest.headers &&
         (originalRequest.headers as Record<string, unknown>).Authorization

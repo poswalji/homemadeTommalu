@@ -65,15 +65,32 @@ export const cartService = {
   getCart: async () => {
     try {
       const isLoggedIn = isAuthenticated();
-      
+
       console.log('🛒 Get Cart - User Status:', isLoggedIn ? 'Logged In' : 'Guest');
+
+      // Guests should not call the auth-only endpoint; return empty cart structure
+      if (!isLoggedIn) {
+        return {
+          success: true,
+          data: {
+            items: [],
+            storeId: null,
+            storeName: null,
+            totalAmount: 0,
+            deliveryCharge: 0,
+            discountAmount: 0,
+            finalAmount: 0,
+          },
+          userType: 'guest',
+        };
+      }
 
       const response = await fetch(`${API_BASE_URL}/cart`, {
         method: 'GET',
-        headers: getHeaders(isLoggedIn),
+        headers: getHeaders(true),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Get cart success:', result);
       return result;

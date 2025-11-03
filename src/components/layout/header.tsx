@@ -33,7 +33,7 @@ export function Header() {
   }, [isAuthenticated, cartData, guestCount]);
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/85 backdrop-blur ">
-      <div className="container flex h-16 items-center justify-between px-4">
+      <div className="container flex h-16 items-center justify-between px-4 mx-auto">
         <Link href="/" className="flex items-center space-x-2" aria-label="TomMalu Home">
           <Image src="/logo.png" alt="TomMalu" width={120} height={32} priority  />
         </Link>
@@ -69,7 +69,6 @@ export function Header() {
           {!isAuthenticated ? (
             <>
               <Button onClick={() => router.push('/login')} variant="default" className="hidden md:inline-flex">Sign In</Button>
-              <Button onClick={() => router.push('/register')} variant="outline" className="hidden md:inline-flex">Sign Up</Button>
             </>
           ) : (
             <>
@@ -125,7 +124,6 @@ export function Header() {
               {!isAuthenticated ? (
                 <>
                   <Button onClick={() => router.push('/login')} variant="default" className="w-full">Sign In</Button>
-                  <Button onClick={() => router.push('/register')} variant="outline" className="w-full">Sign Up</Button>
                   <Button onClick={() => router.push('/partner')} variant="outline" className="w-full">Partner with Tommalu</Button>
                 </>
               ) : (

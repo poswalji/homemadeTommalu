@@ -66,7 +66,7 @@ export function StatsSection() {
     : defaultStats;
   return (
     <section className="py-16 md:py-24 bg-[lab(66%_50.34_52.19)] text-white">
-      <div className="container px-4 md:px-20">
+      <div className="container px-4 md:px-20 mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

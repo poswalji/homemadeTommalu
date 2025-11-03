@@ -19,7 +19,7 @@ export function CategoriesSection() {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-[lab(70%_50.34_52.19)] rounded-full blur-3xl"></div>
       </div>
       
-      <div className="container px-4 md:px-20 relative z-10">
+      <div className="container px-4 md:px-20 mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
