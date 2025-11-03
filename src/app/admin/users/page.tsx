@@ -106,7 +106,14 @@ export default function AdminUsersPage() {
                         onClick={() => suspendUser.mutate(user.id)}
                         disabled={suspendUser.isPending}
                       >
-                        Suspend
+                        {suspendUser.isPending ? (
+                          <>
+                            <Spinner size="sm" className="mr-2" />
+                            Suspending...
+                          </>
+                        ) : (
+                          'Suspend'
+                        )}
                       </Button>
                     ) : (
                       <Button
@@ -115,7 +122,14 @@ export default function AdminUsersPage() {
                         onClick={() => reactivateUser.mutate(user.id)}
                         disabled={reactivateUser.isPending}
                       >
-                        Reactivate
+                        {reactivateUser.isPending ? (
+                          <>
+                            <Spinner size="sm" className="mr-2" />
+                            Reactivating...
+                          </>
+                        ) : (
+                          'Reactivate'
+                        )}
                       </Button>
                     )}
                   </TableCell>

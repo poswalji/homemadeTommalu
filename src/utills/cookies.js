@@ -34,9 +34,8 @@ class CookieService {
   }
 
   // Set auth data
-  setAuthData(token, user, days = 7) {
+  setAuthData(token, days = 7) {
     this.set('token', token, days);
-    this.set('user', JSON.stringify(user), days);
   }
 
   // Clear auth data

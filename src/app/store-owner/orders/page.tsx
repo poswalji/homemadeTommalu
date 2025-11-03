@@ -348,7 +348,14 @@ export default function StoreOwnerOrdersPage() {
                             Cancel
                           </Button>
                           <Button onClick={handleStatusUpdate} disabled={updateStatus.isPending}>
-                            {updateStatus.isPending ? 'Updating...' : 'Update Status'}
+                            {updateStatus.isPending ? (
+                              <>
+                                <Spinner size="sm" className="mr-2" />
+                                Updating...
+                              </>
+                            ) : (
+                              'Update Status'
+                            )}
                           </Button>
                         </DialogFooter>
                       </DialogContent>

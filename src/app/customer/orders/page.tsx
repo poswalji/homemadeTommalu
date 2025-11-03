@@ -282,7 +282,14 @@ export default function CustomerOrdersPage() {
                             onClick={handleCancelOrder}
                             disabled={cancelOrder.isPending}
                           >
-                            {cancelOrder.isPending ? 'Cancelling...' : 'Cancel Order'}
+                            {cancelOrder.isPending ? (
+                              <>
+                                <Spinner size="sm" className="mr-2" />
+                                Cancelling...
+                              </>
+                            ) : (
+                              'Cancel Order'
+                            )}
                           </Button>
                         </DialogFooter>
                       </DialogContent>

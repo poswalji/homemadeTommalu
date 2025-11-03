@@ -158,8 +158,17 @@ export default function AdminPendingStoresPage() {
                     disabled={approveStore.isPending}
                     className="flex-1"
                   >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve
+                    {approveStore.isPending ? (
+                      <>
+                        <Spinner size="sm" className="mr-2" />
+                        Approving...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Approve
+                      </>
+                    )}
                   </Button>
                   <Button
                     variant="destructive"
@@ -168,8 +177,17 @@ export default function AdminPendingStoresPage() {
                     disabled={rejectStore.isPending}
                     className="flex-1"
                   >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Reject
+                    {rejectStore.isPending ? (
+                      <>
+                        <Spinner size="sm" className="mr-2" />
+                        Rejecting...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Reject
+                      </>
+                    )}
                   </Button>
                 </div>
               </Card>

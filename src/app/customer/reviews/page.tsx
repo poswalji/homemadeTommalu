@@ -14,6 +14,7 @@ import {
   Star, StarOff, MessageSquare, Edit, Plus,
   Store, Package
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 
 export default function CustomerReviewsPage() {
@@ -192,7 +193,14 @@ export default function CustomerReviewsPage() {
                   onClick={handleCreateReview}
                   disabled={createMutation.isPending || !reviewForm.orderId || !reviewForm.storeId}
                 >
-                  {createMutation.isPending ? 'Submitting...' : 'Submit Review'}
+                  {createMutation.isPending ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Review'
+                  )}
                 </Button>
               </div>
             </div>
@@ -335,7 +343,14 @@ export default function CustomerReviewsPage() {
                                 onClick={handleUpdateReview}
                                 disabled={updateMutation.isPending}
                               >
-                                {updateMutation.isPending ? 'Updating...' : 'Update Review'}
+                                {updateMutation.isPending ? (
+                                  <>
+                                    <Spinner size="sm" className="mr-2" />
+                                    Updating...
+                                  </>
+                                ) : (
+                                  'Update Review'
+                                )}
                               </Button>
                             </div>
                           </div>

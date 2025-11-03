@@ -76,20 +76,42 @@ apiClient.interceptors.response.use(
 // Helper function for handling API errors
 export const handleApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<{ message?: string; error?: string }>;
+    const axiosError = error as AxiosError<{ 
+      success?: boolean;
+      error?: {
+        message?: string;
+        type?: string;
+        path?: string;
+        method?: string;
+        stack?: string;
+      };
+      message?: string;
+    }>;
     
     if (axiosError.response?.data) {
-      return (
-        axiosError.response.data.message ||
-        axiosError.response.data.error ||
-        axiosError.message ||
-        'An error occurred'
-      );
+      const data = axiosError.response.data;
+      
+      // Handle backend error format: { success: false, error: { message: ... } }
+      if (data.error?.message) {
+        return data.error.message;
+      }
+      
+      // Fallback to direct message property
+      if (data.message) {
+        return data.message;
+      }
+      
+      // Fallback to axios error message
+      if (axiosError.message) {
+        return axiosError.message;
+      }
     }
     
     if (axiosError.request) {
       return 'Network error. Please check your connection.';
     }
+    
+    return 'An error occurred';
   }
   
   if (error instanceof Error) {

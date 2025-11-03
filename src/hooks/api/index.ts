@@ -8,5 +8,6 @@ export * from './use-reviews';
 export * from './use-promotions';
 export * from './use-disputes';
 export * from './use-payouts';
+export * from './use-cart';
 
 

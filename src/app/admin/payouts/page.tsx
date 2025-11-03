@@ -14,6 +14,7 @@ import {
   CreditCard, CheckCircle, XCircle, Clock, DollarSign,
   Download, Plus, Filter
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -172,7 +173,14 @@ export default function PayoutsPage() {
                   onClick={handleGenerate}
                   disabled={generateMutation.isPending}
                 >
-                  {generateMutation.isPending ? 'Generating...' : 'Generate'}
+                  {generateMutation.isPending ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Generating...
+                    </>
+                  ) : (
+                    'Generate'
+                  )}
                 </Button>
               </div>
             </div>
@@ -342,8 +350,17 @@ export default function PayoutsPage() {
                           onClick={() => handleApprove(payout.id)}
                           disabled={approveMutation.isPending}
                         >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Approve
+                          {approveMutation.isPending ? (
+                            <>
+                              <Spinner size="sm" className="mr-2" />
+                              Approving...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Approve
+                            </>
+                          )}
                         </Button>
                       )}
                       {payout.status === 'approved' && (
@@ -395,7 +412,14 @@ export default function PayoutsPage() {
                                   onClick={handleComplete}
                                   disabled={completeMutation.isPending}
                                 >
-                                  {completeMutation.isPending ? 'Completing...' : 'Complete Payout'}
+                                  {completeMutation.isPending ? (
+                                    <>
+                                      <Spinner size="sm" className="mr-2" />
+                                      Completing...
+                                    </>
+                                  ) : (
+                                    'Complete Payout'
+                                  )}
                                 </Button>
                               </div>
                             </div>

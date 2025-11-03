@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   AlertCircle, Plus, FileText, Clock, CheckCircle, XCircle
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 
 export default function CustomerDisputesPage() {
@@ -185,7 +186,14 @@ export default function CustomerDisputesPage() {
                   onClick={handleCreateDispute}
                   disabled={createMutation.isPending || !disputeForm.orderId || !disputeForm.title || !disputeForm.description}
                 >
-                  {createMutation.isPending ? 'Submitting...' : 'Submit Dispute'}
+                  {createMutation.isPending ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Dispute'
+                  )}
                 </Button>
               </div>
             </div>

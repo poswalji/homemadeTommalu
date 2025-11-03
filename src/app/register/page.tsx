@@ -62,11 +62,15 @@ export default function RegisterPage() {
          });
 
          if (result.success) {
-            // Redirect based on role
-            const userRole = result.user.role;
-            console.log(result);
-            const dashboardRoute = getDashboardRoute(userRole);
-            router.push(dashboardRoute);
+            // If verification token exists, redirect to verification page
+            if (result.verificationToken) {
+               router.push(`/verify-email?token=${encodeURIComponent(result.verificationToken)}&email=${encodeURIComponent(formData.email)}`);
+            } else {
+               // If email is already verified, redirect to dashboard
+               const userRole = result.user.role;
+               const dashboardRoute = getDashboardRoute(userRole);
+               router.push(dashboardRoute);
+            }
          }
       } catch (err) {
          setError(handleApiError(err));

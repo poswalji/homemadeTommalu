@@ -132,6 +132,48 @@ export const publicApi = {
       };
     }
   },
+
+  // Get all products across stores
+  getProducts: async (params?: {
+    category?: string;
+    foodType?: string;
+    storeId?: string;
+    search?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    available?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    success: boolean;
+    data: MenuItem[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+    categories: string[];
+    filters: {
+      category: string | null;
+      foodType: string | null;
+      available: boolean | null;
+    };
+  }> => {
+    const response = await apiClient.get('/public/products', { params });
+    return response.data;
+  },
+
+  // Get all categories
+  getCategories: async (): Promise<{
+    success: boolean;
+    data: Array<{ name: string; count: number }>;
+  }> => {
+    const response = await apiClient.get('/public/categories');
+    return response.data;
+  },
 };
 
 

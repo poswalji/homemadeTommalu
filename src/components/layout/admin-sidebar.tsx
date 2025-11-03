@@ -15,12 +15,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { useLogout } from '@/hooks/api';
 
 const adminNavItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Stores', href: '/admin/stores', icon: Store },
   { name: 'Pending Stores', href: '/admin/stores/pending', icon: FileText },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
@@ -70,8 +70,17 @@ export function AdminSidebar() {
           onClick={handleLogout}
           disabled={logout.isPending}
         >
-          <LogOut className="w-5 h-5 mr-3" />
-          Logout
+          {logout.isPending ? (
+            <>
+              <Spinner size="sm" className="mr-3" />
+              Logging out...
+            </>
+          ) : (
+            <>
+              <LogOut className="w-5 h-5 mr-3" />
+              Logout
+            </>
+          )}
         </Button>
       </div>
     </aside>

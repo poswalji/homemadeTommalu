@@ -52,4 +52,34 @@ export const usePublicStats = () => {
   });
 };
 
+// Get all products
+export const useProducts = (params?: {
+  category?: string;
+  foodType?: string;
+  storeId?: string;
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  available?: string;
+  sortBy?: string;
+  sortOrder?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  return useQuery({
+    queryKey: [...publicKeys.all, 'products', params],
+    queryFn: () => publicApi.getProducts(params),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+};
+
+// Get all categories
+export const useCategories = () => {
+  return useQuery({
+    queryKey: [...publicKeys.all, 'categories'],
+    queryFn: () => publicApi.getCategories(),
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+};
+
 

@@ -4,6 +4,7 @@ import {
   type CreateOrderData,
   type UpdateOrderStatusData,
   type OrdersQueryParams,
+  type DeliveryAddress,
 } from '@/services/api/orders.api';
 
 // Query keys
@@ -25,6 +26,21 @@ export const useCreateOrder = () => {
     mutationFn: (data: CreateOrderData) => ordersApi.createOrder(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ordersKeys.myOrders() });
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
+  });
+};
+
+// Create order from cart (customer)
+export const useCreateOrderFromCart = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { deliveryAddress: DeliveryAddress; paymentMethod?: string }) =>
+      ordersApi.createOrderFromCart(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ordersKeys.myOrders() });
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 };

@@ -121,6 +121,15 @@ export const ordersApi = {
     const response = await apiClient.get<OrderResponse>(`/public/orders/${id}`);
     return response.data;
   },
+
+  // Create order from cart (customer)
+  createOrderFromCart: async (data: {
+    deliveryAddress: DeliveryAddress;
+    paymentMethod?: string;
+  }): Promise<OrderResponse> => {
+    const response = await apiClient.post<OrderResponse>('/customer/orders/from-cart', data);
+    return response.data;
+  },
 };
 
 

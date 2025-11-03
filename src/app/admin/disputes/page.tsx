@@ -14,6 +14,7 @@ import {
   AlertCircle, CheckCircle, XCircle,
   ArrowUp, FileText
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -299,7 +300,14 @@ export default function DisputesPage() {
                                     onClick={handleResolve}
                                     disabled={resolveMutation.isPending}
                                   >
-                                    {resolveMutation.isPending ? 'Resolving...' : 'Resolve Dispute'}
+                                    {resolveMutation.isPending ? (
+                                      <>
+                                        <Spinner size="sm" className="mr-2" />
+                                        Resolving...
+                                      </>
+                                    ) : (
+                                      'Resolve Dispute'
+                                    )}
                                   </Button>
                                 </div>
                               </div>
@@ -311,8 +319,17 @@ export default function DisputesPage() {
                             onClick={() => handleEscalate(dispute.id)}
                             disabled={escalateMutation.isPending}
                           >
-                            <ArrowUp className="w-4 h-4 mr-2" />
-                            Escalate
+                            {escalateMutation.isPending ? (
+                              <>
+                                <Spinner size="sm" className="mr-2" />
+                                Escalating...
+                              </>
+                            ) : (
+                              <>
+                                <ArrowUp className="w-4 h-4 mr-2" />
+                                Escalate
+                              </>
+                            )}
                           </Button>
                         </>
                       ) : null}
@@ -323,8 +340,17 @@ export default function DisputesPage() {
                           onClick={() => handleClose(dispute.id)}
                           disabled={closeMutation.isPending}
                         >
-                          <XCircle className="w-4 h-4 mr-2" />
-                          Close
+                          {closeMutation.isPending ? (
+                            <>
+                              <Spinner size="sm" className="mr-2" />
+                              Closing...
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-4 h-4 mr-2" />
+                              Close
+                            </>
+                          )}
                         </Button>
                       )}
                       <Link href={`/admin/disputes/${dispute.id}`}>

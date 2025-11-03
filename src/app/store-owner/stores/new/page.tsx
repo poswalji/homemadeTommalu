@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Store, Save } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -364,7 +365,7 @@ export default function CreateStorePage() {
               >
                 {createStore.isPending ? (
                   <>
-                    <span className="animate-spin mr-2">⏳</span>
+                    <Spinner size="sm" className="mr-2" />
                     Creating...
                   </>
                 ) : (

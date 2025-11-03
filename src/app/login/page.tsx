@@ -40,9 +40,22 @@ export default function LoginPage() {
       } else {
         setError('Login failed. Please check your credentials.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err);
-      setError(handleApiError(err));
+      const errorMessage = handleApiError(err);
+      
+      // Check if the error is about email verification
+      // The backend returns 403 with a message about email verification
+      if (err?.response?.status === 403 && err?.response?.data?.error?.message?.includes('verify')) {
+        // If there's a verificationToken in the error response, redirect to verification page
+        const verificationToken = err?.response?.data?.verificationToken;
+        if (verificationToken) {
+          router.push(`/verify-email?token=${encodeURIComponent(verificationToken)}&email=${encodeURIComponent(email)}`);
+          return;
+        }
+      }
+      
+      setError(errorMessage);
     }
   };
 

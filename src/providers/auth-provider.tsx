@@ -17,44 +17,45 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Initialize user from cookie directly (only on client side)
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      return cookieService.getCurrentUser();
+    }
+    return null;
+  });
+  const [isInitialized, setIsInitialized] = useState(() => typeof window !== 'undefined');
   const router = useRouter();
   const pathname = usePathname();
 
   // Auto-login: Check for existing auth token
   const { data: authData, isLoading, refetch } = useAuthMe();
 
-  // Initialize user from cookie on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedUser = cookieService.getCurrentUser();
-      if (storedUser) {
-        setUser(storedUser);
-      }
-      setIsInitialized(true);
-    }
-  }, []);
-
   // Update user when auth data changes
   useEffect(() => {
     if (authData?.success && authData?.user) {
-      setUser(authData.user);
+      setTimeout(() => {
+        setUser(authData.user);
+      }, 1000);
       // Update cookie with latest user data
       const token = cookieService.getCurrentToken();
       if (token) {
-        cookieService.setAuthData(token, authData.user);
+        cookieService.setAuthData(token);
       }
     } else if (authData && !authData.success) {
-      setUser(null);
+      setTimeout(() => {
+        setUser(null);
+      }, 1000);
     }
   }, [authData]);
 
-  // Auto-redirect if authenticated and on login/register page
   useEffect(() => {
-    if (isInitialized && user && (pathname === '/login' || pathname === '/register')) {
-      const dashboardRoute = getDashboardRoute(user.role);
-      router.push(dashboardRoute);
+    if (isInitialized && user && (pathname === '/login' || pathname === '/register' || pathname === '/verify-email')) {
+      // Only redirect if email is verified
+      if (user.emailVerified !== false) {
+        const dashboardRoute = getDashboardRoute(user.role);
+        router.push(dashboardRoute);
+      }
     }
   }, [user, pathname, isInitialized, router]);
 

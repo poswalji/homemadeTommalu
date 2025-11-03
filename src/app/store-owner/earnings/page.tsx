@@ -15,6 +15,7 @@ import {
   DollarSign, TrendingUp, Download, Calendar, CreditCard,
   Plus, FileText
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -83,8 +84,17 @@ export default function EarningsPage() {
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloadMutation.isPending}>
-            <Download className="w-4 h-4 mr-2" />
-            {downloadMutation.isPending ? 'Downloading...' : 'Download Statement'}
+            {downloadMutation.isPending ? (
+              <>
+                <Spinner size="sm" className="mr-2" />
+                Downloading...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Download Statement
+              </>
+            )}
           </Button>
           <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
             <DialogTrigger asChild>
@@ -133,7 +143,14 @@ export default function EarningsPage() {
                     onClick={handleRequestEarlyPayout}
                     disabled={requestMutation.isPending || !requestForm.storeId}
                   >
-                    {requestMutation.isPending ? 'Submitting...' : 'Submit Request'}
+                    {requestMutation.isPending ? (
+                      <>
+                        <Spinner size="sm" className="mr-2" />
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit Request'
+                    )}
                   </Button>
                 </div>
               </div>

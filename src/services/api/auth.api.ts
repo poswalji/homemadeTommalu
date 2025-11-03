@@ -51,6 +51,7 @@ export interface User {
   role: UserRole;
   phone?: string;
   addresses?: Address[];
+  emailVerified?: boolean;
 }
 
 export interface AuthResponse {
@@ -58,31 +59,63 @@ export interface AuthResponse {
     token: string;
     user: User;
   message?: string;
+  verificationToken?: string;
+}
+
+export interface VerifyEmailData {
+  code: string;
+  verificationToken: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+  token: string;
+  user: User;
+}
+
+export interface ResendVerificationData {
+  verificationToken: string;
+}
+
+export interface ResendVerificationResponse {
+  success: boolean;
+  message: string;
 }
 
 // Auth API Service
 export const authApi = {
   // Register a new user
   register: async (data: RegisterData): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/register', data);
-    
-    // Auto-save auth data if token is present
-    if (response.data?.token) {
-      cookieService.setAuthData(response.data.token, response.data.user);
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/register', data);
+      
+      // Auto-save auth data if token is present
+      if (response.data?.token) {
+        cookieService.setAuthData(response.data.token);
+      }
+      
+      return response.data;
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
     }
-    
-    return response.data;
   },
 
   // Login with email and password
   login: async (data: LoginData): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/login', data);
-    // Auto-save auth data if token is present
-    if (response.data?.token) {
-      cookieService.setAuthData(response.data.token, response.data.user);
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/login', data);
+      // Auto-save auth data if token is present
+      if (response.data?.token) {
+        cookieService.setAuthData(response.data.token);
+      }
+      
+      return response.data;
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
     }
-    
-    return response.data;
   },
 
   // Logout current user
@@ -100,14 +133,19 @@ export const authApi = {
 
   // Login/Register via Google
   googleLogin: async (data: GoogleLoginData): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/google', data);
-    
-    // Auto-save auth data if token is present
-    if (response.data?.token) {
-      cookieService.setAuthData(response.data.token, response.data.user);
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/google', data);
+      
+      // Auto-save auth data if token is present
+      if (response.data?.token) {
+        cookieService.setAuthData(response.data.token);
+      }
+      
+      return response.data;
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
     }
-    
-    return response.data;
   },
 
   // Get current user profile
@@ -119,7 +157,7 @@ export const authApi = {
       if (response.data?.success && response.data.user) {
         const token = cookieService.getCurrentToken();
         if (token) {
-          cookieService.setAuthData(token, response.data.user);
+          cookieService.setAuthData(token);
         }
       }
       
@@ -138,29 +176,72 @@ export const authApi = {
 
   // Update user details
   updateProfile: async (data: UpdateUserData): Promise<{ success: boolean; data: User }> => {
-    const response = await apiClient.put<{ success: boolean; data: User }>('/auth/update', data);
-    
-    // Update stored user data
-    if (response.data.success && response.data.data) {
-      const token = cookieService.getCurrentToken();
-      if (token) {
-        cookieService.setAuthData(token, response.data.data);
+    try {
+      const response = await apiClient.put<{ success: boolean; data: User }>('/auth/update', data);
+      
+      // Update stored user data
+      if (response.data.success && response.data.data) {
+        const token = cookieService.getCurrentToken();
+        if (token) {
+          cookieService.setAuthData(token);
+        }
       }
+      
+      return response.data;
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
     }
-    
-    return response.data;
   },
 
   // Change user password
   changePassword: async (data: ChangePasswordData): Promise<{ success: boolean; message?: string }> => {
-    const response = await apiClient.put<{ success: boolean; message?: string }>('/auth/change-password', data);
-    return response.data;
+    try {
+      const response = await apiClient.put<{ success: boolean; message?: string }>('/auth/change-password', data);
+      return response.data;
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
+    }
   },
 
   // Delete current user account
   deleteAccount: async (): Promise<void> => {
-    await apiClient.delete('/auth/delete');
-    cookieService.clearAuthData();
+    try {
+      await apiClient.delete('/auth/delete');
+      cookieService.clearAuthData();
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
+    }
+  },
+
+  // Verify email with code
+  verifyEmail: async (data: VerifyEmailData): Promise<VerifyEmailResponse> => {
+    try {
+      const response = await apiClient.post<VerifyEmailResponse>('/auth/verify-email', data);
+      
+      // Auto-save auth data if token is present
+      if (response.data?.token) {
+          cookieService.setAuthData(response.data.token);
+      }
+      
+      return response.data;
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
+    }
+  },
+
+  // Resend verification code
+  resendVerificationCode: async (data: ResendVerificationData): Promise<ResendVerificationResponse> => {
+    try {
+      const response = await apiClient.post<ResendVerificationResponse>('/auth/resend-verification', data);
+      return response.data;
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
+    }
   },
 };
 

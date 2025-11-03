@@ -132,7 +132,6 @@ export default function RootLayout({
           <AppProvider>
             <AuthProvider>{children}</AuthProvider>
           </AppProvider>
-          <WhatsAppButton />
           <Toaster position="top-right" richColors />
         </QueryProvider>
       </body>

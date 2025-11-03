@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Save, Lock, User } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -144,8 +145,17 @@ export default function SettingsPage() {
               </div>
               <div className="flex justify-end pt-4">
                 <Button type="submit" disabled={updateProfile.isPending}>
-                  <Save className="w-4 h-4 mr-2" />
-                  {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
+                  {updateProfile.isPending ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
@@ -202,8 +212,17 @@ export default function SettingsPage() {
               </div>
               <div className="flex justify-end pt-4">
                 <Button type="submit" disabled={changePassword.isPending}>
-                  <Lock className="w-4 h-4 mr-2" />
-                  {changePassword.isPending ? 'Changing...' : 'Change Password'}
+                  {changePassword.isPending ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Changing...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Change Password
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

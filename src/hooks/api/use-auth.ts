@@ -7,6 +7,8 @@ import {
   type GoogleLoginData,
   type UpdateUserData,
   type ChangePasswordData,
+  type VerifyEmailData,
+  type ResendVerificationData,
 } from '@/services/api/auth.api';
 
 // Query keys
@@ -134,6 +136,27 @@ export const useDeleteAccount = () => {
       queryClient.clear();
       router.push('/');
     },
+  });
+};
+
+// Verify email mutation
+export const useVerifyEmail = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: VerifyEmailData) => authApi.verifyEmail(data),
+    onSuccess: (data) => {
+      if (data.success && data.user) {
+        queryClient.setQueryData(authKeys.me(), { success: true, user: data.user });
+      }
+    },
+  });
+};
+
+// Resend verification code mutation
+export const useResendVerificationCode = () => {
+  return useMutation({
+    mutationFn: (data: ResendVerificationData) => authApi.resendVerificationCode(data),
   });
 };
 
