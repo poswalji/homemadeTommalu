@@ -46,13 +46,7 @@ apiClient.interceptors.response.use(
       cookieService.clearAuthData();
       
       // Redirect to login (only on client side)
-      if (typeof window !== 'undefined') {
-        const currentPath = window.location.pathname;
-        // Don't redirect if already on login page
-        if (!currentPath.includes('/login')) {
-          window.location.href = '/login';
-        }
-      }
+    
     }
 
     // Handle 403 Forbidden

@@ -87,7 +87,7 @@ export default function CheckoutPage() {
           <Card className="p-12 text-center">
             <h2 className="text-2xl font-semibold mb-2">Your cart is empty</h2>
             <p className="text-gray-500 mb-6">Add some items before checkout!</p>
-            <Button onClick={() => router.push('/food')}>
+            <Button onClick={() => router.push('/browse')}>
               Browse Products
             </Button>
           </Card>

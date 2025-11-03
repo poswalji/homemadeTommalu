@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useProducts, useCategories } from '@/hooks/api';
 import { ProductCard } from '@/components/products/product-card';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,8 @@ import { Search, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 
-export default function FoodPage() {
+export default function GroceryPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedFoodType, setSelectedFoodType] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('name');
@@ -24,8 +23,7 @@ export default function FoodPage() {
   const categories = categoriesData?.data || [];
 
   const { data: productsData, isLoading, isError } = useProducts({
-    category: selectedCategory || undefined,
-    foodType: selectedFoodType || undefined,
+    category: selectedCategory || 'Grocery',
     search: searchQuery || undefined,
     sortBy,
     sortOrder,
@@ -37,15 +35,17 @@ export default function FoodPage() {
   const products = productsData?.data || [];
   const pagination = productsData?.pagination;
 
-  const foodTypes = ['veg', 'non-veg', 'egg', 'vegan'];
+  useEffect(() => {
+    // Default focus to grocery category if exists
+    if (!selectedCategory) {
+      const groceryCat = categories.find((c: any) => /groc|daily|essentials/i.test(c?.name));
+      if (groceryCat?.name) setSelectedCategory(groceryCat.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories?.length]);
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category === selectedCategory ? '' : category);
-    setCurrentPage(1);
-  };
-
-  const handleFoodTypeSelect = (foodType: string) => {
-    setSelectedFoodType(foodType === selectedFoodType ? '' : foodType);
     setCurrentPage(1);
   };
 
@@ -56,12 +56,11 @@ export default function FoodPage() {
 
   const clearFilters = () => {
     setSelectedCategory('');
-    setSelectedFoodType('');
     setSearchQuery('');
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = selectedCategory || selectedFoodType || searchQuery;
+  const hasActiveFilters = selectedCategory || searchQuery;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -75,7 +74,7 @@ export default function FoodPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search groceries..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -107,17 +106,6 @@ export default function FoodPage() {
                   <X className="w-3 h-3" />
                 </Button>
               )}
-              {selectedFoodType && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setSelectedFoodType('')}
-                  className="flex items-center gap-1"
-                >
-                  {selectedFoodType}
-                  <X className="w-3 h-3" />
-                </Button>
-              )}
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
                   Clear All
@@ -140,7 +128,7 @@ export default function FoodPage() {
                     >
                       All
                     </Button>
-                    {categories.map((cat) => (
+                    {categories.map((cat: any) => (
                       <Button
                         key={cat.name}
                         variant={selectedCategory === cat.name ? 'default' : 'outline'}
@@ -150,48 +138,6 @@ export default function FoodPage() {
                         {cat.name}
                       </Button>
                     ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Food Type</label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant={selectedFoodType === '' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleFoodTypeSelect('')}
-                    >
-                      All
-                    </Button>
-                    {foodTypes.map((type) => (
-                      <Button
-                        key={type}
-                        variant={selectedFoodType === type ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleFoodTypeSelect(type)}
-                      >
-                        {type}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Sort By</label>
-                  <div className="flex gap-2">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="border rounded px-3 py-2 flex-1"
-                    >
-                      <option value="name">Name</option>
-                      <option value="price">Price</option>
-                    </select>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    >
-                      {sortOrder === 'asc' ? '↑' : '↓'}
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -215,7 +161,7 @@ export default function FoodPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-              {products.map((product) => (
+              {products.map((product: any) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
@@ -251,4 +197,5 @@ export default function FoodPage() {
     </div>
   );
 }
+
 

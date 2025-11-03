@@ -97,7 +97,11 @@ export const useLogout = () => {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: () => authApi.logout(),
+    mutationFn: async () => {
+      await authApi.logout();
+      const { cookieService } = await import('@/utills/cookies');
+      cookieService.clearAuthData();
+    },
     onSuccess: () => {
       queryClient.clear();
       router.push('/login');

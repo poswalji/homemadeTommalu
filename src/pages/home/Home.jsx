@@ -84,7 +84,7 @@ const Home = ({
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Popular Restaurants</h2>
               <Link 
-                href={'/food'}
+                href={'/browse'}
                 className="text-purple-600 hover:text-purple-800 font-medium"
               >
                 View All <i className="fas fa-arrow-right ml-1"></i>
@@ -110,7 +110,7 @@ const Home = ({
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Popular Grocery Stores</h2>
               <Link
-                href={'/grocery'}
+                href={'/browse'}
                 className="text-green-600 hover:text-green-800 font-medium"
               >
                 View All <i className="fas fa-arrow-right ml-1"></i>

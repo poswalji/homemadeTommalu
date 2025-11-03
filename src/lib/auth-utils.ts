@@ -11,7 +11,8 @@ export function getDashboardRoute(role: UserRole): string {
     case 'storeOwner':
       return '/store-owner/stores';
     case 'customer':
-      return '/customer';
+      // No dedicated /customer route; send customers to main browsing page
+      return '/browse';
     default:
       return '/';
   }
@@ -31,7 +32,7 @@ export function canAccessRoute(userRole: UserRole | undefined, route: string): b
     return userRole === 'storeOwner';
   }
 
-  if (route.startsWith('/customer')) {
+  if (route.startsWith('/browse')) {
     return userRole === 'customer';
   }
 

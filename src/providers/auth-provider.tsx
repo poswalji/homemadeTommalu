@@ -6,6 +6,9 @@ import { cookieService } from '@/utills/cookies';
 import type { User } from '@/services/api/auth.api';
 import { getDashboardRoute } from '@/lib/auth-utils';
 import { useRouter, usePathname } from 'next/navigation';
+import { getGuestCart, clearGuestCart } from '@/lib/cart-storage';
+import { cartApi } from '@/services/api/cart.api';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -42,10 +45,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) {
         cookieService.setAuthData(token);
       }
+      cookieService.setUser(authData.user);
+      // After successful auth, try to sync any guest cart items
+      (async () => {
+        try {
+          const guestCart = getGuestCart();
+          if (guestCart.items.length > 0) {
+            for (const item of guestCart.items) {
+              try {
+                await cartApi.addToCart({ menuItemId: item.menuItemId, quantity: item.quantity });
+              } catch {
+                // continue other items
+              }
+            }
+            clearGuestCart();
+            // Refresh cart query indirectly (components using hooks will refetch)
+            toast.success('Your saved cart has been synced.');
+          }
+        } catch {
+          // ignore sync failures
+        }
+      })();
     } else if (authData && !authData.success) {
       setTimeout(() => {
         setUser(null);
       }, 1000);
+      cookieService.clearAuthData();
     }
   }, [authData]);
 

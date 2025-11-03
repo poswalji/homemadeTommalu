@@ -45,7 +45,7 @@ export function StoreOwnerSidebar() {
       <nav className="p-4 space-y-2">
         {storeOwnerNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+          const isActive = pathname === item.href ;
           
           return (
             <Link

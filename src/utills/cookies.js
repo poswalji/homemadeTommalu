@@ -38,6 +38,16 @@ class CookieService {
     this.set('token', token, days);
   }
 
+  // Set user json
+  setUser(user, days = 7) {
+    try {
+      const value = JSON.stringify(user || null);
+      this.set('user', value, days);
+    } catch {
+      // ignore
+    }
+  }
+
   // Clear auth data
   clearAuthData() {
     this.delete('token');

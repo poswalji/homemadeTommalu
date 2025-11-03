@@ -9,6 +9,9 @@ import { Plus, Minus, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/axios';
 import Image from 'next/image';
+import { useAuth } from '@/providers/auth-provider';
+import { addItemToGuestCart } from '@/lib/cart-storage';
+import { usePathname, useRouter } from 'next/navigation';
 
 export interface Product {
   id: string;
@@ -35,6 +38,9 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const addToCart = useAddToCart();
+  const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
 
   const discountPrice = product.discount
     ? product.price - (product.price * product.discount / 100)
@@ -43,6 +49,15 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = async () => {
     if (!product.isAvailable) {
       toast.error('Product is currently unavailable');
+      return;
+    }
+
+    // If not authenticated, store in guest cart and redirect to login
+    if (!isAuthenticated) {
+      addItemToGuestCart({ menuItemId: product.id, quantity });
+      toast.success(`${product.name} saved to cart. Please login to checkout.`);
+      const returnUrl = encodeURIComponent(pathname || '/');
+      router.push(`/login?returnUrl=${returnUrl}`);
       return;
     }
 

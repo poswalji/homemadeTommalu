@@ -3,48 +3,14 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Utensils, ShoppingBasket, Apple, Beef, Wheat } from "lucide-react";
-
-const categories = [
-  {
-    id: 1,
-    title: "Fresh Groceries",
-    description: "Get fresh fruits, vegetables, and daily essentials",
-    icon: <ShoppingBasket className="h-12 w-12 text-green-600" />,
-    color: "bg-green-50 hover:bg-green-100",
-    image: "🥬",
-    items: "1000+ Products",
-  },
-  {
-    id: 2,
-    title: "Restaurant Food",
-    description: "Order from top restaurants in your area",
-    icon: <Utensils className="h-12 w-12 text-orange-600" />,
-    color: "bg-orange-50 hover:bg-orange-100",
-    image: "🍕",
-    items: "200+ Restaurants",
-  },
-  {
-    id: 3,
-    title: "Fruits & Veggies",
-    description: "Fresh organic fruits and vegetables",
-    icon: <Apple className="h-12 w-12 text-red-600" />,
-    color: "bg-red-50 hover:bg-red-100",
-    image: "🍎",
-    items: "500+ Varieties",
-  },
-  {
-    id: 4,
-    title: "Meat & Seafood",
-    description: "Premium quality meat and fresh seafood",
-    icon: <Beef className="h-12 w-12 text-pink-600" />,
-    color: "bg-pink-50 hover:bg-pink-100",
-    image: "🥩",
-    items: "Fresh Daily",
-  },
-];
+import { ArrowRight } from "lucide-react";
+import { useCategories } from "@/hooks/api";
+import { useRouter } from "next/navigation";
 
 export function CategoriesSection() {
+  const { data: categoriesData } = useCategories();
+  const categories = categoriesData?.data || [];
+  const router = useRouter();
   return (
     <section className="py-16 md:py-24 bg-white relative overflow-hidden">
       {/* Background decoration */}
@@ -71,23 +37,25 @@ export function CategoriesSection() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {categories.map((category, index) => (
+          {categories.map((category: any, index: number) => (
             <motion.div
-              key={category.id}
+              key={category.name}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="group cursor-pointer"
+              onClick={() => router.push(`/browse?category=${encodeURIComponent(category.name)}`)}
             >
-              <Card className={`h-full transition-all duration-300 ${category.color} border-none shadow-md hover:shadow-xl transform hover:-translate-y-2`}>
+              <Card className={`h-full transition-all duration-300 bg-gray-50 hover:bg-gray-100 border-none shadow-md hover:shadow-xl transform hover:-translate-y-2`}>
                 <CardContent className="p-6">
-                  <div className="text-6xl mb-4 text-center">{category.image}</div>
-                  <div className="flex justify-center mb-4">{category.icon}</div>
-                  <h3 className="text-xl font-bold mb-2 text-center">{category.title}</h3>
-                  <p className="text-gray-600 text-center mb-3">{category.description}</p>
+                  <div className="text-6xl mb-4 text-center">{category.emoji || '🛒'}</div>
+                  <h3 className="text-xl font-bold mb-2 text-center">{category.name}</h3>
+                  {category.description && (
+                    <p className="text-gray-600 text-center mb-3">{category.description}</p>
+                  )}
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                    <span className="text-sm text-gray-500">{category.items}</span>
+                    <span className="text-sm text-gray-500">Explore</span>
                     <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />
                   </div>
                 </CardContent>
@@ -107,7 +75,7 @@ export function CategoriesSection() {
           <p className="text-gray-600 mb-4">
             Don&apos;t see what you&apos;re looking for?
           </p>
-          <button className="text-[lab(66%_50.34_52.19)] font-semibold hover:text-[lab(60%_50.34_52.19)] transition-colors flex items-center gap-2 mx-auto">
+          <button className="text-[lab(66%_50.34_52.19)] font-semibold hover:text-[lab(60%_50.34_52.19)] transition-colors flex items-center gap-2 mx-auto" onClick={() => router.push('/browse')}>
             View All Categories
             <ArrowRight className="h-4 w-4" />
           </button>

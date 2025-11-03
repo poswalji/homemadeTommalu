@@ -94,6 +94,9 @@ export const authApi = {
       if (response.data?.token) {
         cookieService.setAuthData(response.data.token);
       }
+      if (response.data?.user) {
+        cookieService.setUser(response.data.user);
+      }
       
       return response.data;
     } catch (error) {
@@ -109,6 +112,9 @@ export const authApi = {
       // Auto-save auth data if token is present
       if (response.data?.token) {
         cookieService.setAuthData(response.data.token);
+      }
+      if (response.data?.user) {
+        cookieService.setUser(response.data.user);
       }
       
       return response.data;
@@ -140,6 +146,9 @@ export const authApi = {
       if (response.data?.token) {
         cookieService.setAuthData(response.data.token);
       }
+      if (response.data?.user) {
+        cookieService.setUser(response.data.user);
+      }
       
       return response.data;
     } catch (error) {
@@ -159,6 +168,7 @@ export const authApi = {
         if (token) {
           cookieService.setAuthData(token);
         }
+        cookieService.setUser(response.data.user);
       }
       
       return {
@@ -185,6 +195,7 @@ export const authApi = {
         if (token) {
           cookieService.setAuthData(token);
         }
+        cookieService.setUser(response.data.data);
       }
       
       return response.data;
@@ -224,6 +235,9 @@ export const authApi = {
       // Auto-save auth data if token is present
       if (response.data?.token) {
           cookieService.setAuthData(response.data.token);
+      }
+      if (response.data?.user) {
+          cookieService.setUser(response.data.user);
       }
       
       return response.data;

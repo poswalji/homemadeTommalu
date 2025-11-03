@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ShoppingCart, TrendingUp, Sparkles, Shield, Zap } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -10,6 +11,7 @@ import 'swiper/css/effect-fade';
 import 'swiper/css/pagination';
 
 export function HeroSection() {
+   const router = useRouter();
    return (
       <section className='relative overflow-hidden  py-20'>
          <div className="fixed inset-0 -z-10">
@@ -96,14 +98,15 @@ export function HeroSection() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: 0.25 }}
                         className='flex flex-col sm:flex-row gap-4 mb-6'>
-                        <Button size='lg' className='group text-base h-14 px-8 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all'>
+                        <Button size='lg' className='group text-base h-14 px-8 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all' onClick={() => router.push('/browse')}>
                            <span className="font-semibold">Order Now</span>
                            <ArrowRight className='ml-2 h-5 w-5 transition-transform group-hover:translate-x-1' />
                         </Button>
-                        <Button size='lg' variant='outline' className='h-14 px-8 border-2 hover:bg-gray-50 transform hover:scale-105 transition-all'>
+                        <Button size='lg' variant='outline' className='h-14 px-8 border-2 hover:bg-gray-50 transform hover:scale-105 transition-all' onClick={() => router.push('/grocery')}>
                            <ShoppingCart className='mr-2 h-5 w-5' />
-                           <span className="font-semibold">Browse Products</span>
+                            <span className="font-semibold">Browse Groceries</span>
                         </Button>
+                       
                      </motion.div>
 
                      {/* Trust Indicators */}
