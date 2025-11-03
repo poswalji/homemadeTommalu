@@ -4,7 +4,6 @@ import { Figtree} from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/context/app-context";
 import { appConfig } from "@/config/app.config";
-import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { QueryProvider } from "@/providers/query-provider";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/providers/auth-provider";
@@ -43,15 +42,28 @@ export const metadata: Metadata = {
     title: appConfig.name,
     description: appConfig.description,
     siteName: appConfig.name,
+    images: [
+      {
+        url: `${appConfig.url}/logo.png`,
+        width: 1200,
+        height: 630,
+        alt: `${appConfig.name} - ${appConfig.description}`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: appConfig.name,
     description: appConfig.description,
+    images: [`${appConfig.url}/logo.png`],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

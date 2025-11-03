@@ -3,11 +3,25 @@ import { appConfig } from "@/config/app.config";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: ["/"],
-      disallow: ["/api/", "/admin"],
-    },
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/api/",
+          "/admin",
+          "/store-owner",
+          "/customer",
+          "/cart",
+          "/checkout",
+          "/login",
+          "/register",
+          "/verify-email",
+          "/orders",
+          "/_next/",
+        ],
+      },
+    ],
     sitemap: `${appConfig.url}/sitemap.xml`,
     host: appConfig.url,
   };
