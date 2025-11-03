@@ -92,3 +92,4 @@ export function Chart({ data, config, type = "bar" }: ChartProps) {
 }
 
 
+

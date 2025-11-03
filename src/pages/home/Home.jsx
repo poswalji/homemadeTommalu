@@ -138,7 +138,7 @@ const Home = ({
               No Stores Available Yet
             </h3>
             <p className="text-gray-500">
-              We're working on bringing stores to your area!
+              We&apos;re working on bringing stores to your area!
             </p>
           </div>
         )}
