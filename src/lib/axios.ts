@@ -41,12 +41,18 @@ apiClient.interceptors.response.use(
     // Handle 401 Unauthorized - Clear auth and redirect to login
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
-      // Clear auth data
-      cookieService.clearAuthData();
-      
-      // Redirect to login (only on client side)
-    
+
+      // Only clear auth if this was an authenticated call (had Bearer) or an auth endpoint
+      const hadAuthHeader = !!(
+        originalRequest.headers &&
+        (originalRequest.headers as Record<string, unknown>).Authorization
+      );
+      const url = (originalRequest.url || '').toString();
+      const isAuthEndpoint = url.includes('/auth/');
+
+      if (hadAuthHeader || isAuthEndpoint) {
+        cookieService.clearAuthData();
+      }
     }
 
     // Handle 403 Forbidden

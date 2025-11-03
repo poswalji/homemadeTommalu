@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { cookieService } from '@/utills/cookies';
 import {
   cartApi,
   type AddToCartData,
@@ -14,11 +15,23 @@ export const cartKeys = {
 
 // Get cart
 export const useCart = () => {
+  const isAuthed = typeof window !== 'undefined' && cookieService.isAuthenticated();
   return useQuery({
     queryKey: cartKeys.cart(),
     queryFn: () => cartApi.getCart(),
     staleTime: 1000 * 30, // 30 seconds
     refetchOnWindowFocus: true,
+    enabled: isAuthed, // Avoid hitting auth-only endpoint when not logged in
+    initialData: {
+      success: true,
+      data: {
+        items: [],
+        totalItems: 0,
+        totalAmount: 0,
+        deliveryCharge: 0,
+        finalAmount: 0,
+      },
+    },
   });
 };
 
@@ -28,8 +41,14 @@ export const useAddToCart = () => {
 
   return useMutation({
     mutationFn: (data: AddToCartData) => cartApi.addToCart(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+    onSuccess: (response) => {
+      // If authenticated, refetch server cart; otherwise, set cache from response to avoid 401
+      const isAuthed = typeof window !== 'undefined' && cookieService.isAuthenticated();
+      if (isAuthed) {
+        queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+      } else if (response?.data) {
+        queryClient.setQueryData(cartKeys.cart(), { success: true, data: response.data });
+      }
     },
   });
 };
