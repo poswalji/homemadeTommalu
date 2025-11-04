@@ -1,9 +1,10 @@
 'use client';
 
 import { AdminSidebar } from '@/components/layout/admin-sidebar';
+import { Menubar } from '@/components/layout/menubar';
 import { useAuthMe } from '@/hooks/api';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 export default function AdminLayout({
@@ -13,6 +14,7 @@ export default function AdminLayout({
 }) {
    const { data: authData, isLoading } = useAuthMe();
    const router = useRouter();
+   const [sidebarOpen, setSidebarOpen] = useState(false);
 
    useEffect(() => {
       if (!isLoading && (!authData?.user || authData.user.role !== 'admin')) {
@@ -57,8 +59,17 @@ export default function AdminLayout({
 
    return (
       <div className='flex min-h-screen bg-gray-50'>
-         <AdminSidebar />
-         <main className='flex-1 ml-64 p-8'>{children}</main>
+         <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+         <div className='flex-1 flex flex-col min-w-0'>
+            <Menubar 
+               title="Tommalu Admin" 
+               isMenuOpen={sidebarOpen}
+               onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+            />
+            <main className='flex-1 md:ml-64 p-4 md:p-8 transition-all duration-300'>
+               {children}
+            </main>
+         </div>
       </div>
    );
 }

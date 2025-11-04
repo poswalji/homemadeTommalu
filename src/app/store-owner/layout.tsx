@@ -1,9 +1,10 @@
-  'use client';
+'use client';
 
 import { StoreOwnerSidebar } from '@/components/layout/store-owner-sidebar';
+import { Menubar } from '@/components/layout/menubar';
 import { useAuthMe } from '@/hooks/api';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function UsersLayout({
   children,
@@ -12,6 +13,7 @@ export default function UsersLayout({
 }) {
   const { data: authData, isLoading } = useAuthMe();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (!authData?.user || authData.user.role !== 'storeOwner')) {
@@ -33,10 +35,17 @@ export default function UsersLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <StoreOwnerSidebar />
-      <main className="flex-1 ml-64 p-8">
-        {children}
-      </main>
+      <StoreOwnerSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className='flex-1 flex flex-col min-w-0'>
+        <Menubar 
+          title="Tommalu Store" 
+          isMenuOpen={sidebarOpen}
+          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+        <main className="flex-1 md:ml-64 p-4 md:p-8 transition-all duration-300">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
