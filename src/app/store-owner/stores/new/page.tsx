@@ -161,7 +161,7 @@ export default function CreateStorePage() {
    return (
       <div className='space-y-6 p-4 md:p-6 lg:p-8 max-w-4xl mx-auto'>
          {/* Header */}
-         <div className='flex items-center gap-4'>
+         <div className='flex justify-center flex-col gap-4'>
             <Link href='/store-owner/stores'>
                <Button
                   variant='ghost'
