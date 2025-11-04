@@ -27,6 +27,7 @@ const STORE_CATEGORIES = [
    'Bakery',
    'Pharmacy',
    'Vegetable & Fruits',
+   'Meat & Fish',
    'Dairy',
    'Other',
 ];

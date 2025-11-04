@@ -45,18 +45,23 @@ import {
 import { useParams } from 'next/navigation';
 
 const MENU_CATEGORIES = [
-   'Appetizers',
-   'Main Course',
-   'Desserts',
-   'Beverages',
-   'Snacks',
-   'Breakfast',
-   'Lunch',
-   'Dinner',
+   'Veg Main Course',
+   'Non-Veg Main Course',
+   'Starters & Snacks',
+   'Breads & Rice',
+   'Drinks & Beverages',
+   'Dairy & Eggs',
+   'Groceries & Essentials',
+   'Fruits & Vegetables',
+   'Sweets & Desserts',
+   'Fast Food',
+   'Bakery Items',
+   'Grains & Pulses',
+   'Meat & Seafood',
    'Other',
 ];
 
-const FOOD_TYPES = ['veg', 'non-veg', 'vegan'];
+const FOOD_TYPES = ['veg', 'non-veg', 'egg', 'vegan'];
 
 export default function MenuManagementPage() {
    const params = useParams();
