@@ -49,6 +49,7 @@ export interface CreateMenuItemData {
   price: number;
   category?: string;
   description?: string;
+  foodType?: string;
   available?: boolean;
   stockQuantity?: number;
   image?: File;
@@ -59,6 +60,9 @@ export interface UpdateMenuItemData {
   price?: number;
   category?: string;
   description?: string;
+  foodType?: string;
+  available?: boolean;
+  stockQuantity?: number;
   image?: File;
 }
 
@@ -147,6 +151,7 @@ export const storeOwnerApi = {
     formData.append('price', data.price.toString());
     if (data.category) formData.append('category', data.category);
     if (data.description) formData.append('description', data.description);
+    if (data.foodType) formData.append('foodType', data.foodType);
     if (data.available !== undefined) formData.append('available', data.available.toString());
     if (data.stockQuantity !== undefined) formData.append('stockQuantity', data.stockQuantity.toString());
     if (data.image) formData.append('image', data.image);
@@ -171,6 +176,9 @@ export const storeOwnerApi = {
     if (data.price !== undefined) formData.append('price', data.price.toString());
     if (data.category) formData.append('category', data.category);
     if (data.description) formData.append('description', data.description);
+    if (data.foodType) formData.append('foodType', data.foodType);
+    if (data.available !== undefined) formData.append('available', data.available.toString());
+    if (data.stockQuantity !== undefined) formData.append('stockQuantity', data.stockQuantity.toString());
     if (data.image) formData.append('image', data.image);
 
     const response = await apiClient.patch<StoreOwnerResponse<MenuItem>>(

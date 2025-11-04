@@ -164,36 +164,37 @@ export default function CreateStorePage() {
    };
 
    return (
-      <div className='space-y-6 p-4 md:p-6 lg:p-8 max-w-4xl mx-auto'>
-         {/* Header */}
-         <div className='flex justify-center flex-col gap-4'>
-            <Link href='/store-owner/stores'>
-               <Button
-                  variant='ghost'
-                  size='sm'>
-                  <ArrowLeft className='w-4 h-4 mr-2' />
-                  Back to Stores
-               </Button>
-            </Link>
-            <div>
-               <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
-                  Create New Store
-               </h1>
-               <p className='text-gray-600 mt-2 text-sm'>
-                  Fill in the details to create your store
-               </p>
+      <div className='min-h-screen bg-gray-50'>
+         <div className='max-w-4xl mx-auto p-4 md:p-6 lg:p-8 space-y-6'>
+            {/* Header */}
+            <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
+               <div className='flex flex-col gap-4'>
+                  <Link href='/store-owner/stores'>
+                     <Button variant='ghost' size='sm' className='w-fit'>
+                        <ArrowLeft className='w-4 h-4 mr-2' />
+                        Back to Stores
+                     </Button>
+                  </Link>
+                  <div>
+                     <h1 className='text-2xl md:text-3xl font-bold text-gray-900'>
+                        Create New Store
+                     </h1>
+                     <p className='text-gray-600 mt-1'>
+                        Fill in the details to create your store
+                     </p>
+                  </div>
+               </div>
             </div>
-         </div>
 
-         {/* Form */}
-         <form onSubmit={handleSubmit}>
-            <Card>
-               <CardHeader>
-                  <CardTitle className='text-lg sm:text-xl flex items-center gap-2'>
-                     <Store className='w-5 h-5' />
-                     Store Information
-                  </CardTitle>
-               </CardHeader>
+            {/* Form */}
+            <form onSubmit={handleSubmit}>
+               <Card className='bg-white border border-gray-200 rounded-lg shadow-sm'>
+                  <CardHeader>
+                     <CardTitle className='flex items-center gap-2'>
+                        <Store className='w-5 h-5' />
+                        Store Information
+                     </CardTitle>
+                  </CardHeader>
                <CardContent className='space-y-6'>
                   {/* Store Name */}
                   <div>
@@ -375,7 +376,6 @@ export default function CreateStorePage() {
                      </div>
                   </div>
 
-                  {/* Delivery Settings */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                      <div>
                         <Label htmlFor='deliveryFee'>Delivery Fee (₹)</Label>
@@ -417,13 +417,8 @@ export default function CreateStorePage() {
 
                   {/* Submit Buttons */}
                   <div className='flex gap-4 pt-4'>
-                     <Link
-                        href='/store-owner/stores'
-                        className='flex-1'>
-                        <Button
-                           type='button'
-                           variant='outline'
-                           className='w-full'>
+                     <Link href='/store-owner/stores' className='flex-1'>
+                        <Button type='button' variant='outline' className='w-full'>
                            Cancel
                         </Button>
                      </Link>
@@ -433,10 +428,7 @@ export default function CreateStorePage() {
                         disabled={createStore.isPending}>
                         {createStore.isPending ? (
                            <>
-                              <Spinner
-                                 size='sm'
-                                 className='mr-2'
-                              />
+                              <Spinner size='sm' className='mr-2' />
                               Creating...
                            </>
                         ) : (
@@ -450,6 +442,7 @@ export default function CreateStorePage() {
                </CardContent>
             </Card>
          </form>
+      </div>
       </div>
    );
 }

@@ -24,6 +24,8 @@ export interface Store {
   deliveryFee?: number;
   minOrder?: number;
   isOpen?: boolean;
+  isVerified?: boolean;
+  totalReviews?: number;
   rating?: number;
   image?: string;
   ownerId?: string | { name?: string; email?: string; id?: string };
