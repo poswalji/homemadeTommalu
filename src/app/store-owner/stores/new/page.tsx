@@ -143,17 +143,22 @@ export default function CreateStorePage() {
             minOrder: parseFloat(formData.minOrder) || 0,
          };
 
-         await createStore.mutateAsync({
+         const response = await createStore.mutateAsync({
             ...storeData,
             category: storeData.category as StoreCategory,
          });
          toast.success(
-            'Store created successfully! Waiting for admin verification.'
+            'Store created successfully! Now add menu items to your store.'
          );
-         router.push('/store-owner/stores');
+         // Redirect to menu management page
+         if (response?.data?.id) {
+            router.push(`/store-owner/stores/${response.data.id}/menu`);
+         } else {
+            router.push('/store-owner/stores');
+         }
       } catch (error: any) {
          toast.error(
-            error?.response?.data?.message || 'Failed to create store'
+            error?.response?.data?.error?.message || error?.response?.data?.message || 'Failed to create store'
          );
       }
    };

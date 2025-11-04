@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, SetStateAction, Dispatch } from 'react';
 import { useAuthMe } from '@/hooks/api/use-auth';
 import { cookieService } from '@/utills/cookies';
 import type { User } from '@/services/api/auth.api';
@@ -15,6 +15,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   refetch: () => void;
+  setUser: (Dispatch<SetStateAction<User | null>>) ;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading: isLoading || !isInitialized,
     isAuthenticated: !!user,
+    setUser,
     refetch: async () => {
       await refetch();
     },

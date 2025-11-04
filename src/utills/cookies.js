@@ -53,6 +53,7 @@ class CookieService {
     this.delete('token');
     this.delete('user');
     this.delete('guestId');
+    
   }
 
   // Check if authenticated

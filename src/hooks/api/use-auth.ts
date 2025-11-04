@@ -10,6 +10,7 @@ import {
   type VerifyEmailData,
   type ResendVerificationData,
 } from '@/services/api/auth.api';
+import { useAuth } from '@/providers/auth-provider';
 
 // Query keys
 export const authKeys = {
@@ -96,14 +97,19 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
+  const {setUser}= useAuth()
+
   return useMutation({
     mutationFn: async () => {
       await authApi.logout();
       const { cookieService } = await import('@/utills/cookies');
       cookieService.clearAuthData();
+      
     },
     onSuccess: () => {
       queryClient.clear();
+      setUser(null)
+
       router.push('/login');
     },
   });

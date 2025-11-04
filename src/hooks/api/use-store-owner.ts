@@ -128,7 +128,8 @@ export const useUpdateMenuItem = () => {
     mutationFn: ({ menuItemId, data }: { menuItemId: string; data: UpdateMenuItemData }) =>
       storeOwnerApi.updateMenuItem(menuItemId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: storeOwnerKeys.menu('') });
+      // Invalidate all menu queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: storeOwnerKeys.all });
     },
   });
 };
@@ -140,7 +141,8 @@ export const useDeleteMenuItem = () => {
   return useMutation({
     mutationFn: (menuItemId: string) => storeOwnerApi.deleteMenuItem(menuItemId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: storeOwnerKeys.menu('') });
+      // Invalidate all menu queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: storeOwnerKeys.all });
     },
   });
 };
@@ -152,7 +154,8 @@ export const useToggleMenuItemAvailability = () => {
   return useMutation({
     mutationFn: (menuItemId: string) => storeOwnerApi.toggleMenuItemAvailability(menuItemId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: storeOwnerKeys.menu('') });
+      // Invalidate all menu queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: storeOwnerKeys.all });
     },
   });
 };

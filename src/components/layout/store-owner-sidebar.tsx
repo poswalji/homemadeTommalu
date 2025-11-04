@@ -32,8 +32,10 @@ export function StoreOwnerSidebar() {
   const pathname = usePathname();
   const logout = useLogout();
 
-  const handleLogout = () => {
-    logout.mutate();
+
+  const handleLogout =async () => {
+    await logout.mutate();
+
   };
 
   return (
