@@ -143,6 +143,7 @@ export default function MenuManagementPage() {
             price: parseFloat(formData.price),
             category: formData.category,
             description: formData.description,
+            foodType: formData.foodType,
             available: formData.available,
             stockQuantity: formData.stockQuantity
                ? parseInt(formData.stockQuantity)
