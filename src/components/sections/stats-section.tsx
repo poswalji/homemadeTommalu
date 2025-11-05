@@ -19,12 +19,12 @@ export function StatsSection() {
   const defaultStats = [
     {
       icon: statIcons[0],
-      value: "50,000+",
+      value: "50+",
       label: "Happy Customers",
     },
     {
       icon: statIcons[1],
-      value: "200K+",
+      value: "65+",
       label: "Deliveries Completed",
     },
     {
@@ -34,7 +34,7 @@ export function StatsSection() {
     },
     {
       icon: statIcons[3],
-      value: "1000+",
+      value: "10+",
       label: "Active Stores",
     },
   ];
