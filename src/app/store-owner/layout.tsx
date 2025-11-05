@@ -35,10 +35,10 @@ export default function UsersLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <StoreOwnerSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <StoreOwnerSidebar name={authData.user.name} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className='flex-1 flex flex-col min-w-0'>
         <Menubar 
-          title="Tommalu Store" 
+          title={authData.user.name} 
           isMenuOpen={sidebarOpen}
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         />
