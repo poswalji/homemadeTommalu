@@ -32,9 +32,10 @@ const storeOwnerNavItems = [
 interface StoreOwnerSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  name:string;
 }
 
-export function StoreOwnerSidebar({ isOpen, onClose }: StoreOwnerSidebarProps) {
+export function StoreOwnerSidebar({ isOpen, onClose,name }: StoreOwnerSidebarProps) {
   const pathname = usePathname();
   const logout = useLogout();
 
@@ -68,7 +69,7 @@ export function StoreOwnerSidebar({ isOpen, onClose }: StoreOwnerSidebarProps) {
         )}
       >
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Tommalu Store</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{name}</h2>
         </div>
         
         <nav className="p-4 space-y-2">
