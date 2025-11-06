@@ -205,8 +205,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           playNotificationSound(orderId);
         }
         
-        // Invalidate queries for all user types based on notification type
-        // This ensures all users see updated data regardless of their current role
+        // Handle different notification types for all user roles
         if (notification.type === 'order_created') {
           // Store owner queries (affects store owners)
           QueryClient.invalidateQueries({ queryKey: ['store-owner', 'orders'] });
@@ -224,7 +223,76 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           
           // General orders queries (affects all users)
           QueryClient.invalidateQueries({ queryKey: ['orders'] });
+          
+          // Trigger email notification for order creation (tracking)
+          if (user?.role === 'customer' || user?.role === 'storeOwner') {
+            console.log('📧 Email notification should be sent for new order:', {
+              orderId,
+              userId: user?.id,
+              userEmail: user?.email,
+              userRole: user?.role
+            });
+          }
+        } else if (notification.type === 'delivery_assigned' && user?.role === 'admin') {
+          // Admin delivery assignment notifications
+          QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'dashboard'] });
+          QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'orders'] });
+          QueryClient.invalidateQueries({ queryKey: ['orders'] });
+        } else if (notification.type === 'order_status_updated') {
+          // Order status update notifications for all users
+          QueryClient.invalidateQueries({ queryKey: ['orders', 'my'] });
+          QueryClient.invalidateQueries({ queryKey: ['orders', 'detail', orderId] });
+          QueryClient.invalidateQueries({ queryKey: ['store-owner', 'orders'] });
+          QueryClient.invalidateQueries({ queryKey: ['orders'] });
+          
+          // Trigger email notification for status updates (tracking)
+          if (user?.role === 'customer' || user?.role === 'storeOwner') {
+            console.log('📧 Email notification should be sent for order status update:', {
+              orderId,
+              status: notification.message,
+              userId: user?.id,
+              userEmail: user?.email
+            });
+          }
         }
+      }
+    });
+
+    // Listen for delivery assignment (for admin as delivery boy)
+    newSocket.on('delivery_assigned', (deliveryData: any) => {
+      console.log('🚚 Delivery assigned:', deliveryData);
+      if (user?.role === 'admin' && deliveryData.orderId) {
+        const notification: Notification = {
+          id: `delivery-assigned-${deliveryData.orderId}`,
+          title: '🚚 New Delivery Assignment',
+          message: `Order #${deliveryData.orderId?.slice(-6)} assigned for delivery. Customer: ${deliveryData.customerName || 'N/A'}, Address: ${deliveryData.deliveryAddress || 'N/A'}`,
+          type: 'delivery_assigned',
+          relatedId: deliveryData.orderId,
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+        setNotifications((prev) => [notification, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+
+        // Show browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(notification.title, {
+            body: notification.message,
+            icon: '/logo.png',
+            tag: notification.id
+          });
+        }
+
+        // Invalidate admin queries
+        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'dashboard'] });
+        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'orders'] });
+        QueryClient.invalidateQueries({ queryKey: ['orders'] });
+        
+        // Trigger email notification to admin
+        console.log('📧 Email notification should be sent to admin for delivery assignment:', {
+          orderId: deliveryData.orderId,
+          adminEmail: user?.email
+        });
       }
     });
 
@@ -282,25 +350,77 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       }
     });
 
-    // Listen for order status updates (for customers and store owners)
+    // Listen for order status updates (for customers, store owners, and admin)
     newSocket.on('order_status_update', (orderData: any) => {
       console.log('📦 Order status update:', orderData);
-      const notification: Notification = {
-        id: `order-update-${orderData.orderId}`,
-        title: 'Order Status Updated',
-        message: orderData.message || `Order #${orderData.orderId?.slice(-6)} status updated to ${orderData.status}`,
-        type: 'order_status_updated',
-        relatedId: orderData.orderId,
-        read: false,
-        createdAt: new Date().toISOString()
-      };
+      const status = orderData.status;
+      const orderId = orderData.orderId;
+      
+      // Create notification based on user role and order status
+      let notification: Notification;
+      
+      if (user?.role === 'admin' && status === 'OutForDelivery') {
+        // Admin as delivery boy - special notification for delivery assignment
+        notification = {
+          id: `delivery-${orderId}`,
+          title: '🚚 New Delivery Assignment',
+          message: `Order #${orderId?.slice(-6)} is ready for delivery. Customer: ${orderData.customerName || 'N/A'}`,
+          type: 'delivery_assigned',
+          relatedId: orderId,
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+      } else if (user?.role === 'customer') {
+        // Customer notification for order tracking
+        notification = {
+          id: `order-update-${orderId}`,
+          title: 'Order Status Updated',
+          message: orderData.message || `Your order #${orderId?.slice(-6)} status updated to ${status}`,
+          type: 'order_status_updated',
+          relatedId: orderId,
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+      } else {
+        // Store owner or general notification
+        notification = {
+          id: `order-update-${orderId}`,
+          title: 'Order Status Updated',
+          message: orderData.message || `Order #${orderId?.slice(-6)} status updated to ${status}`,
+          type: 'order_status_updated',
+          relatedId: orderId,
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+      }
+      
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
 
+      // Show browser notification if permission granted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(notification.title, {
+          body: notification.message,
+          icon: '/logo.png',
+          tag: notification.id
+        });
+      }
+
+      // Trigger email notification for order tracking (for customers and store owners)
+      // Email sending is handled by backend, but we log it here for tracking
+      if (user?.role === 'customer' || user?.role === 'storeOwner') {
+        console.log('📧 Email notification should be sent for order tracking:', {
+          orderId,
+          status,
+          userId: user?.id,
+          userEmail: user?.email,
+          userRole: user?.role
+        });
+        // Backend should handle email sending via notification service
+      }
+
       // Handle order status updates for all user types
       if (orderData.orderId && orderData.status) {
-        const orderId = orderData.orderId;
-        const status = orderData.status;
         const finalStatuses = ['Confirmed', 'Rejected', 'Cancelled', 'Delivered'];
         
         // Stop notification sound for store owners when order reaches final status
@@ -326,6 +446,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         // Special handling for OutForDelivery status (admin as delivery boy)
         if (status === 'OutForDelivery') {
           QueryClient.invalidateQueries({ queryKey: ['orders'] });
+          
+          // Send notification to admin when order is ready for delivery
+          if (user?.role === 'admin') {
+            console.log('🚚 Admin delivery notification triggered for order:', orderId);
+            // Backend should send email notification to admin for delivery assignment
+          }
         }
         
         // General orders queries (affects all users)

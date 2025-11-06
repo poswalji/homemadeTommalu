@@ -102,7 +102,7 @@ export function HeroSection() {
                            <span className="font-semibold">Order Now</span>
                            <ArrowRight className='ml-2 h-5 w-5 transition-transform group-hover:translate-x-1' />
                         </Button>
-                        <Button size='lg' variant='outline' className='h-14 px-8 border-2 hover:bg-gray-50 transform hover:scale-105 transition-all' onClick={() => router.push('/grocery')}>
+                        <Button size='lg' variant='outline' className='h-14 px-8 border-2 hover:bg-gray-50 transform hover:scale-105 transition-all' onClick={() => router.push('/browse?category=Groceries+%26+Essentials')}>
                            <ShoppingCart className='mr-2 h-5 w-5' />
                             <span className="font-semibold">Browse Groceries</span>
                         </Button>

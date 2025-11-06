@@ -47,6 +47,12 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         return '🔄';
       case 'payment_received':
         return '💰';
+      case 'delivery_assigned':
+        return '🚚';
+      case 'delivery_started':
+        return '🚗';
+      case 'delivery_completed':
+        return '✅';
       default:
         return '🔔';
     }
@@ -62,6 +68,11 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         return 'bg-purple-50 border-purple-200';
       case 'order_cancelled':
         return 'bg-red-50 border-red-200';
+      case 'delivery_assigned':
+      case 'delivery_started':
+        return 'bg-orange-50 border-orange-200';
+      case 'delivery_completed':
+        return 'bg-green-50 border-green-200';
       default:
         return 'bg-gray-50 border-gray-200';
     }
