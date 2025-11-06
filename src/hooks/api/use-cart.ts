@@ -15,23 +15,11 @@ export const cartKeys = {
 
 // Get cart
 export const useCart = () => {
-  const isAuthed = typeof window !== 'undefined' && cookieService.isAuthenticated();
   return useQuery({
     queryKey: cartKeys.cart(),
     queryFn: () => cartApi.getCart(),
-    staleTime: 1000 * 30, // 30 seconds
     refetchOnWindowFocus: true,
-    enabled: isAuthed, // Avoid hitting auth-only endpoint when not logged in
-    initialData: {
-      success: true,
-      data: {
-        items: [],
-        totalItems: 0,
-        totalAmount: 0,
-        deliveryCharge: 0,
-        finalAmount: 0,
-      },
-    },
+  
   });
 };
 

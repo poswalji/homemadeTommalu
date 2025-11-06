@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/axios';
 import { MapPin, CreditCard, Check } from 'lucide-react';
+import { LocationPicker } from '@/components/maps/location-picker';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -27,12 +28,36 @@ export default function CheckoutPage() {
     state: '',
     pincode: '',
     country: 'India',
+    coordinates: null as { lat: number; lng: number } | null,
   });
 
   const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery');
 
   const cart = cartData?.data;
   const hasItems = cart?.items && cart.items.length > 0;
+
+  // Calculate values - prioritize API values, fallback to calculations
+  const items = cart?.items || [];
+  const computedItemsTotal = items.reduce(
+    (sum: number, i: any) => sum + (Number(i.price) || 0) * (Number(i.quantity) || 0),
+    0
+  );
+  
+  // Use deliveryCharge from API if exists, otherwise calculate
+  const deliveryCharge = cart?.deliveryCharge !== undefined && cart?.deliveryCharge !== null
+    ? cart.deliveryCharge
+    : (computedItemsTotal >= 100 ? 0 : 30);
+  
+  // Use finalAmount from API if exists, otherwise calculate
+  const discountAmount = cart?.discount?.discountAmount || 0;
+  const finalAmount = cart?.finalAmount !== undefined && cart?.finalAmount !== null
+    ? cart.finalAmount
+    : Math.max(0, computedItemsTotal + deliveryCharge - discountAmount);
+  
+  // Use totalAmount from API if exists, otherwise use computed
+  const totalAmount = cart?.totalAmount !== undefined && cart?.totalAmount !== null
+    ? cart.totalAmount
+    : computedItemsTotal;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +153,25 @@ export default function CheckoutPage() {
                   </select>
                 </div>
 
-                <div>
+                <div className="col-span-2">
+                  <Label>Location on Map</Label>
+                  <LocationPicker
+                    onLocationSelect={(location) => {
+                      setFormData({
+                        ...formData,
+                        street: location.address.split(',')[0] || location.address,
+                        city: location.city || '',
+                        state: location.state || '',
+                        pincode: location.pincode || '',
+                        coordinates: { lat: location.lat, lng: location.lng },
+                      });
+                    }}
+                    initialLocation={formData.coordinates || undefined}
+                    height="300px"
+                  />
+                </div>
+
+                <div className="col-span-2">
                   <Label htmlFor="street">Street Address *</Label>
                   <Input
                     id="street"
@@ -137,6 +180,9 @@ export default function CheckoutPage() {
                     required
                     className="mt-1"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select location on map above or enter manually
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -230,23 +276,23 @@ export default function CheckoutPage() {
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span>Items ({cart?.totalItems || 0})</span>
-                  <span>₹{((cart?.totalAmount || 0) - (cart?.deliveryCharge || 0)).toFixed(2)}</span>
+                  <span>₹{totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Delivery</span>
-                  <span>₹{cart?.deliveryCharge?.toFixed(2) || '0.00'}</span>
+                  <span>₹{deliveryCharge.toFixed(2)}</span>
                 </div>
                 {cart?.discount && (
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Discount ({cart.discount.code})</span>
-                    <span>-₹{cart.discount.discountAmount?.toFixed(2) || '0.00'}</span>
+                    <span>-₹{discountAmount.toFixed(2)}</span>
                   </div>
                 )}
               </div>
 
               <div className="flex justify-between font-bold text-lg mb-6 pt-4 border-t">
                 <span>Total</span>
-                <span>₹{cart?.finalAmount?.toFixed(2) || '0.00'}</span>
+                <span>₹{finalAmount.toFixed(2)}</span>
               </div>
 
               <Button

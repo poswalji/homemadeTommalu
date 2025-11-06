@@ -4,6 +4,7 @@ import {
   type UsersQueryParams,
   type UpdateStoreMetadataData,
   type UpdateStoreCommissionData,
+  type UpdateStoreDeliveryFeeData,
   type RejectStoreData,
   type ResetPasswordData,
 } from '@/services/api/admin.api';
@@ -150,6 +151,22 @@ export const useUpdateStoreCommission = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.store(variables.id) });
       queryClient.invalidateQueries({ queryKey: adminKeys.pendingStores() });
+      queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'stores'] });
+    },
+  });
+};
+
+// Update store delivery fee
+export const useUpdateStoreDeliveryFee = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateStoreDeliveryFeeData }) =>
+      adminApi.updateStoreDeliveryFee(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.store(variables.id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.pendingStores() });
+      queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'stores'] });
     },
   });
 };

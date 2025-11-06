@@ -9,7 +9,9 @@ import {
   User, 
   MapPin,
   Heart,
-  LogOut
+  LogOut,
+  Star,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,10 +20,11 @@ import { useLogout } from '@/hooks/api';
 import { useEffect } from 'react';
 
 const customerNavItems = [
-  { name: 'Home', href: '/customer', icon: Home },
+  { name: 'Dashboard', href: '/customer', icon: Home },
   { name: 'Orders', href: '/customer/orders', icon: ShoppingBag },
   { name: 'Addresses', href: '/customer/addresses', icon: MapPin },
-  { name: 'Favorites', href: '/customer/favorites', icon: Heart },
+  { name: 'Reviews', href: '/customer/reviews', icon: Star },
+  { name: 'Disputes', href: '/customer/disputes', icon: AlertCircle },
   { name: 'Profile', href: '/customer/profile', icon: User },
 ];
 
@@ -70,7 +73,8 @@ export function CustomerSidebar({ isOpen, onClose }: CustomerSidebarProps) {
         <nav className="p-4 space-y-2">
           {customerNavItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            // ✅ Check if pathname matches or starts with href (for nested routes)
+            const isActive = pathname === item.href 
             
             return (
               <Link

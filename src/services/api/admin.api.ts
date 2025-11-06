@@ -18,6 +18,7 @@ export interface User {
 
 export interface Store {
   id: string;
+  _id?: string;
   storeName: string;
   address: string;
   phone: string;
@@ -25,6 +26,17 @@ export interface Store {
   description?: string;
   verificationStatus?: string;
   commissionRate?: number;
+  deliveryFee?: number;
+  status?: string;
+  isOpen?: boolean;
+  available?: boolean;
+  ownerId?: {
+    _id: string;
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  createdAt?: string;
 }
 
 export interface UpdateStoreMetadataData {
@@ -38,6 +50,10 @@ export interface UpdateStoreMetadataData {
 
 export interface UpdateStoreCommissionData {
   commissionRate: number; // 0-100
+}
+
+export interface UpdateStoreDeliveryFeeData {
+  deliveryFee: number; // >= 0
 }
 
 export interface RejectStoreData {
@@ -161,6 +177,12 @@ export const adminApi = {
   // Update store commission (superAdmin)
   updateStoreCommission: async (id: string, data: UpdateStoreCommissionData): Promise<AdminResponse<Store>> => {
     const response = await apiClient.patch<AdminResponse<Store>>(`/admin/stores/${id}/commission`, data);
+    return response.data;
+  },
+
+  // Update store delivery fee (superAdmin)
+  updateStoreDeliveryFee: async (id: string, data: UpdateStoreDeliveryFeeData): Promise<AdminResponse<Store>> => {
+    const response = await apiClient.patch<AdminResponse<Store>>(`/admin/stores/${id}/delivery-fee`, data);
     return response.data;
   },
 

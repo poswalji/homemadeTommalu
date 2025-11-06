@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus, MapPin, Edit, Trash2, Check } from 'lucide-react';
+import { LocationPicker } from '@/components/maps/location-picker';
 
 export default function CustomerAddressesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -34,6 +35,7 @@ export default function CustomerAddressesPage() {
     pincode: '',
     country: 'India',
     isDefault: false,
+    coordinates: null as { lat: number; lng: number } | null,
   });
 
   const handleOpenDialog = (address?: any) => {
@@ -47,6 +49,7 @@ export default function CustomerAddressesPage() {
         pincode: address.pincode || '',
         country: address.country || 'India',
         isDefault: address.isDefault || false,
+        coordinates: address.coordinates || null,
       });
     } else {
       setEditingAddress(null);
@@ -58,6 +61,7 @@ export default function CustomerAddressesPage() {
         pincode: '',
         country: 'India',
         isDefault: addresses.length === 0,
+        coordinates: null,
       });
     }
     setIsDialogOpen(true);
@@ -66,15 +70,16 @@ export default function CustomerAddressesPage() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingAddress(null);
-    setFormData({
-      label: 'Home',
-      street: '',
-      city: '',
-      state: '',
-      pincode: '',
-      country: 'India',
-      isDefault: false,
-    });
+      setFormData({
+        label: 'Home',
+        street: '',
+        city: '',
+        state: '',
+        pincode: '',
+        country: 'India',
+        isDefault: false,
+        coordinates: null,
+      });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -238,7 +243,7 @@ export default function CustomerAddressesPage() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl ">
           <DialogHeader>
             <DialogTitle>
               {editingAddress ? 'Edit Address' : 'Add New Address'}
@@ -267,6 +272,23 @@ export default function CustomerAddressesPage() {
                 </select>
               </div>
               <div className="col-span-2">
+                <Label>Location on Map</Label>
+                <LocationPicker
+                  onLocationSelect={(location) => {
+                    setFormData({
+                      ...formData,
+                      street: location.address.split(',')[0] || location.address,
+                      city: location.city || '',
+                      state: location.state || '',
+                      pincode: location.pincode || '',
+                      coordinates: { lat: location.lat, lng: location.lng },
+                    });
+                  }}
+                  initialLocation={formData.coordinates || undefined}
+                  height="300px"
+                />
+              </div>
+              <div className="col-span-2">
                 <Label htmlFor="street">Street Address *</Label>
                 <Input
                   id="street"
@@ -278,6 +300,9 @@ export default function CustomerAddressesPage() {
                   required
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Select location on map above or enter manually
+                </p>
               </div>
               <div>
                 <Label htmlFor="city">City *</Label>

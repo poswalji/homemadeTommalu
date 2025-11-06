@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Users, 
-  Store, 
   ShoppingBag, 
   Settings, 
   LogOut,
   FileText,
   CheckCircle,
-  XCircle
+  XCircle,
+  Ticket,
+  Store as StoreIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,8 +23,10 @@ import { useEffect } from 'react';
 const adminNavItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Stores', href: '/admin/stores', icon: StoreIcon },
   { name: 'Pending Stores', href: '/admin/stores/pending', icon: FileText },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
+  { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
 ];
 
 interface AdminSidebarProps {

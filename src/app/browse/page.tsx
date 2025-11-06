@@ -10,19 +10,27 @@ import { Spinner } from '@/components/ui/spinner';
 import { Search, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export default function BrowsePage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  
+  // Read initial values from URL params
   const initialCategory = searchParams?.get('category') || '';
   const initialType = searchParams?.get('type') || '';
+  const initialSearch = searchParams?.get('search') || '';
+  const initialPage = parseInt(searchParams?.get('page') || '1', 10);
+  const initialSortBy = searchParams?.get('sortBy') || 'name';
+  const initialSortOrder = (searchParams?.get('sortOrder') || 'asc') as 'asc' | 'desc';
 
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [selectedFoodType, setSelectedFoodType] = useState<string>(initialType);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [sortBy, setSortBy] = useState(initialSortBy);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialSortOrder);
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: categoriesData } = useCategories();
@@ -42,17 +50,46 @@ export default function BrowsePage() {
   const products = productsData?.data || [];
   const pagination = productsData?.pagination;
 
+  // Update URL params when filters change
   useEffect(() => {
-    if (initialCategory && initialCategory !== selectedCategory) {
-      setSelectedCategory(initialCategory);
-      setCurrentPage(1);
-    }
-    if (initialType && initialType !== selectedFoodType) {
-      setSelectedFoodType(initialType);
-      setCurrentPage(1);
+    const params = new URLSearchParams();
+    
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (selectedFoodType) params.set('type', selectedFoodType);
+    if (searchQuery) params.set('search', searchQuery);
+    if (currentPage > 1) params.set('page', currentPage.toString());
+    if (sortBy !== 'name') params.set('sortBy', sortBy);
+    if (sortOrder !== 'asc') params.set('sortOrder', sortOrder);
+    
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    
+    // Only update URL if it's different to avoid infinite loops
+    const currentSearch = window.location.search || '';
+    const newSearch = queryString ? `?${queryString}` : '';
+    if (currentSearch !== newSearch) {
+      router.replace(newUrl || '', { scroll: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCategory, initialType]);
+  }, [selectedCategory, selectedFoodType, searchQuery, currentPage, sortBy, sortOrder]);
+
+  // Sync state with URL params on mount or when URL changes
+  useEffect(() => {
+    const category = searchParams?.get('category') || '';
+    const type = searchParams?.get('type') || '';
+    const search = searchParams?.get('search') || '';
+    const page = parseInt(searchParams?.get('page') || '1', 10);
+    const sort = searchParams?.get('sortBy') || 'name';
+    const order = (searchParams?.get('sortOrder') || 'asc') as 'asc' | 'desc';
+    
+    if (category !== selectedCategory) setSelectedCategory(category);
+    if (type !== selectedFoodType) setSelectedFoodType(type);
+    if (search !== searchQuery) setSearchQuery(search);
+    if (page !== currentPage) setCurrentPage(page);
+    if (sort !== sortBy) setSortBy(sort);
+    if (order !== sortOrder) setSortOrder(order);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category === selectedCategory ? '' : category);
@@ -69,11 +106,23 @@ export default function BrowsePage() {
     setCurrentPage(1);
   };
 
+  const handleSortByChange = (newSortBy: string) => {
+    setSortBy(newSortBy);
+    setCurrentPage(1);
+  };
+
+  const handleSortOrderChange = () => {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    setCurrentPage(1);
+  };
+
   const clearFilters = () => {
     setSelectedCategory('');
     setSelectedFoodType('');
     setSearchQuery('');
     setCurrentPage(1);
+    setSortBy('name');
+    setSortOrder('asc');
   };
 
   const hasActiveFilters = selectedCategory || selectedFoodType || searchQuery;
@@ -194,7 +243,7 @@ export default function BrowsePage() {
                   <div className="flex gap-2">
                     <select
                       value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
+                      onChange={(e) => handleSortByChange(e.target.value)}
                       className="border rounded px-3 py-2 flex-1"
                     >
                       <option value="name">Name</option>
@@ -203,7 +252,7 @@ export default function BrowsePage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      onClick={handleSortOrderChange}
                     >
                       {sortOrder === 'asc' ? '↑' : '↓'}
                     </Button>
