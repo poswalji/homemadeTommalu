@@ -3,7 +3,7 @@
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { CustomerSidebar } from '@/components/layout/customer-sidebar';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -11,6 +11,8 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
+    <Suspense>
+
     <div className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-1 flex">
@@ -38,5 +40,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       </div>
       <Footer />
     </div>
+    </Suspense>
+
   );
 }

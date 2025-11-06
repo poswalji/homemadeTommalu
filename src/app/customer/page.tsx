@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useProducts, useCategories } from '@/hooks/api';
 import { ProductCard } from '@/components/products/product-card';
 import { Button } from '@/components/ui/button';
@@ -126,6 +126,8 @@ export default function CustomerDashboard() {
   const hasActiveFilters = selectedCategory || selectedFoodType || searchQuery;
 
   return (
+    <Suspense>
+
     <div className="space-y-6">
       {/* Welcome Section */}
       <div>
@@ -313,5 +315,7 @@ export default function CustomerDashboard() {
         </>
       )}
     </div>
+    </Suspense>
+
   );
 }
