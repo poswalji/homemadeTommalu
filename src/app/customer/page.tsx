@@ -127,33 +127,32 @@ export default function CustomerDashboard() {
 
   return (
     <Suspense>
-
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Welcome Section */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Browse Products</h1>
-        <p className="text-gray-600 mt-2">Discover and order from your favorite stores</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Browse Products</h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Discover and order from your favorite stores</p>
       </div>
 
       {/* Search and Filters Section */}
-      <div className="mb-8">
-        <form onSubmit={handleSearch} className="mb-4">
-          <div className="flex gap-2">
+      <div className="mb-6 sm:mb-8">
+        <form onSubmit={handleSearch} className="mb-3 sm:mb-4">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
               <Input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-9 sm:pl-10 text-sm sm:text-base"
               />
             </div>
             <Button
               type="button"
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 text-sm sm:text-base"
             >
               <Filter className="w-4 h-4" />
               Filters
@@ -163,16 +162,16 @@ export default function CustomerDashboard() {
 
         {/* Active Filters */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
             {selectedCategory && (
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => setSelectedCategory('')}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 text-xs sm:text-sm"
               >
-                {selectedCategory}
-                <X className="w-3 h-3" />
+                <span className="truncate max-w-[120px] sm:max-w-none">{selectedCategory}</span>
+                <X className="w-3 h-3 flex-shrink-0" />
               </Button>
             )}
             {selectedFoodType && (
@@ -180,14 +179,14 @@ export default function CustomerDashboard() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setSelectedFoodType('')}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 text-xs sm:text-sm"
               >
-                {selectedFoodType}
-                <X className="w-3 h-3" />
+                <span className="truncate max-w-[120px] sm:max-w-none">{selectedFoodType}</span>
+                <X className="w-3 h-3 flex-shrink-0" />
               </Button>
             )}
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs sm:text-sm">
                 Clear All
               </Button>
             )}
@@ -196,8 +195,8 @@ export default function CustomerDashboard() {
 
         {/* Expanded Filters */}
         {showFilters && (
-          <Card className="p-4 mb-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="p-3 sm:p-4 mb-3 sm:mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Category</label>
                 <div className="flex flex-wrap gap-2">
@@ -282,7 +281,7 @@ export default function CustomerDashboard() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -290,24 +289,28 @@ export default function CustomerDashboard() {
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="flex justify-center items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
+                className="w-full sm:w-auto text-sm"
               >
                 <ChevronLeft className="w-4 h-4" />
-                Previous
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">Prev</span>
               </Button>
-              <span className="text-sm">
+              <span className="text-xs sm:text-sm">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
                 disabled={currentPage === pagination.totalPages}
+                className="w-full sm:w-auto text-sm"
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
+                <span className="sm:hidden">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>

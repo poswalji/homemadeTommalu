@@ -102,21 +102,21 @@ export default function CustomerOrdersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-        <p className="text-gray-600 mt-2">View and track your orders</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Orders</h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">View and track your orders</p>
       </div>
 
-      <Card className="p-6">
-        <div className="mb-6">
+      <Card className="p-4 sm:p-6">
+        <div className="mb-4 sm:mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <Input
               placeholder="Search orders..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 max-w-md"
+              className="pl-9 sm:pl-10 w-full sm:max-w-md text-sm sm:text-base"
             />
           </div>
         </div>
@@ -131,35 +131,35 @@ export default function CustomerOrdersPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {filteredOrders.map((order) => (
-              <Card key={order.id} className="p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold">
+              <Card key={order.id} className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                      <h3 className="text-base sm:text-lg font-semibold truncate">
                         Order #{order.id?.slice(0, 8)}
                       </h3>
                       <Badge className={getStatusColor(order.status)}>
                         {order.status}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">{order.storeName}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{order.storeName}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold">₹{order.finalPrice}</p>
-                    <p className="text-sm text-gray-600">
+                  <div className="text-left sm:text-right">
+                    <p className="text-xl sm:text-2xl font-bold">₹{order.finalPrice}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">
                       {order.items?.length || 0} items
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <div className="flex items-start gap-2">
-                    <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">Order Date</p>
-                      <p className="text-sm text-gray-600">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium">Order Date</p>
+                      <p className="text-xs sm:text-sm text-gray-600 break-words">
                         {new Date(order.createdAt).toLocaleDateString('en-IN', {
                           year: 'numeric',
                           month: 'long',
@@ -172,10 +172,10 @@ export default function CustomerOrdersPage() {
                   </div>
                   {order.deliveryAddress && (
                     <div className="flex items-start gap-2">
-                      <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">Delivery Address</p>
-                        <p className="text-sm text-gray-600">
+                      <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm font-medium">Delivery Address</p>
+                        <p className="text-xs sm:text-sm text-gray-600 break-words">
                           {order.deliveryAddress.street}, {order.deliveryAddress.city}
                           {order.deliveryAddress.pincode && ` - ${order.deliveryAddress.pincode}`}
                         </p>
@@ -224,11 +224,12 @@ export default function CustomerOrdersPage() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Link href={`/customer/orders/${order.id}`} className="flex-1">
-                    <Button variant="outline" className="w-full">
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
+                    <Button variant="outline" className="w-full text-xs sm:text-sm">
+                      <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">View Details</span>
+                      <span className="sm:hidden">Details</span>
                     </Button>
                   </Link>
                   {['Pending', 'Confirmed'].includes(order.status) && (
@@ -242,11 +243,12 @@ export default function CustomerOrdersPage() {
                       <DialogTrigger asChild>
                         <Button
                           variant="outline"
-                          className="flex-1"
+                          className="flex-1 text-xs sm:text-sm"
                           onClick={() => openCancelDialog(order.id)}
                         >
-                          <XCircle className="w-4 h-4 mr-2" />
-                          Cancel Order
+                          <XCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          <span className="hidden sm:inline">Cancel Order</span>
+                          <span className="sm:hidden">Cancel</span>
                         </Button>
                       </DialogTrigger>
                       <DialogContent>

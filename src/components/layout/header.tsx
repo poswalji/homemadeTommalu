@@ -10,6 +10,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { useCart } from '@/hooks/api/use-cart';
 import { getGuestCart } from '@/lib/cart-storage';
 import { useLogout } from '@/hooks/api/use-auth';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 export function Header() {
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -93,6 +94,7 @@ export function Header() {
             </nav>
 
             <div className='flex items-center space-x-4'>
+               {isAuthenticated && <NotificationBell />}
                <Link href='/cart'>
                   <Button
                      variant='ghost'

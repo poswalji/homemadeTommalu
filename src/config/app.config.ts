@@ -2,7 +2,7 @@ export const appConfig = {
   name: "Tommalu",
   description: "Your trusted partner for fresh groceries and delicious food delivery in Jaipur",
   url: process.env.NEXT_PUBLIC_APP_URL || "https://tommalu.com",
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
   keywords: [
     "food delivery nims",
     "food delivery Achrol",
