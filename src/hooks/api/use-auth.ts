@@ -9,6 +9,8 @@ import {
   type ChangePasswordData,
   type VerifyEmailData,
   type ResendVerificationData,
+  type ForgotPasswordData,
+  type ResetPasswordData,
 } from '@/services/api/auth.api';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -167,6 +169,27 @@ export const useVerifyEmail = () => {
 export const useResendVerificationCode = () => {
   return useMutation({
     mutationFn: (data: ResendVerificationData) => authApi.resendVerificationCode(data),
+  });
+};
+
+// Forgot password mutation
+export const useForgotPassword = () => {
+  return useMutation({
+    mutationFn: (data: ForgotPasswordData) => authApi.forgotPassword(data),
+  });
+};
+
+// Reset password mutation
+export const useResetPassword = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: ResetPasswordData) => authApi.resetPassword(data),
+    onSuccess: (data) => {
+      if (data.success && data.user) {
+        queryClient.setQueryData(authKeys.me(), { success: true, user: data.user });
+      }
+    },
   });
 };
 

@@ -83,6 +83,27 @@ export interface ResendVerificationResponse {
   message: string;
 }
 
+export interface ForgotPasswordData {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ResetPasswordData {
+  token: string;
+  password: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+  token?: string;
+  user?: User;
+}
+
 // Auth API Service
 export const authApi = {
   // Register a new user
@@ -251,6 +272,37 @@ export const authApi = {
   resendVerificationCode: async (data: ResendVerificationData): Promise<ResendVerificationResponse> => {
     try {
       const response = await apiClient.post<ResendVerificationResponse>('/auth/resend-verification', data);
+      return response.data;
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
+    }
+  },
+
+  // Forgot password - request password reset
+  forgotPassword: async (data: ForgotPasswordData): Promise<ForgotPasswordResponse> => {
+    try {
+      const response = await apiClient.post<ForgotPasswordResponse>('/auth/forgot-password', data);
+      return response.data;
+    } catch (error) {
+      // Re-throw error to be handled by the calling component
+      throw error;
+    }
+  },
+
+  // Reset password with token
+  resetPassword: async (data: ResetPasswordData): Promise<ResetPasswordResponse> => {
+    try {
+      const response = await apiClient.post<ResetPasswordResponse>('/auth/reset-password', data);
+      
+      // Auto-save auth data if token is present
+      if (response.data?.token) {
+        cookieService.setAuthData(response.data.token);
+      }
+      if (response.data?.user) {
+        cookieService.setUser(response.data.user);
+      }
+      
       return response.data;
     } catch (error) {
       // Re-throw error to be handled by the calling component
