@@ -1,14 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { payoutsApi, type RequestEarlyPayoutData } from '@/services/api/payouts.api';
-
-// Query keys
-export const payoutKeys = {
-  all: ['payouts'] as const,
-  storeOwner: () => [...payoutKeys.all, 'storeOwner'] as const,
-  admin: () => [...payoutKeys.all, 'admin'] as const,
-  detail: (id: string) => [...payoutKeys.all, id] as const,
-  earnings: () => [...payoutKeys.all, 'earnings'] as const,
-};
+import { payoutKeys } from '@/config/query.config';
 
 // Store Owner: Get my payouts
 export const useMyPayouts = (params?: {

@@ -1,26 +1,34 @@
 'use client';
 
-import { useState } from 'react';
-import { useCart } from '@/hooks/api';
+import { useState, useEffect } from 'react';
+import { useCart, useAuthMe } from '@/hooks/api';
 import { useCreateOrderFromCart } from '@/hooks/api/use-orders';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Badge } from '@/components/ui/badge';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/axios';
-import { MapPin, CreditCard, Check } from 'lucide-react';
+import { MapPin, CreditCard, Check, Plus } from 'lucide-react';
 import { LocationPicker } from '@/components/maps/location-picker';
+import { cn } from '@/lib/utils';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: cartData, isLoading: cartLoading } = useCart();
+  const { data: authData } = useAuthMe();
   const createOrder = useCreateOrderFromCart();
 
+  const savedAddresses = authData?.user?.addresses || [];
+  const defaultAddress = savedAddresses.find((addr) => addr.isDefault) || savedAddresses[0];
+
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [useSavedAddress, setUseSavedAddress] = useState(savedAddresses.length > 0);
   const [formData, setFormData] = useState({
     label: 'Home' as 'Home' | 'Work' | 'Other',
     street: '',
@@ -32,6 +40,50 @@ export default function CheckoutPage() {
   });
 
   const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery');
+
+  // Initialize with default address if available
+  useEffect(() => {
+    if (defaultAddress && useSavedAddress && selectedAddressId === null && savedAddresses.length > 0) {
+      const defaultIndex = savedAddresses.findIndex((a) => a === defaultAddress);
+      const indexToSet = defaultIndex >= 0 ? defaultIndex.toString() : '0';
+      setSelectedAddressId(indexToSet);
+      const address = savedAddresses[defaultIndex >= 0 ? defaultIndex : 0];
+      if (address) {
+        setFormData({
+          label: address.label || 'Home',
+          street: address.street || '',
+          city: address.city || '',
+          state: address.state || '',
+          pincode: address.pincode || '',
+          country: address.country || 'India',
+          coordinates: (address as any).coordinates || null,
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultAddress, useSavedAddress, savedAddresses.length]);
+
+  // Update form when address is selected
+  useEffect(() => {
+    if (selectedAddressId !== null && useSavedAddress && savedAddresses.length > 0) {
+      const index = parseInt(selectedAddressId);
+      if (index >= 0 && index < savedAddresses.length) {
+        const selectedAddress = savedAddresses[index];
+        if (selectedAddress) {
+          setFormData({
+            label: selectedAddress.label || 'Home',
+            street: selectedAddress.street || '',
+            city: selectedAddress.city || '',
+            state: selectedAddress.state || '',
+            pincode: selectedAddress.pincode || '',
+            country: selectedAddress.country || 'India',
+            coordinates: (selectedAddress as any).coordinates || null,
+          });
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAddressId, useSavedAddress]);
 
   const cart = cartData?.data;
   const hasItems = cart?.items && cart.items.length > 0;
@@ -133,12 +185,83 @@ export default function CheckoutPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Delivery Address */}
             <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5" />
-                <h2 className="text-xl font-semibold">Delivery Address</h2>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  <h2 className="text-xl font-semibold">Delivery Address</h2>
+                </div>
+                {savedAddresses.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setUseSavedAddress(!useSavedAddress);
+                      if (!useSavedAddress && defaultAddress) {
+                        const defaultIndex = savedAddresses.findIndex((a) => a === defaultAddress);
+                        setSelectedAddressId(defaultIndex >= 0 ? defaultIndex.toString() : '0');
+                      }
+                    }}
+                  >
+                    {useSavedAddress ? 'Enter New Address' : 'Use Saved Address'}
+                  </Button>
+                )}
               </div>
 
-              <div className="space-y-4">
+              {useSavedAddress && savedAddresses.length > 0 ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label>Select Saved Address</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                      {savedAddresses.map((address, index: number) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => setSelectedAddressId(index.toString())}
+                          className={cn(
+                            'p-4 border-2 rounded-lg text-left transition-all hover:border-[lab(66%_50.34_52.19)]',
+                            selectedAddressId === index.toString()
+                              ? 'border-[lab(66%_50.34_52.19)] bg-[lab(66%_50.34_52.19)]/5'
+                              : 'border-gray-200'
+                          )}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-gray-500" />
+                              <span className="font-semibold capitalize">{address.label}</span>
+                            </div>
+                            {address.isDefault && (
+                              <Badge variant="secondary" className="text-xs">Default</Badge>
+                            )}
+                            {selectedAddressId === index.toString() && (
+                              <Check className="w-5 h-5 text-[lab(66%_50.34_52.19)]" />
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {address.street}
+                            <br />
+                            {address.city}
+                            {address.state && `, ${address.state}`}
+                            <br />
+                            {address.pincode}
+                            {address.country && `, ${address.country}`}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={() => router.push('/customer/addresses')}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Manage Addresses
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
                 <div>
                   <Label htmlFor="label">Address Label</Label>
                   <select
@@ -232,7 +355,8 @@ export default function CheckoutPage() {
                     />
                   </div>
                 </div>
-              </div>
+                </div>
+              )}
             </Card>
 
             {/* Payment Method */}

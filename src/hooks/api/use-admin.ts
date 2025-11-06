@@ -8,17 +8,7 @@ import {
   type RejectStoreData,
   type ResetPasswordData,
 } from '@/services/api/admin.api';
-
-// Query keys
-export const adminKeys = {
-  all: ['admin'] as const,
-  users: (params?: UsersQueryParams) => [...adminKeys.all, 'users', params] as const,
-  user: (id: string) => [...adminKeys.all, 'user', id] as const,
-  userOrders: (id: string) => [...adminKeys.user(id), 'orders'] as const,
-  userTransactions: (id: string) => [...adminKeys.user(id), 'transactions'] as const,
-  pendingStores: () => [...adminKeys.all, 'stores', 'pending'] as const,
-  store: (id: string) => [...adminKeys.all, 'store', id] as const,
-};
+import { adminKeys, ordersKeys } from '@/config/query.config';
 
 // Get users
 export const useUsers = (params?: UsersQueryParams) => {
@@ -151,7 +141,7 @@ export const useUpdateStoreCommission = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.store(variables.id) });
       queryClient.invalidateQueries({ queryKey: adminKeys.pendingStores() });
-      queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'stores'] });
+      queryClient.invalidateQueries({ queryKey: adminKeys.stores() });
     },
   });
 };
@@ -166,7 +156,7 @@ export const useUpdateStoreDeliveryFee = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.store(variables.id) });
       queryClient.invalidateQueries({ queryKey: adminKeys.pendingStores() });
-      queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'stores'] });
+      queryClient.invalidateQueries({ queryKey: adminKeys.stores() });
     },
   });
 };
@@ -174,7 +164,7 @@ export const useUpdateStoreDeliveryFee = () => {
 // Analytics hooks
 export const useDashboardAnalytics = (params?: { startDate?: string; endDate?: string }) => {
   return useQuery({
-    queryKey: [...adminKeys.all, 'analytics', 'dashboard', params],
+    queryKey: adminKeys.analytics.dashboard(params),
     queryFn: () => adminApi.getDashboardAnalytics(params),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -186,7 +176,7 @@ export const useOrderAnalytics = (params?: {
   groupBy?: 'day' | 'week' | 'month';
 }) => {
   return useQuery({
-    queryKey: [...adminKeys.all, 'analytics', 'orders', params],
+    queryKey: adminKeys.analytics.orders(params),
     queryFn: () => adminApi.getOrderAnalytics(params),
     staleTime: 1000 * 60 * 5,
   });
@@ -198,7 +188,7 @@ export const useStoreAnalytics = (params?: {
   top?: number;
 }) => {
   return useQuery({
-    queryKey: [...adminKeys.all, 'analytics', 'stores', params],
+    queryKey: adminKeys.analytics.stores(params),
     queryFn: () => adminApi.getStoreAnalytics(params),
     staleTime: 1000 * 60 * 5,
   });
@@ -206,7 +196,7 @@ export const useStoreAnalytics = (params?: {
 
 export const useRevenueAnalytics = (params?: { startDate?: string; endDate?: string }) => {
   return useQuery({
-    queryKey: [...adminKeys.all, 'analytics', 'revenue', params],
+    queryKey: adminKeys.analytics.revenue(params),
     queryFn: () => adminApi.getRevenueAnalytics(params),
     staleTime: 1000 * 60 * 5,
   });
@@ -221,7 +211,7 @@ export const useMenuItems = (params?: {
   limit?: number;
 }) => {
   return useQuery({
-    queryKey: [...adminKeys.all, 'menu', 'items', params],
+    queryKey: adminKeys.menu.items(params),
     queryFn: () => adminApi.listMenuItems(params),
     staleTime: 1000 * 60 * 2,
   });
@@ -229,7 +219,7 @@ export const useMenuItems = (params?: {
 
 export const useMenuItemById = (id: string) => {
   return useQuery({
-    queryKey: [...adminKeys.all, 'menu', 'items', id],
+    queryKey: adminKeys.menu.item(id),
     queryFn: () => adminApi.getMenuItemById(id),
     enabled: !!id,
   });
@@ -241,7 +231,7 @@ export const useDisableMenuItem = () => {
   return useMutation({
     mutationFn: (id: string) => adminApi.disableMenuItem(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'menu', 'items'] });
+      queryClient.invalidateQueries({ queryKey: adminKeys.menu.items() });
     },
   });
 };
@@ -255,7 +245,7 @@ export const useAllStores = (params?: {
   limit?: number;
 }) => {
   return useQuery({
-    queryKey: [...adminKeys.all, 'stores', 'all', params],
+    queryKey: adminKeys.storesAll(params),
     queryFn: () => adminApi.getAllStores(params),
     staleTime: 1000 * 60 * 2,
   });
@@ -269,7 +259,7 @@ export const useCancelOrderAdmin = () => {
     mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
       adminApi.cancelOrder(id, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ordersKeys.all });
     },
   });
 };

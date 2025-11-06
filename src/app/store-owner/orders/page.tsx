@@ -38,6 +38,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useSocket } from '@/context/socket-context';
+import Image from 'next/image';
 
 export default function StoreOwnerOrdersPage() {
    const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +54,7 @@ export default function StoreOwnerOrdersPage() {
 
    const { data, isLoading, error } = useStoreOwnerOrders();
    const updateStatus = useStoreOwnerUpdateOrderStatus();
+   const { stopNotificationSound } = useSocket();
 
    const handleStatusUpdate = async () => {
       if (!selectedOrder || !statusUpdate.status) {
@@ -74,6 +77,9 @@ export default function StoreOwnerOrdersPage() {
                   : {}),
             },
          });
+         if (selectedOrder && statusUpdate.status !== 'Pending') {
+            stopNotificationSound(selectedOrder);
+         }
          toast.success(`Order status updated to ${statusUpdate.status}`);
          setIsDialogOpen(false);
          setSelectedOrder(null);
@@ -256,6 +262,48 @@ export default function StoreOwnerOrdersPage() {
                                  {order.items?.length || 0} items
                               </p>
                            </div>
+                        </div>
+                        <div className='overflow-x-auto mb-4'>
+                           <table className='min-w-full rounded-md border border-gray-200 bg-gray-50'>
+                              <thead>
+                                 <tr>
+                                    <th className='px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
+                                       Item
+                                    </th>
+                                    <th className='px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
+                                       Qty
+                                    </th>
+                                    <th className='px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
+                                       Price
+                                    </th>
+                                    <th className='px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
+                                       Total
+                                    </th>
+                                 </tr>
+                              </thead>
+                              <tbody>
+                                 {order.items?.map((item: any) => (
+                                    <tr
+                                       key={item.id}
+                                       className='odd:bg-white even:bg-gray-50'>
+                                       <td className='px-3 py-2 text-sm text-gray-800'>
+                                          {item.itemName}
+                                       </td>
+                                       <td className='px-3 py-2 text-sm text-gray-800'>
+                                          {item.quantity}
+                                       </td>
+                                       <td className='px-3 py-2 text-sm text-gray-800'>
+                                          ₹{item.itemPrice}
+                                       </td>
+                                       <td className='px-3 py-2 text-sm text-gray-800'>
+                                          ₹
+                                          {Number(item.itemPrice) *
+                                             Number(item.quantity)}
+                                       </td>
+                                    </tr>
+                                 ))}
+                              </tbody>
+                           </table>
                         </div>
 
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>

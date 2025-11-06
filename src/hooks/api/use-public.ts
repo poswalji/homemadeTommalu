@@ -4,14 +4,7 @@ import {
   type StoresQueryParams,
   type StoreSearchParams,
 } from '@/services/api/public.api';
-
-// Query keys
-export const publicKeys = {
-  all: ['public'] as const,
-  stores: (params?: StoresQueryParams) => [...publicKeys.all, 'stores', params] as const,
-  storeMenu: (storeId: string) => [...publicKeys.all, 'menu', storeId] as const,
-  search: (params?: StoreSearchParams) => [...publicKeys.all, 'search', params] as const,
-};
+import { publicKeys } from '@/config/query.config';
 
 // Get stores
 export const useStores = (params?: StoresQueryParams) => {
@@ -45,7 +38,7 @@ export const useSearchStores = (params?: StoreSearchParams, enabled = true) => {
 // Get public stats
 export const usePublicStats = () => {
   return useQuery({
-    queryKey: [...publicKeys.all, 'stats'],
+    queryKey: publicKeys.stats(),
     queryFn: () => publicApi.getStats(),
     staleTime: 1000 * 60 * 10, // 10 minutes - stats don't change frequently
     refetchOnWindowFocus: false,
@@ -67,7 +60,7 @@ export const useProducts = (params?: {
   limit?: number;
 }) => {
   return useQuery({
-    queryKey: [...publicKeys.all, 'products', params],
+    queryKey: publicKeys.products(params),
     queryFn: () => publicApi.getProducts(params),
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
@@ -76,7 +69,7 @@ export const useProducts = (params?: {
 // Get all categories
 export const useCategories = () => {
   return useQuery({
-    queryKey: [...publicKeys.all, 'categories'],
+    queryKey: publicKeys.categories(),
     queryFn: () => publicApi.getCategories(),
     staleTime: 1000 * 60 * 10, // 10 minutes
   });

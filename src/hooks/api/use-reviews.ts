@@ -1,14 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { reviewsApi, type CreateReviewData, type UpdateReviewData, type StoreResponseData } from '@/services/api/reviews.api';
-
-// Query keys
-export const reviewKeys = {
-  all: ['reviews'] as const,
-  store: (storeId: string) => [...reviewKeys.all, 'store', storeId] as const,
-  user: () => [...reviewKeys.all, 'user'] as const,
-  detail: (id: string) => [...reviewKeys.all, id] as const,
-  admin: () => [...reviewKeys.all, 'admin'] as const,
-};
+import { reviewKeys } from '@/config/query.config';
 
 // Get store reviews
 export const useStoreReviews = (storeId: string, params?: {

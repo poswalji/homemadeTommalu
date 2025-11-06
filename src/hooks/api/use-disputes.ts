@@ -1,14 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { disputesApi, type CreateDisputeData, type ResolveDisputeData } from '@/services/api/disputes.api';
-
-// Query keys
-export const disputeKeys = {
-  all: ['disputes'] as const,
-  user: () => [...disputeKeys.all, 'user'] as const,
-  store: () => [...disputeKeys.all, 'store'] as const,
-  admin: () => [...disputeKeys.all, 'admin'] as const,
-  detail: (id: string) => [...disputeKeys.all, id] as const,
-};
+import { disputeKeys } from '@/config/query.config';
 
 // Customer: Get my disputes
 export const useMyDisputes = (params?: {

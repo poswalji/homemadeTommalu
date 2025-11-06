@@ -14,6 +14,7 @@ import {
   Clock
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function PublicOrderTrackingPage() {
   const params = useParams();
@@ -147,13 +148,30 @@ export default function PublicOrderTrackingPage() {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
               <p className="text-sm text-gray-600 mb-1">Items</p>
-              <p className="font-medium">{order.items?.length || 0} items</p>
+              <p className="font-medium">{order?.items?.length || 'N/A'} items</p>
+              
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Total Amount</p>
               <p className="font-medium">₹{order.finalPrice?.toFixed(2) || '0.00'}</p>
             </div>
           </div>
+
+          {order?.items?.map((item, index) => (
+            <div key={item.menuId} className="mb-6 flex items-center justify-between">
+              {index === 0 && (
+                <div className="flex items-center gap-2 bg-white p-2 rounded-md">
+                  <p className="text-sm text-gray-600 mb-1">Order Items</p>
+                </div>
+              )}
+              <div className="flex items-center gap-2 bg-white p-2 rounded-md">
+                <p className="text-sm text-gray-600 mb-1">{item.itemName}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{item.quantity} x ₹{item.itemPrice?.toFixed(2) || '0.00'}</p>
+              </div>
+            </div>
+          ))}
 
           <div className="mb-6">
             <p className="text-sm text-gray-600 mb-1">Order Date</p>

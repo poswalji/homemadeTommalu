@@ -37,6 +37,7 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useSocket } from '@/context/socket-context';
 
 export default function StoreOwnerOrderDetailPage() {
   const params = useParams();
@@ -50,7 +51,7 @@ export default function StoreOwnerOrderDetailPage() {
 
   const { data, isLoading, error: orderError } = useOrder(orderId);
   const updateStatus = useStoreOwnerUpdateOrderStatus();
-
+  const { stopNotificationSound } = useSocket();
   const handleStatusUpdate = async () => {
     if (!statusUpdate.status) {
       toast.error('Please select a status');
@@ -71,6 +72,9 @@ export default function StoreOwnerOrderDetailPage() {
             : {}),
         },
       });
+      if (orderId && statusUpdate.status!=="Pending") {
+        stopNotificationSound(orderId);
+      }
       toast.success(`Order status updated to ${statusUpdate.status}`);
       setIsDialogOpen(false);
       setStatusUpdate({ status: '', rejectionReason: '', cancellationReason: '' });

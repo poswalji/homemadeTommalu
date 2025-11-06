@@ -7,16 +7,7 @@ import {
   type UpdateMenuItemData,
   type UpdateOrderStatusData,
 } from '@/services/api/store-owner.api';
-
-// Query keys
-export const storeOwnerKeys = {
-  all: ['store-owner'] as const,
-  profile: () => [...storeOwnerKeys.all, 'profile'] as const,
-  stores: () => [...storeOwnerKeys.all, 'stores'] as const,
-  store: (id: string) => [...storeOwnerKeys.stores(), id] as const,
-  menu: (storeId: string) => [...storeOwnerKeys.all, 'menu', storeId] as const,
-  orders: () => [...storeOwnerKeys.all, 'orders'] as const,
-};
+import { storeOwnerKeys, ordersKeys } from '@/config/query.config';
 
 // Get store owner profile
 export const useStoreOwnerProfile = () => {
@@ -179,8 +170,8 @@ export const useStoreOwnerUpdateOrderStatus = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: storeOwnerKeys.orders() });
       // ✅ Sync with customer orders view
-      queryClient.invalidateQueries({ queryKey: ['orders', 'detail', variables.orderId] });
-      queryClient.invalidateQueries({ queryKey: ['orders', 'my'] });
+      queryClient.invalidateQueries({ queryKey: ordersKeys.detail(variables.orderId) });
+      queryClient.invalidateQueries({ queryKey: ordersKeys.my() });
     },
   });
 };

@@ -6,17 +6,12 @@ import {
   type UpdateCartQuantityData,
   type RemoveFromCartData,
 } from '@/services/api/cart.api';
-
-// Query keys
-export const cartKeys = {
-  all: ['cart'] as const,
-  cart: () => [...cartKeys.all, 'current'] as const,
-};
+import { cartKeys } from '@/config/query.config';
 
 // Get cart
 export const useCart = () => {
   return useQuery({
-    queryKey: cartKeys.cart(),
+    queryKey: cartKeys.current(),
     queryFn: () => cartApi.getCart(),
     refetchOnWindowFocus: true,
   
@@ -41,9 +36,9 @@ export const useAddToCart = () => {
       // If authenticated, refetch server cart; otherwise, set cache from response to avoid 401
       const isAuthed = typeof window !== 'undefined' && cookieService.isAuthenticated();
       if (isAuthed) {
-        queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+        queryClient.invalidateQueries({ queryKey: cartKeys.current() });
       } else if (response?.data) {
-        queryClient.setQueryData(cartKeys.cart(), { success: true, data: response.data });
+        queryClient.setQueryData(cartKeys.current(), { success: true, data: response.data });
       }
     },
   });
@@ -56,7 +51,7 @@ export const useUpdateCartQuantity = () => {
   return useMutation({
     mutationFn: (data: UpdateCartQuantityData) => cartApi.updateQuantity(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+      queryClient.invalidateQueries({ queryKey: cartKeys.current() });
     },
   });
 };
@@ -68,7 +63,7 @@ export const useRemoveFromCart = () => {
   return useMutation({
     mutationFn: (data: RemoveFromCartData) => cartApi.removeFromCart(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+      queryClient.invalidateQueries({ queryKey: cartKeys.current() });
     },
   });
 };
@@ -80,7 +75,7 @@ export const useClearCart = () => {
   return useMutation({
     mutationFn: () => cartApi.clearCart(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+      queryClient.invalidateQueries({ queryKey: cartKeys.current() });
     },
   });
 };
@@ -92,7 +87,7 @@ export const useApplyDiscount = () => {
   return useMutation({
     mutationFn: (discountCode: string) => cartApi.applyDiscount(discountCode),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+      queryClient.invalidateQueries({ queryKey: cartKeys.current() });
     },
   });
 };
@@ -104,7 +99,7 @@ export const useRemoveDiscount = () => {
   return useMutation({
     mutationFn: () => cartApi.removeDiscount(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+      queryClient.invalidateQueries({ queryKey: cartKeys.current() });
     },
   });
 };
@@ -116,7 +111,7 @@ export const useMergeCart = () => {
   return useMutation({
     mutationFn: () => cartApi.mergeCart(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.cart() });
+      queryClient.invalidateQueries({ queryKey: cartKeys.current() });
     },
   });
 };

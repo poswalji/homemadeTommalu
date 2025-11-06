@@ -5,6 +5,7 @@ import { cookieService } from '@/utills/cookies';
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/config/query.config';
 
 interface Notification {
   id: string;
@@ -25,6 +26,7 @@ interface SocketContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   clearNotifications: () => void;
+  stopNotificationSound: (orderId: string) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -198,7 +200,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
       // Handle notifications for all user types
       if (notification.relatedId) {
-        const orderId = notification.relatedId;
+        // ✅ FIXED: Ensure orderId is converted to string
+        const orderId = String(notification.relatedId);
         
         // Play notification sound for store owners on new order notifications
         if (user?.role === 'storeOwner' && notification.type === 'order_created') {
@@ -208,21 +211,23 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         // Handle different notification types for all user roles
         if (notification.type === 'order_created') {
           // Store owner queries (affects store owners)
-          QueryClient.invalidateQueries({ queryKey: ['store-owner', 'orders'] });
-          QueryClient.invalidateQueries({ queryKey: ['payouts', 'storeOwner'] });
-          QueryClient.invalidateQueries({ queryKey: ['payouts', 'earnings'] });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.storeOwner() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.earnings() });
           
           // Customer queries (affects customers)
-          QueryClient.invalidateQueries({ queryKey: ['orders', 'my'] });
-          QueryClient.invalidateQueries({ queryKey: ['orders', 'detail', orderId] });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+          // ✅ FIXED: Invalidate public order query for order tracking page
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.public(orderId) });
           
           // Admin queries (admin acts as delivery boy - needs to see all orders)
-          QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'dashboard'] });
-          QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'orders'] });
-          QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'revenue'] });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.revenue() });
           
           // General orders queries (affects all users)
-          QueryClient.invalidateQueries({ queryKey: ['orders'] });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
           
           // Trigger email notification for order creation (tracking)
           if (user?.role === 'customer' || user?.role === 'storeOwner') {
@@ -235,15 +240,17 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           }
         } else if (notification.type === 'delivery_assigned' && user?.role === 'admin') {
           // Admin delivery assignment notifications
-          QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'dashboard'] });
-          QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'orders'] });
-          QueryClient.invalidateQueries({ queryKey: ['orders'] });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
         } else if (notification.type === 'order_status_updated') {
           // Order status update notifications for all users
-          QueryClient.invalidateQueries({ queryKey: ['orders', 'my'] });
-          QueryClient.invalidateQueries({ queryKey: ['orders', 'detail', orderId] });
-          QueryClient.invalidateQueries({ queryKey: ['store-owner', 'orders'] });
-          QueryClient.invalidateQueries({ queryKey: ['orders'] });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+          // ✅ FIXED: Invalidate public order query for order tracking page
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.public(orderId) });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
           
           // Trigger email notification for status updates (tracking)
           if (user?.role === 'customer' || user?.role === 'storeOwner') {
@@ -253,6 +260,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
               userId: user?.id,
               userEmail: user?.email
             });
+
           }
         }
       }
@@ -284,9 +292,9 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         }
 
         // Invalidate admin queries
-        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'dashboard'] });
-        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'orders'] });
-        QueryClient.invalidateQueries({ queryKey: ['orders'] });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
         
         // Trigger email notification to admin
         console.log('📧 Email notification should be sent to admin for delivery assignment:', {
@@ -332,21 +340,21 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         // Invalidate queries for all user types
         // This ensures all users see updated data regardless of their current role
         // Store owner queries (affects store owners)
-        QueryClient.invalidateQueries({ queryKey: ['store-owner', 'orders'] });
-        QueryClient.invalidateQueries({ queryKey: ['payouts', 'storeOwner'] });
-        QueryClient.invalidateQueries({ queryKey: ['payouts', 'earnings'] });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.storeOwner() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.earnings() });
         
         // Customer queries (affects customers)
-        QueryClient.invalidateQueries({ queryKey: ['orders', 'my'] });
-        QueryClient.invalidateQueries({ queryKey: ['orders', 'detail', orderId] });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
         
         // Admin queries (admin acts as delivery boy - needs to see all orders)
-        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'dashboard'] });
-        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'orders'] });
-        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'revenue'] });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.revenue() });
         
         // General orders queries (affects all users)
-        QueryClient.invalidateQueries({ queryKey: ['orders'] });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
       }
     });
 
@@ -354,7 +362,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     newSocket.on('order_status_update', (orderData: any) => {
       console.log('📦 Order status update:', orderData);
       const status = orderData.status;
-      const orderId = orderData.orderId;
+      // ✅ FIXED: Ensure orderId is converted to string
+      const orderId = String(orderData.orderId);
       
       // Create notification based on user role and order status
       let notification: Notification;
@@ -423,29 +432,31 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       if (orderData.orderId && orderData.status) {
         const finalStatuses = ['Confirmed', 'Rejected', 'Cancelled', 'Delivered'];
         
-        // Stop notification sound for store owners when order reaches final status
-        if (user?.role === 'storeOwner' && finalStatuses.includes(status)) {
+        // Stop notification sound for store owners on any status update
+        if (user?.role === 'storeOwner') {
           stopNotificationSound(orderId);
         }
         
         // Invalidate queries for all user types when order status changes
         // This ensures all users see updated data regardless of their current role
         // Store owner queries (affects store owners)
-        QueryClient.invalidateQueries({ queryKey: ['store-owner', 'orders'] });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
         
         // Customer queries (affects customers)
-        QueryClient.invalidateQueries({ queryKey: ['orders', 'my'] });
-        QueryClient.invalidateQueries({ queryKey: ['orders', 'detail', orderId] });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+        // ✅ FIXED: Invalidate public order query for order tracking page
+        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.public(orderId) });
         
         // Admin queries (admin acts as delivery boy - needs real-time updates)
         // Admin needs to see all orders, especially OutForDelivery status for delivery management
-        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'dashboard'] });
-        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'orders'] });
-        QueryClient.invalidateQueries({ queryKey: ['admin', 'analytics', 'revenue'] });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.revenue() });
         
         // Special handling for OutForDelivery status (admin as delivery boy)
         if (status === 'OutForDelivery') {
-          QueryClient.invalidateQueries({ queryKey: ['orders'] });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
           
           // Send notification to admin when order is ready for delivery
           if (user?.role === 'admin') {
@@ -455,13 +466,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         }
         
         // General orders queries (affects all users)
-        QueryClient.invalidateQueries({ queryKey: ['orders'] });
+        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
         
         // Update earnings/payouts if order status affects them
         if (finalStatuses.includes(status)) {
-          QueryClient.invalidateQueries({ queryKey: ['payouts', 'storeOwner'] });
-          QueryClient.invalidateQueries({ queryKey: ['payouts', 'earnings'] });
-          QueryClient.invalidateQueries({ queryKey: ['payouts', 'admin'] });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.storeOwner() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.earnings() });
+          QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.admin() });
         }
       }
     });
@@ -550,6 +561,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         markAsRead,
         markAllAsRead,
         clearNotifications
+,stopNotificationSound
       }}
     >
       {children}

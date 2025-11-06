@@ -1,13 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { promotionsApi, type CreatePromotionData, type ValidatePromotionData, type ApplyPromotionData } from '@/services/api/promotions.api';
-
-// Query keys
-export const promotionKeys = {
-  all: ['promotions'] as const,
-  active: () => [...promotionKeys.all, 'active'] as const,
-  admin: () => [...promotionKeys.all, 'admin'] as const,
-  detail: (id: string) => [...promotionKeys.all, 'admin', id] as const,
-};
+import { promotionKeys } from '@/config/query.config';
 
 // Get active promotions
 export const useActivePromotions = (params?: {
