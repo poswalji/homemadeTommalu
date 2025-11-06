@@ -1,9 +1,9 @@
 'use client';
 
+import { useAuth } from '@/providers/auth-provider';
+import { cookieService } from '@/utills/cookies';
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useAuth } from './app-context';
-import cookieService from '@/utills/cookies';
 
 interface Notification {
   id: string;
@@ -54,9 +54,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
-        setSocket(null);
-        setIsConnected(false);
       }
+      // State updates will happen via disconnect event handler
       return;
     }
 
@@ -81,16 +80,17 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     });
 
     socketRef.current = newSocket;
-    setSocket(newSocket);
 
     // Connection event handlers
     newSocket.on('connect', () => {
       console.log('✅ Socket.io connected');
+      setSocket(newSocket);
       setIsConnected(true);
     });
 
     newSocket.on('disconnect', () => {
       console.log('❌ Socket.io disconnected');
+      setSocket(null);
       setIsConnected(false);
     });
 
@@ -152,11 +152,15 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       Notification.requestPermission();
     }
 
-    // Cleanup on unmount
+    // Cleanup on unmount or dependency change
     return () => {
-      if (newSocket) {
-        newSocket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.removeAllListeners();
+        socketRef.current.disconnect();
+        socketRef.current = null;
       }
+      setSocket(null);
+      setIsConnected(false);
     };
   }, [isAuthenticated, user]);
 
