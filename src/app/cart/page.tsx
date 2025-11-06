@@ -120,7 +120,7 @@ export default function CartPage() {
                 <Card key={item.menuItemId} className="p-4">
                   <div className="flex gap-4">
                     {/* Item Image */}
-                    <div className="relative w-24 h-24 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                    <div className="relative w-24 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
                       {item.image ? (
                         <Image
                           src={item.image}
