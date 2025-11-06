@@ -151,11 +151,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
 
     // Initialize Socket.io connection
+    // ✅ FIXED: Use polling only for Vercel compatibility (Vercel doesn't support WebSockets)
     const newSocket = io(API_URL, {
       auth: {
         token: token
       },
-      transports: ['websocket', 'polling'],
+      transports: ['polling'], // Only polling transport for Vercel compatibility
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5
