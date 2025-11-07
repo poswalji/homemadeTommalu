@@ -38,22 +38,22 @@ export const queryKeys = {
   // Admin
   admin: {
     all: ['admin'] as const,
-    users: (params?: any) => [...queryKeys.admin.all, 'users', params] as const,
+    users: (params?: any) => [...queryKeys.admin.all, 'users', params || ''] as const,
     user: (id: string) => [...queryKeys.admin.all, 'user', id] as const,
     userOrders: (id: string) => [...queryKeys.admin.user(id), 'orders'] as const,
     userTransactions: (id: string) => [...queryKeys.admin.user(id), 'transactions'] as const,
     pendingStores: () => [...queryKeys.admin.all, 'stores', 'pending'] as const,
     store: (id: string) => [...queryKeys.admin.all, 'store', id] as const,
     stores: () => [...queryKeys.admin.all, 'stores'] as const,
-    storesAll: (params?: any) => [...queryKeys.admin.all, 'stores', 'all', params] as const,
+    storesAll: (params?: any) => [...queryKeys.admin.all, 'stores', 'all', params || ''] as const,
     analytics: {
-      dashboard: (params?: any) => [...queryKeys.admin.all, 'analytics', 'dashboard', params] as const,
-      orders: (params?: any) => [...queryKeys.admin.all, 'analytics', 'orders', params] as const,
-      stores: (params?: any) => [...queryKeys.admin.all, 'analytics', 'stores', params] as const,
-      revenue: (params?: any) => [...queryKeys.admin.all, 'analytics', 'revenue', params] as const,
+      dashboard: (params?: any) => [...queryKeys.admin.all, 'analytics', 'dashboard', params || ''] as const,
+      orders: (params?: any) => [...queryKeys.admin.all, 'analytics', 'orders', params || ''] as const,
+      stores: (params?: any) => [...queryKeys.admin.all, 'analytics', 'stores', params || ''] as const,
+      revenue: (params?: any) => [...queryKeys.admin.all, 'analytics', 'revenue', params || ''] as const,
     },
     menu: {
-      items: (params?: any) => [...queryKeys.admin.all, 'menu', 'items', params] as const,
+      items: (params?: any) => [...queryKeys.admin.all, 'menu', 'items', params || ''] as const,
       item: (id: string) => [...queryKeys.admin.all, 'menu', 'items', id] as const,
     },
   },
@@ -70,11 +70,11 @@ export const queryKeys = {
   // Public
   public: {
     all: ['public'] as const,
-    stores: (params?: any) => [...queryKeys.public.all, 'stores', params] as const,
+    stores: (params?: any) => [...queryKeys.public.all, 'stores', params || ''] as const,
     storeMenu: (storeId: string) => [...queryKeys.public.all, 'menu', storeId] as const,
-    search: (params?: any) => [...queryKeys.public.all, 'search', params] as const,
+    search: (params?: any) => [...queryKeys.public.all, 'search', params || ''] as const,
     stats: () => [...queryKeys.public.all, 'stats'] as const,
-    products: (params?: any) => [...queryKeys.public.all, 'products', params] as const,
+    products: (params?: any) => [...queryKeys.public.all, 'products', params || ''] as const,
     categories: () => [...queryKeys.public.all, 'categories'] as const,
   },
 

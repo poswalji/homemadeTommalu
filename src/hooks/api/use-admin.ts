@@ -38,7 +38,7 @@ export const useReactivateUser = () => {
   return useMutation({
     mutationFn: (id: string) => adminApi.reactivateUser(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.users() });
+      queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'users'] });
     },
   });
 };
