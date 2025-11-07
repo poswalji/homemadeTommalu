@@ -39,6 +39,7 @@ export interface CreateOrderData {
 export interface Order {
   id: string;
   userId: string;
+  storeId: string;
   items: OrderItem[];
   discount?: number;
   promoCode?: string;

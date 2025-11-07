@@ -1,7 +1,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useOrderPublic } from '@/hooks/api';
+import { useOrderPublic, useMyReviews } from '@/hooks/api';
+import { useAuth } from '@/providers/auth-provider';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -11,16 +12,36 @@ import {
   CheckCircle, 
   Truck,
   XCircle,
-  Clock
+  Clock,
+  Star
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState, useMemo } from 'react';
+import { OrderReviewModal } from '@/components/reviews/order-review-modal';
 
 export default function PublicOrderTrackingPage() {
   const params = useParams();
   const orderId = params?.id as string;
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   const { data, isLoading, error } = useOrderPublic(orderId);
+  const { user, isAuthenticated } = useAuth();
+  const { data: reviewsData } = useMyReviews();
+
+  // Check if this order has been reviewed (only if user is authenticated)
+  const hasBeenReviewed = useMemo(() => {
+    if (!isAuthenticated || !reviewsData?.data) return false;
+    const reviews = reviewsData.data || [];
+    return reviews.some((review: any) => review.orderId === orderId);
+  }, [reviewsData, orderId, isAuthenticated]);
+
+  // Check if the order belongs to the authenticated user
+  const isOrderOwner = useMemo(() => {
+    if (!isAuthenticated || !user || !data?.data) return false;
+    const order = data.data;
+    return order.userId === user.id || order.user?._id === user.id || order.userId?._id === user.id;
+  }, [isAuthenticated, user, data]);
 
   if (isLoading) {
     return (
@@ -220,12 +241,80 @@ export default function PublicOrderTrackingPage() {
           </div>
         </Card>
 
+        {/* Review Prompt for Delivered Orders */}
+        {order.status === 'Delivered' && isAuthenticated && isOrderOwner && (
+          <>
+            {!hasBeenReviewed ? (
+              <Card className="p-8 bg-yellow-50 border-yellow-200">
+                <div className="text-center space-y-4">
+                  <div className="flex justify-center">
+                    <Star className="w-16 h-16 text-yellow-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      How was your order?
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Share your experience and help others make better choices
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setIsReviewModalOpen(true)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                    size="lg"
+                  >
+                    <Star className="w-5 h-5 mr-2" />
+                    Write a Review
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <Card className="p-8 bg-green-50 border-green-200">
+                <div className="text-center space-y-3">
+                  <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
+                  <h3 className="text-lg font-semibold text-green-800">
+                    Thank you for your review!
+                  </h3>
+                  <p className="text-sm text-green-700">
+                    Your feedback helps us improve
+                  </p>
+                  {isAuthenticated && (
+                    <Link href="/customer/reviews">
+                      <Button variant="outline" size="sm" className="mt-2">
+                        View Your Reviews
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+
         <div className="mt-8 text-center">
           <Link href="/">
             <Button variant="outline">Back to Home</Button>
           </Link>
         </div>
       </div>
+
+      {/* Review Modal */}
+      {order && order.status === 'Delivered' && isAuthenticated && isOrderOwner && !hasBeenReviewed && (
+        <OrderReviewModal
+          open={isReviewModalOpen}
+          onOpenChange={setIsReviewModalOpen}
+          orderId={order.id}
+          storeId={order.storeId || order.store?.id || ''}
+          storeName={order.storeName || order.store?.name}
+          items={(order.items || []).map((item: any) => ({
+            id: item.menuItemId || item.id || item.menuId || '',
+            name: item.itemName || item.name || 'Item',
+          }))}
+          onReviewSubmitted={() => {
+            setIsReviewModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
