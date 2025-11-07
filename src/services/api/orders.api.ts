@@ -43,6 +43,7 @@ export interface Order {
   items: OrderItem[];
   discount?: number;
   promoCode?: string;
+  deliveryCharge?: number;
   finalPrice: number;
   deliveryAddress: DeliveryAddress;
   status: OrderStatus;
@@ -54,6 +55,7 @@ export interface Order {
   customerEmail?: string;
   storeName?: string;
   storeEmail?: string;
+  paymentMethod?: string;
 }
 
 export interface UpdateOrderStatusData {

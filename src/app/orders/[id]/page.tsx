@@ -40,7 +40,7 @@ export default function PublicOrderTrackingPage() {
   const isOrderOwner = useMemo(() => {
     if (!isAuthenticated || !user || !data?.data) return false;
     const order = data.data;
-    return order.userId === user.id || order.user?._id === user.id || order.userId?._id === user.id;
+    return order.userId === user.id 
   }, [isAuthenticated, user, data]);
 
   if (isLoading) {
@@ -304,8 +304,8 @@ export default function PublicOrderTrackingPage() {
           open={isReviewModalOpen}
           onOpenChange={setIsReviewModalOpen}
           orderId={order.id}
-          storeId={order.storeId || order.store?.id || ''}
-          storeName={order.storeName || order.store?.name}
+          storeId={order.storeId}
+          storeName={order.storeName }
           items={(order.items || []).map((item: any) => ({
             id: item.menuItemId || item.id || item.menuId || '',
             name: item.itemName || item.name || 'Item',
