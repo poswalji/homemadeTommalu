@@ -18,9 +18,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
           </main>
         </div>
         {/* Footer - Hidden on mobile for customer pages since we have bottom navigation */}
-        <div className="hidden md:block">
-          <Footer />
-        </div>
+       
       </div>
     </Suspense>
   );

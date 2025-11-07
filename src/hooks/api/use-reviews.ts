@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { reviewsApi, type CreateReviewData, type UpdateReviewData, type StoreResponseData } from '@/services/api/reviews.api';
-import { reviewKeys } from '@/config/query.config';
+import { reviewKeys, ordersKeys } from '@/config/query.config';
 
 // Get store reviews
 export const useStoreReviews = (storeId: string, params?: {
@@ -36,6 +36,9 @@ export const useCreateReview = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: reviewKeys.store(variables.orderId) });
       queryClient.invalidateQueries({ queryKey: reviewKeys.user() });
+      // Invalidate orders to update review status
+      queryClient.invalidateQueries({ queryKey: ordersKeys.my() });
+      queryClient.invalidateQueries({ queryKey: ordersKeys.detail(variables.orderId) });
     },
   });
 };

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useMyOrders, useCancelOrder } from '@/hooks/api';
+import { useState, useMemo } from 'react';
+import { useMyOrders, useCancelOrder, useMyReviews } from '@/hooks/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -18,18 +18,31 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Eye, Package, Calendar, MapPin, Search, XCircle } from 'lucide-react';
+import { Eye, Package, Calendar, MapPin, Search, XCircle, Star } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { OrderReviewModal } from '@/components/reviews/order-review-modal';
 
 export default function CustomerOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState('');
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
+  const [reviewStoreId, setReviewStoreId] = useState<string | null>(null);
+  const [reviewStoreName, setReviewStoreName] = useState<string | undefined>(undefined);
+  const [reviewItems, setReviewItems] = useState<Array<{ id: string; name: string }>>([]);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   const { data, isLoading, error } = useMyOrders();
+  const { data: reviewsData } = useMyReviews();
   const cancelOrder = useCancelOrder();
+
+  // Create a map of reviewed order IDs
+  const reviewedOrderIds = useMemo(() => {
+    const reviews = reviewsData?.data || [];
+    return new Set(reviews.map((review: any) => review.orderId));
+  }, [reviewsData]);
 
   const handleCancelOrder = async () => {
     if (!selectedOrder) return;
@@ -52,6 +65,19 @@ export default function CustomerOrdersPage() {
     setSelectedOrder(orderId);
     setCancellationReason('');
     setIsCancelDialogOpen(true);
+  };
+
+  const openReviewModal = (order: any) => {
+    setReviewOrderId(order.id);
+    setReviewStoreId(order.storeId || order.store?.id || '');
+    setReviewStoreName(order.storeName || order.store?.name);
+    setReviewItems(
+      (order.items || []).map((item: any) => ({
+        id: item.menuItemId || item.id || '',
+        name: item.itemName || item.name || 'Item',
+      }))
+    );
+    setIsReviewModalOpen(true);
   };
 
   if (isLoading) {
@@ -132,7 +158,7 @@ export default function CustomerOrdersPage() {
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4">
-            {filteredOrders.map((order) => (
+            {filteredOrders.reverse().map((order) => (
               <Card key={order.id} className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <div className="flex-1 min-w-0">
@@ -232,6 +258,17 @@ export default function CustomerOrdersPage() {
                       <span className="sm:hidden">Details</span>
                     </Button>
                   </Link>
+                  {order.status === 'Delivered' && !reviewedOrderIds.has(order.id) && (
+                    <Button
+                      variant="default"
+                      className="flex-1 text-xs sm:text-sm bg-yellow-500 hover:bg-yellow-600"
+                      onClick={() => openReviewModal(order)}
+                    >
+                      <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Review Order</span>
+                      <span className="sm:hidden">Review</span>
+                    </Button>
+                  )}
                   {['Pending', 'Confirmed'].includes(order.status) && (
                     <Dialog open={isCancelDialogOpen && selectedOrder === order.id} onOpenChange={(open) => {
                       setIsCancelDialogOpen(open);
@@ -297,17 +334,31 @@ export default function CustomerOrdersPage() {
                       </DialogContent>
                     </Dialog>
                   )}
-                  {order.status === 'Delivered' && (
-                    <Button variant="outline" className="flex-1">
-                      Reorder
-                    </Button>
-                  )}
+                 
                 </div>
               </Card>
             ))}
           </div>
         )}
       </Card>
+
+      {/* Review Modal */}
+      {reviewOrderId && reviewStoreId && (
+        <OrderReviewModal
+          open={isReviewModalOpen}
+          onOpenChange={setIsReviewModalOpen}
+          orderId={reviewOrderId}
+          storeId={reviewStoreId}
+          storeName={reviewStoreName}
+          items={reviewItems}
+          onReviewSubmitted={() => {
+            setReviewOrderId(null);
+            setReviewStoreId(null);
+            setReviewStoreName(undefined);
+            setReviewItems([]);
+          }}
+        />
+      )}
     </div>
   );
 }

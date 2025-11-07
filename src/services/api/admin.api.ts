@@ -168,6 +168,12 @@ export const adminApi = {
     return response.data;
   },
 
+  // Reactivate a store (superAdmin)
+  reactivateStore: async (id: string): Promise<AdminResponse<Store>> => {
+    const response = await apiClient.patch<AdminResponse<Store>>(`/admin/stores/${id}/reactivate`);
+    return response.data;
+  },
+
   // Update store metadata (superAdmin)
   updateStoreMetadata: async (id: string, data: UpdateStoreMetadataData): Promise<AdminResponse<Store>> => {
     const response = await apiClient.patch<AdminResponse<Store>>(`/admin/stores/${id}/metadata`, data);

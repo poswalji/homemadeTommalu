@@ -255,7 +255,7 @@ export default function CustomerReviewsPage() {
                           )}
                           <div className="flex flex-wrap gap-4 text-xs text-gray-500">
                             <span>
-                              Order: #{review.orderId?.slice(-8) || 'N/A'}
+                              Order: #{review.orderId._id || 'N/A'}
                             </span>
                             <span>•</span>
                             <span>{new Date(review.createdAt).toLocaleDateString()}</span>

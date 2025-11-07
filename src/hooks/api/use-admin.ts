@@ -113,6 +113,22 @@ export const useSuspendStore = () => {
     mutationFn: (id: string) => adminApi.suspendStore(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.pendingStores() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.stores() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.storesAll() });
+    },
+  });
+};
+
+// Reactivate store
+export const useReactivateStore = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => adminApi.reactivateStore(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.pendingStores() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.stores() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.storesAll() });
     },
   });
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useOrder, useCancelOrder } from '@/hooks/api';
+import { useOrder, useCancelOrder, useMyReviews } from '@/hooks/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -24,20 +24,30 @@ import {
   XCircle, 
   CheckCircle, 
   Truck,
-  ArrowLeft 
+  ArrowLeft,
+  Star
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
+import { OrderReviewModal } from '@/components/reviews/order-review-modal';
 
 export default function CustomerOrderDetailPage() {
   const params = useParams();
   const orderId = (params?.id as string) || '';
   const [cancellationReason, setCancellationReason] = useState('');
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   const { data, isLoading, error } = useOrder(orderId);
+  const { data: reviewsData } = useMyReviews();
   const cancelOrder = useCancelOrder();
+
+  // Check if this order has been reviewed
+  const hasBeenReviewed = useMemo(() => {
+    const reviews = reviewsData?.data || [];
+    return reviews.some((review: any) => review.orderId === orderId);
+  }, [reviewsData, orderId]);
 
   const handleCancelOrder = async () => {
     try {
@@ -278,6 +288,47 @@ export default function CustomerOrderDetailPage() {
             </div>
           </Card>
 
+          {order.status === 'Delivered' && !hasBeenReviewed && (
+            <Card className="p-6 bg-yellow-50 border-yellow-200">
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <Star className="w-12 h-12 text-yellow-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    How was your order?
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Share your experience and help others make better choices
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setIsReviewModalOpen(true)}
+                  className="w-full bg-yellow-500 hover:bg-yellow-600"
+                >
+                  <Star className="w-4 h-4 mr-2" />
+                  Write a Review
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {order.status === 'Delivered' && hasBeenReviewed && (
+            <Card className="p-6 bg-green-50 border-green-200">
+              <div className="text-center space-y-2">
+                <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
+                <p className="text-sm font-medium text-green-800">
+                  Thank you for your review!
+                </p>
+                <Link href="/customer/reviews">
+                  <Button variant="outline" size="sm" className="mt-2">
+                    View Your Reviews
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+          )}
+
           {['Pending', 'Confirmed'].includes(order.status) && (
             <Card className="p-6">
               <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
@@ -333,6 +384,24 @@ export default function CustomerOrderDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Review Modal */}
+      {order && order.status === 'Delivered' && !hasBeenReviewed && (
+        <OrderReviewModal
+          open={isReviewModalOpen}
+          onOpenChange={setIsReviewModalOpen}
+          orderId={order.id}
+          storeId={order.storeId || order.store?.id || ''}
+          storeName={order.storeName || order.store?.name}
+          items={(order.items || []).map((item: any) => ({
+            id: item.menuItemId || item.id || '',
+            name: item.itemName || item.name || 'Item',
+          }))}
+          onReviewSubmitted={() => {
+            setIsReviewModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

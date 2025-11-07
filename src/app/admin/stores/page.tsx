@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAllStores, useUpdateStoreDeliveryFee, useApproveStore, useRejectStore, useSuspendStore } from '@/hooks/api';
+import { useAllStores, useUpdateStoreDeliveryFee, useApproveStore, useRejectStore, useSuspendStore, useReactivateStore } from '@/hooks/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
@@ -9,8 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { Edit, CheckCircle, XCircle, AlertTriangle, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/axios';
@@ -35,6 +33,7 @@ export default function AdminStoresPage() {
   const approveStore = useApproveStore();
   const rejectStore = useRejectStore();
   const suspendStore = useSuspendStore();
+  const reactivateStore = useReactivateStore();
 
   const stores = storesData?.data || [];
 
@@ -90,6 +89,18 @@ export default function AdminStoresPage() {
     try {
       await suspendStore.mutateAsync(storeId);
       toast.success('Store suspended');
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleReactivate = async (storeId: string) => {
+    if (!confirm('Are you sure you want to reactivate this store?')) return;
+
+    try {
+      await reactivateStore.mutateAsync(storeId);
+      toast.success('Store reactivated successfully');
     } catch (error) {
       const errorMessage = handleApiError(error);
       toast.error(errorMessage);
@@ -254,7 +265,7 @@ export default function AdminStoresPage() {
                                 </Button>
                               </>
                             )}
-                            {store.status === 'active' && (
+                            {store.status === 'active' ? (
                               <Button
                                 variant="destructive"
                                 size="sm"
@@ -263,7 +274,17 @@ export default function AdminStoresPage() {
                               >
                                 <AlertTriangle className="w-4 h-4 mr-2" /> Suspend
                               </Button>
-                            )}
+                            ) : store.status === 'suspended' ? (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleReactivate(store._id || store.id)}
+                                disabled={reactivateStore.isPending}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                <CheckCircle className="w-4 h-4 mr-2" /> Reactivate
+                              </Button>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
