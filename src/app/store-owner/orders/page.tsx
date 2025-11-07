@@ -207,11 +207,6 @@ export default function StoreOwnerOrdersPage() {
                      <SelectItem value='All'>All Statuses</SelectItem>
                      <SelectItem value='Pending'>Pending</SelectItem>
                      <SelectItem value='Confirmed'>Confirmed</SelectItem>
-                     <SelectItem value='OutForDelivery'>
-                        Out for Delivery
-                     </SelectItem>
-                     <SelectItem value='Delivered'>Delivered</SelectItem>
-                     <SelectItem value='Cancelled'>Cancelled</SelectItem>
                      <SelectItem value='Rejected'>Rejected</SelectItem>
                   </SelectContent>
                </Select>
