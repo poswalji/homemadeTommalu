@@ -25,12 +25,12 @@ import { useEffect } from 'react';
 const adminNavItems = [
    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
    { name: 'Analytics', href: '/admin/analytics', icon: ChartBar },
-   { name: 'Dispute', href: '/admin/dispute', icon: Ticket },
-   { name: 'Payout', href: '/admin/payout', icon: Banknote },
-   { name: 'Users', href: '/admin/users', icon: Users },
+   { name: 'Disputes', href: '/admin/disputes', icon: Ticket },
    { name: 'Stores', href: '/admin/stores', icon: StoreIcon },
    { name: 'Pending Stores', href: '/admin/stores/pending', icon: FileText },
    { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
+   { name: 'Payouts', href: '/admin/payouts', icon: Banknote },
+   { name: 'Users', href: '/admin/users', icon: Users },
    { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
 ];
 
