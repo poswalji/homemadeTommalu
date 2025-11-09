@@ -151,15 +151,19 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
 
     // Initialize Socket.io connection
-    // ✅ FIXED: Use polling only for Vercel compatibility (Vercel doesn't support WebSockets)
+    // ✅ FIXED: Use polling transport for better CORS compatibility
     const newSocket = io(API_URL, {
       auth: {
         token: token
       },
-      // Only polling transport for Vercel compatibility
+      // Use polling first, then upgrade to websocket if available
+      transports: ['polling', 'websocket'],
+      upgrade: true,
+      rememberUpgrade: false,
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      forceNew: false
     });
 
     socketRef.current = newSocket;

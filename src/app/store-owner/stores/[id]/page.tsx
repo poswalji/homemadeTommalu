@@ -1,6 +1,6 @@
 'use client';
 
-import { useStore, useToggleStoreStatus, useDeleteStore } from '@/hooks/api';
+import { useStore, useToggleStoreStatus, useDeleteStore, useUpdateStore } from '@/hooks/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,9 @@ import {
    DialogTitle,
 } from '@/components/ui/dialog';
 import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function StoreDetailPage() {
    const router = useRouter();
@@ -37,7 +40,18 @@ export default function StoreDetailPage() {
    const { data, isLoading, error } = useStore(id);
    const toggleStatus = useToggleStoreStatus();
    const deleteStore = useDeleteStore();
+   const updateStore = useUpdateStore();
    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+   const [showEditDialog, setShowEditDialog] = useState(false);
+   const [editFormData, setEditFormData] = useState({
+      storeName: '',
+      address: '',
+      phone: '',
+      description: '',
+      openingTime: '',
+      closingTime: '',
+   });
+   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
    const handleDelete = async () => {
       try {
@@ -63,6 +77,85 @@ export default function StoreDetailPage() {
          toast.error(
             error?.response?.data?.error?.message ||
                'Failed to toggle store status'
+         );
+      }
+   };
+
+   const handleEditClick = () => {
+      setEditFormData({
+         storeName: store.storeName,
+         address: store.address,
+         phone: store.phone,
+         description: store.description || '',
+         openingTime: store.openingTime || '09:00',
+         closingTime: store.closingTime || '23:00',
+      });
+      setEditErrors({});
+      setShowEditDialog(true);
+   };
+
+   const handleEditChange = (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+   ) => {
+      const { name, value } = e.target;
+      setEditFormData((prev) => ({
+         ...prev,
+         [name]: value,
+      }));
+      if (editErrors[name]) {
+         setEditErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors[name];
+            return newErrors;
+         });
+      }
+   };
+
+   const validateEditForm = (): boolean => {
+      const newErrors: Record<string, string> = {};
+
+      if (!editFormData.storeName.trim()) {
+         newErrors.storeName = 'Store name is required';
+      }
+      if (!editFormData.address.trim()) {
+         newErrors.address = 'Address is required';
+      }
+      if (!editFormData.phone.trim()) {
+         newErrors.phone = 'Phone number is required';
+      } else if (!/^[0-9]{10}$/.test(editFormData.phone.replace(/[-\s]/g, ''))) {
+         newErrors.phone = 'Please enter a valid 10-digit phone number';
+      }
+      if (!editFormData.openingTime) {
+         newErrors.openingTime = 'Opening time is required';
+      }
+      if (!editFormData.closingTime) {
+         newErrors.closingTime = 'Closing time is required';
+      }
+
+      setEditErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+   };
+
+   const handleEditSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      if (!validateEditForm()) {
+         toast.error('Please fix the errors in the form');
+         return;
+      }
+
+      try {
+         await updateStore.mutateAsync({
+            id,
+            data: editFormData,
+         });
+         toast.success('Store updated successfully');
+         setShowEditDialog(false);
+      } catch (error: any) {
+         toast.error(
+            error?.response?.data?.error?.message ||
+               error?.response?.data?.message ||
+               'Failed to update store'
          );
       }
    };
@@ -217,14 +310,7 @@ export default function StoreDetailPage() {
                             <p className='text-2xl font-bold text-gray-900'>{store.rating || 0}</p>
                             <p className='text-xs text-gray-500'>{store?.totalReviews || 0} reviews</p>
                          </div>
-                         <div>
-                            <p className='text-sm text-gray-600 mb-1'>Delivery Fee</p>
-                            <p className='text-xl font-semibold text-gray-900'>₹{store.deliveryFee || 0}</p>
-                         </div>
-                         <div>
-                            <p className='text-sm text-gray-600 mb-1'>Minimum Order</p>
-                            <p className='text-xl font-semibold text-gray-900'>₹{store.minOrder || 0}</p>
-                         </div>
+                       
                       </CardContent>
                    </Card>
 
@@ -239,7 +325,10 @@ export default function StoreDetailPage() {
                                Manage Menu
                             </Button>
                          </Link>
-                         <Button variant='outline' className='w-full justify-start' disabled>
+                         <Button
+                            variant='outline'
+                            className='w-full justify-start'
+                            onClick={handleEditClick}>
                             <Edit className='w-4 h-4 mr-2' />
                             Edit Store
                          </Button>
@@ -293,6 +382,149 @@ export default function StoreDetailPage() {
                </DialogFooter>
             </DialogContent>
          </Dialog>
+
+         {/* Edit Dialog */}
+         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent className='max-w-2xl'>
+               <DialogHeader>
+                  <DialogTitle>Edit Store</DialogTitle>
+                  <DialogDescription>
+                     Update your store information below.
+                  </DialogDescription>
+               </DialogHeader>
+               <form onSubmit={handleEditSubmit} className='space-y-6'>
+                  <div className='space-y-4'>
+                     {/* Store Name */}
+                     <div>
+                        <Label htmlFor='edit-storeName'>Store Name *</Label>
+                        <Input
+                           id='edit-storeName'
+                           name='storeName'
+                           value={editFormData.storeName}
+                           onChange={handleEditChange}
+                           placeholder='Enter store name'
+                           className='mt-1'
+                        />
+                        {editErrors.storeName && (
+                           <p className='text-red-500 text-sm mt-1'>
+                              {editErrors.storeName}
+                           </p>
+                        )}
+                     </div>
+
+                     {/* Address */}
+                     <div>
+                        <Label htmlFor='edit-address'>Address *</Label>
+                        <Textarea
+                           id='edit-address'
+                           name='address'
+                           value={editFormData.address}
+                           onChange={handleEditChange}
+                           placeholder='Enter complete address'
+                           className='mt-1'
+                           rows={3}
+                        />
+                        {editErrors.address && (
+                           <p className='text-red-500 text-sm mt-1'>
+                              {editErrors.address}
+                           </p>
+                        )}
+                     </div>
+
+                     {/* Phone */}
+                     <div>
+                        <Label htmlFor='edit-phone'>Phone Number *</Label>
+                        <Input
+                           id='edit-phone'
+                           name='phone'
+                           type='tel'
+                           value={editFormData.phone}
+                           onChange={handleEditChange}
+                           placeholder='Enter 10-digit phone number'
+                           className='mt-1'
+                        />
+                        {editErrors.phone && (
+                           <p className='text-red-500 text-sm mt-1'>
+                              {editErrors.phone}
+                           </p>
+                        )}
+                     </div>
+
+                     {/* Description */}
+                     <div>
+                        <Label htmlFor='edit-description'>Description (Optional)</Label>
+                        <Textarea
+                           id='edit-description'
+                           name='description'
+                           value={editFormData.description}
+                           onChange={handleEditChange}
+                           placeholder='Describe your store...'
+                           className='mt-1'
+                           rows={3}
+                        />
+                     </div>
+
+                     {/* Operating Hours */}
+                     <div className='grid grid-cols-2 gap-4'>
+                        <div>
+                           <Label htmlFor='edit-openingTime'>Opening Time *</Label>
+                           <Input
+                              id='edit-openingTime'
+                              name='openingTime'
+                              type='time'
+                              value={editFormData.openingTime}
+                              onChange={handleEditChange}
+                              className='mt-1'
+                           />
+                           {editErrors.openingTime && (
+                              <p className='text-red-500 text-sm mt-1'>
+                                 {editErrors.openingTime}
+                              </p>
+                           )}
+                        </div>
+                        <div>
+                           <Label htmlFor='edit-closingTime'>Closing Time *</Label>
+                           <Input
+                              id='edit-closingTime'
+                              name='closingTime'
+                              type='time'
+                              value={editFormData.closingTime}
+                              onChange={handleEditChange}
+                              className='mt-1'
+                           />
+                           {editErrors.closingTime && (
+                              <p className='text-red-500 text-sm mt-1'>
+                                 {editErrors.closingTime}
+                              </p>
+                           )}
+                        </div>
+                     </div>
+                  </div>
+
+                  <DialogFooter>
+                     <Button
+                        type='button'
+                        variant='outline'
+                        onClick={() => setShowEditDialog(false)}>
+                        Cancel
+                     </Button>
+                     <Button
+                        type='submit'
+                        disabled={updateStore.isPending}>
+                        {updateStore.isPending ? (
+                           <>
+                              <Spinner size='sm' className='mr-2' />
+                              Updating...
+                           </>
+                        ) : (
+                           'Update Store'
+                        )}
+                     </Button>
+                  </DialogFooter>
+               </form>
+            </DialogContent>
+         </Dialog>
       </div>
    );
 }
+

@@ -36,8 +36,6 @@ export interface UpdateStoreData {
   description?: string;
   openingTime?: string;
   closingTime?: string;
-  deliveryFee?: number;
-  minOrder?: number;
 }
 
 export interface CreateMenuItemData {
