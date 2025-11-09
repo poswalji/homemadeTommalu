@@ -23,14 +23,10 @@ export interface CreateStoreData {
   storeName: string;
   address: string;
   phone: string;
-  licenseNumber: string;
-  licenseType: LicenseType;
   category: StoreCategory;
   description?: string;
   openingTime?: string;
   closingTime?: string;
-  deliveryFee?: number;
-  minOrder?: number;
 }
 
 export interface UpdateStoreData {

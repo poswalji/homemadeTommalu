@@ -22,7 +22,6 @@ import { useEffect } from 'react';
 const storeOwnerNavItems = [
   { name: 'Dashboard', href: '/store-owner', icon: BarChart3 },
   { name: 'My Stores', href: '/store-owner/stores', icon: Store },
-  { name: 'Create Store', href: '/store-owner/stores/new', icon: Plus },
   { name: 'Orders', href: '/store-owner/orders', icon: ShoppingBag },
   { name: 'Earnings', href: '/store-owner/earnings', icon: DollarSign },
   { name: 'Payouts', href: '/store-owner/payouts', icon: CreditCard },
