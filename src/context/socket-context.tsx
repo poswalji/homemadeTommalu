@@ -156,7 +156,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       auth: {
         token: token
       },
-      transports: ['polling'], // Only polling transport for Vercel compatibility
+      // Only polling transport for Vercel compatibility
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5
@@ -569,4 +569,5 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     </SocketContext.Provider>
   );
 };
+
 
