@@ -157,7 +157,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         token: token
       },
       // Use polling first, then upgrade to websocket if available
-      transports: ['polling', 'websocket'],
+      transports: [ 'websocket'],
       upgrade: true,
       rememberUpgrade: false,
       reconnection: true,
