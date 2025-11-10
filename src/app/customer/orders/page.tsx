@@ -269,7 +269,7 @@ export default function CustomerOrdersPage() {
                       <span className="sm:hidden">Review</span>
                     </Button>
                   )}
-                  {['Pending', 'Confirmed'].includes(order.status) && (
+                  {order.status === 'Pending' && (
                     <Dialog open={isCancelDialogOpen && selectedOrder === order.id} onOpenChange={(open) => {
                       setIsCancelDialogOpen(open);
                       if (!open) {

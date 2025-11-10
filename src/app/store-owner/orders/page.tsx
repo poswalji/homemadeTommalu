@@ -35,6 +35,7 @@ import {
    CheckCircle,
    XCircle,
    Truck,
+   Store,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -227,33 +228,36 @@ export default function StoreOwnerOrdersPage() {
                   {filteredOrders.map((order: any) => (
                      <Card
                         key={order.id}
-                        className='p-6 hover:shadow-lg transition-shadow'>
-                        <div className='flex items-start justify-between mb-4'>
-                           <div>
-                              <div className='flex items-center gap-3 mb-2'>
-                                 <h3 className='text-lg font-semibold'>
+                        className='p-4 sm:p-6 hover:shadow-lg transition-shadow'>
+                        <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4'>
+                           <div className='flex-1 min-w-0'>
+                              <div className='flex flex-wrap items-center gap-2 sm:gap-3 mb-2'>
+                                 <h3 className='text-base sm:text-lg font-semibold'>
                                     Order #{order.id?.slice(0, 8)}
                                  </h3>
                                  <Badge
                                     className={getStatusColor(order.status)}>
                                     <span className='flex items-center gap-1'>
                                        {getStatusIcon(order.status)}
-                                       {order.status}
+                                       <span className="hidden sm:inline">{order.status}</span>
+                                       <span className="sm:hidden">{order.status.slice(0, 4)}</span>
                                     </span>
                                  </Badge>
                               </div>
-                              <p className='text-sm text-gray-600'>
-                                 Customer: {order.customerName || 'N/A'}
-                              </p>
-                              <p className='text-sm text-gray-600'>
-                                 Store: {order.storeName || 'N/A'}
-                              </p>
+                              <div className="space-y-1">
+                                <p className='text-xs sm:text-sm text-gray-600'>
+                                   <span className="font-medium">Customer:</span> {order.customerName || 'N/A'}
+                                </p>
+                                <p className='text-xs sm:text-sm text-gray-600'>
+                                   <span className="font-medium">Store:</span> {order.storeName || 'N/A'}
+                                </p>
+                              </div>
                            </div>
-                           <div className='text-right'>
-                              <p className='text-2xl font-bold'>
-                                 ₹{order.finalPrice}
+                           <div className='text-left sm:text-right'>
+                              <p className='text-xl sm:text-2xl font-bold'>
+                                 ₹{order.finalPrice?.toFixed(2) || order.finalPrice}
                               </p>
-                              <p className='text-sm text-gray-600'>
+                              <p className='text-xs sm:text-sm text-gray-600'>
                                  {order.items?.length || 0} items
                               </p>
                            </div>
@@ -262,38 +266,38 @@ export default function StoreOwnerOrdersPage() {
                            <table className='min-w-full rounded-md border border-gray-200 bg-gray-50'>
                               <thead>
                                  <tr>
-                                    <th className='px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
+                                    <th className='px-2 sm:px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
                                        Item
                                     </th>
-                                    <th className='px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
+                                    <th className='px-2 sm:px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
                                        Qty
                                     </th>
-                                    <th className='px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
+                                    <th className='px-2 sm:px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
                                        Price
                                     </th>
-                                    <th className='px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
+                                    <th className='px-2 sm:px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b'>
                                        Total
                                     </th>
                                  </tr>
                               </thead>
                               <tbody>
-                                 {order.items?.map((item: any) => (
+                                 {order.items?.map((item: any, idx: number) => (
                                     <tr
-                                       key={item.id}
+                                       key={item.id || idx}
                                        className='odd:bg-white even:bg-gray-50'>
-                                       <td className='px-3 py-2 text-sm text-gray-800'>
+                                       <td className='px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-800'>
                                           {item.itemName}
                                        </td>
-                                       <td className='px-3 py-2 text-sm text-gray-800'>
+                                       <td className='px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-800'>
                                           {item.quantity}
                                        </td>
-                                       <td className='px-3 py-2 text-sm text-gray-800'>
-                                          ₹{item.itemPrice}
+                                       <td className='px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-800'>
+                                          ₹{item.itemPrice?.toFixed(2) || item.itemPrice}
                                        </td>
-                                       <td className='px-3 py-2 text-sm text-gray-800'>
+                                       <td className='px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-800'>
                                           ₹
-                                          {Number(item.itemPrice) *
-                                             Number(item.quantity)}
+                                          {(Number(item.itemPrice) *
+                                             Number(item.quantity)).toFixed(2)}
                                        </td>
                                     </tr>
                                  ))}
@@ -356,18 +360,19 @@ export default function StoreOwnerOrdersPage() {
                            </div>
                         )}
 
-                        <div className='flex gap-2'>
+                        <div className='flex flex-col sm:flex-row gap-2'>
                            <Link
                               href={`/store-owner/orders/${order.id}`}
                               className='flex-1'>
                               <Button
                                  variant='outline'
-                                 className='w-full'>
-                                 <Eye className='w-4 h-4 mr-2' />
-                                 View Details
+                                 className='w-full text-xs sm:text-sm'>
+                                 <Eye className='w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2' />
+                                 <span className="hidden sm:inline">View Details</span>
+                                 <span className="sm:hidden">Details</span>
                               </Button>
                            </Link>
-                           {['Pending', 'Confirmed'].includes(order.status) && (
+                           {order.status === 'Pending' && (
                               <Dialog
                                  open={
                                     isDialogOpen && selectedOrder === order.id
@@ -403,7 +408,7 @@ export default function StoreOwnerOrdersPage() {
                                        </DialogTitle>
                                        <DialogDescription>
                                           Update the status for Order #
-                                          {order.id?.slice(0, 8)}
+                                          {order.id?.slice(0, 8)}. Pending orders can only be confirmed or rejected.
                                        </DialogDescription>
                                     </DialogHeader>
                                     <div className='space-y-4 py-4'>
@@ -421,23 +426,11 @@ export default function StoreOwnerOrdersPage() {
                                                 <SelectValue placeholder='Select status' />
                                              </SelectTrigger>
                                              <SelectContent>
-                                                <SelectItem value='Pending'>
-                                                   Pending
-                                                </SelectItem>
                                                 <SelectItem value='Confirmed'>
-                                                   Confirmed
-                                                </SelectItem>
-                                                <SelectItem value='OutForDelivery'>
-                                                   Out for Delivery
-                                                </SelectItem>
-                                                <SelectItem value='Delivered'>
-                                                   Delivered
+                                                   Confirm Order
                                                 </SelectItem>
                                                 <SelectItem value='Rejected'>
-                                                   Rejected
-                                                </SelectItem>
-                                                <SelectItem value='Cancelled'>
-                                                   Cancelled
+                                                   Reject Order
                                                 </SelectItem>
                                              </SelectContent>
                                           </Select>
@@ -457,27 +450,6 @@ export default function StoreOwnerOrdersPage() {
                                                    setStatusUpdate({
                                                       ...statusUpdate,
                                                       rejectionReason:
-                                                         e.target.value,
-                                                   })
-                                                }
-                                             />
-                                          </div>
-                                       )}
-                                       {statusUpdate.status === 'Cancelled' && (
-                                          <div>
-                                             <Label htmlFor='cancellationReason'>
-                                                Cancellation Reason
-                                             </Label>
-                                             <Textarea
-                                                id='cancellationReason'
-                                                placeholder='Enter reason for cancellation...'
-                                                value={
-                                                   statusUpdate.cancellationReason
-                                                }
-                                                onChange={(e) =>
-                                                   setStatusUpdate({
-                                                      ...statusUpdate,
-                                                      cancellationReason:
                                                          e.target.value,
                                                    })
                                                 }
@@ -512,6 +484,41 @@ export default function StoreOwnerOrdersPage() {
                                     </DialogFooter>
                                  </DialogContent>
                               </Dialog>
+                           )}
+                           {order.status === 'Confirmed' && (
+                              <Button
+                                 variant='default'
+                                 className='flex-1'
+                                 onClick={async () => {
+                                    try {
+                                       await updateStatus.mutateAsync({
+                                          orderId: order.id,
+                                          data: {
+                                             status: 'OutForDelivery' as any,
+                                          },
+                                       });
+                                       toast.success('Order marked as out for delivery');
+                                    } catch (error: any) {
+                                       toast.error(
+                                          error?.response?.data?.message || 'Failed to update order status'
+                                       );
+                                    }
+                                 }}
+                                 disabled={updateStatus.isPending}>
+                                 {updateStatus.isPending ? (
+                                    <>
+                                       <Spinner size='sm' className='mr-2' />
+                                       <span className="hidden sm:inline">Updating...</span>
+                                       <span className="sm:hidden">...</span>
+                                    </>
+                                 ) : (
+                                    <>
+                                       <Truck className='w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2' />
+                                       <span className="hidden sm:inline">Mark as Out for Delivery</span>
+                                       <span className="sm:hidden">Out for Delivery</span>
+                                    </>
+                                 )}
+                              </Button>
                            )}
                         </div>
                      </Card>

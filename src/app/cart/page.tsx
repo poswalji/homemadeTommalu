@@ -7,7 +7,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { Plus, Minus, Trash2, ShoppingBag, ShoppingCart, Ticket, X } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingBag, ShoppingCart, Ticket, X, Store } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/axios';
@@ -142,34 +143,57 @@ export default function CartPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">
-                  {items.length} {items.length === 1 ? 'item' : 'items'}
-                </h2>
-                {hasItems && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearCart}
-                    disabled={clearCart.isPending}
-                  >
-                    {clearCart.isPending ? (
-                      <>
-                        <Spinner size="sm" className="mr-2" />
-                        Clearing...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Clear Cart
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
+            <div className="lg:col-span-2 space-y-6">
+              {/* Store Header Section */}
+              {cart?.storeName && (
+                <Card className="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Store className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">{cart.storeName}</h2>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                          {items.length} {items.length === 1 ? 'item' : 'items'} in cart
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs sm:text-sm">
+                      Single Store Order
+                    </Badge>
+                  </div>
+                </Card>
+              )}
 
-              {items.map((item) => {
+              {/* Items Section */}
+              <Card className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Order Items</h2>
+                  {hasItems && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearCart}
+                      disabled={clearCart.isPending}
+                    >
+                      {clearCart.isPending ? (
+                        <>
+                          <Spinner size="sm" className="mr-2" />
+                          Clearing...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Clear Cart
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  {items.map((item) => {
                 // ✅ Extract menuItemId - handle both populated object and string ID
                 const menuItemId = (() => {
                   const id = item.menuItemId as any;
@@ -254,6 +278,8 @@ export default function CartPage() {
                 </Card>
               );
               })}
+                </div>
+              </Card>
             </div>
 
             {/* Order Summary */}

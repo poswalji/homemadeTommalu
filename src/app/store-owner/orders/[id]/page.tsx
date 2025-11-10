@@ -236,6 +236,74 @@ export default function StoreOwnerOrderDetailPage() {
             </Card>
           )}
 
+          {order.status === 'Confirmed' && (
+            <Card className="p-6">
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="w-full"
+                    onClick={() => setStatusUpdate({ 
+                      status: '', 
+                      rejectionReason: '', 
+                      cancellationReason: '' 
+                    })}
+                  >
+                    Mark as Out for Delivery
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Mark Order as Out for Delivery</DialogTitle>
+                    <DialogDescription>
+                      Mark Order #{order.id?.slice(0, 8)} as out for delivery. This will notify the delivery team.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <p className="text-sm text-gray-600">
+                      Are you sure you want to mark this order as out for delivery?
+                    </p>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          await updateStatus.mutateAsync({
+                            orderId,
+                            data: {
+                              status: 'OutForDelivery' as any,
+                            },
+                          });
+                          toast.success('Order marked as out for delivery');
+                          setIsDialogOpen(false);
+                          setStatusUpdate({ status: '', rejectionReason: '', cancellationReason: '' });
+                        } catch (err: unknown) {
+                          const errObj = err as { response?: { data?: { message?: string } } };
+                          toast.error(errObj?.response?.data?.message || 'Failed to update order status');
+                        }
+                      }}
+                      disabled={updateStatus.isPending}
+                    >
+                      {updateStatus.isPending ? (
+                        <>
+                          <Spinner size="sm" className="mr-2" />
+                          Updating...
+                        </>
+                      ) : (
+                        'Mark as Out for Delivery'
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </Card>
+          )}
+
           {(order.rejectionReason || order.cancellationReason) && (
             <Card className={`p-6 ${
               order.rejectionReason ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'
@@ -321,14 +389,14 @@ export default function StoreOwnerOrderDetailPage() {
             </div>
           </Card>
 
-          {['Pending', 'Confirmed'].includes(order.status) && (
+          {order.status === 'Pending' && (
             <Card className="p-6">
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
                     className="w-full"
                     onClick={() => setStatusUpdate({ 
-                      status: order.status, 
+                      status: '', 
                       rejectionReason: '', 
                       cancellationReason: '' 
                     })}
@@ -340,7 +408,7 @@ export default function StoreOwnerOrderDetailPage() {
                   <DialogHeader>
                     <DialogTitle>Update Order Status</DialogTitle>
                     <DialogDescription>
-                      Update the status for Order #{order.id?.slice(0, 8)}
+                      Update the status for Order #{order.id?.slice(0, 8)}. Pending orders can only be confirmed or rejected.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
@@ -356,9 +424,8 @@ export default function StoreOwnerOrderDetailPage() {
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Confirmed">Confirmed</SelectItem>
-                          <SelectItem value="Rejected">Rejected</SelectItem>
+                          <SelectItem value="Confirmed">Confirm Order</SelectItem>
+                          <SelectItem value="Rejected">Reject Order</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -373,22 +440,6 @@ export default function StoreOwnerOrderDetailPage() {
                             setStatusUpdate({
                               ...statusUpdate,
                               rejectionReason: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    )}
-                    {statusUpdate.status === 'Cancelled' && (
-                      <div>
-                        <Label htmlFor="cancellationReason">Cancellation Reason</Label>
-                        <Textarea
-                          id="cancellationReason"
-                          placeholder="Enter reason for cancellation..."
-                          value={statusUpdate.cancellationReason}
-                          onChange={(e) =>
-                            setStatusUpdate({
-                              ...statusUpdate,
-                              cancellationReason: e.target.value,
                             })
                           }
                         />

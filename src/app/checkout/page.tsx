@@ -183,6 +183,28 @@ export default function CheckoutPage() {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Forms */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Store Information Section */}
+            {cart?.storeName && (
+              <Card className="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <MapPin className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg sm:text-xl font-semibold text-gray-900">{cart.storeName}</h2>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                        Ordering from a single store
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="text-xs sm:text-sm">
+                    {cart?.totalItems || 0} {cart?.totalItems === 1 ? 'item' : 'items'}
+                  </Badge>
+                </div>
+              </Card>
+            )}
+
             {/* Delivery Address */}
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
