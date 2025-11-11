@@ -126,9 +126,9 @@ export const publicApi = {
       return {
         success: true,
         data: {
-          totalCustomers: 50000,
-          totalOrders: 200000,
-          totalStores: 1000,
+          totalCustomers: 50,
+          totalOrders: 80,
+          totalStores: 11,
           averageRating: 4.8,
         },
       };
