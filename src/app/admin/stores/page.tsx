@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Edit, CheckCircle, XCircle, AlertTriangle, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/axios';
+import Link from 'next/link';
 
 export default function AdminStoresPage() {
   const [editingStore, setEditingStore] = useState<any>(null);
@@ -207,7 +208,12 @@ export default function AdminStoresPage() {
                     stores.map((store: any) => (
                       <tr key={store._id || store.id} className="border-b hover:bg-gray-50">
                         <td className="p-4">
-                          <div className="font-medium">{store.storeName}</div>
+                          <Link 
+                            href={`/admin/stores/${store._id || store.id}`}
+                            className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            {store.storeName}
+                          </Link>
                           <div className="text-sm text-gray-500">{store.address}</div>
                           <div className="text-sm text-gray-400">{store.phone}</div>
                         </td>

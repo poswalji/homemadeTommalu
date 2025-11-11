@@ -267,6 +267,16 @@ export const useAllStores = (params?: {
   });
 };
 
+// Get store by ID (admin view)
+export const useStoreById = (id: string, enabled = true) => {
+  return useQuery({
+    queryKey: adminKeys.store(id),
+    queryFn: () => adminApi.getStoreById(id),
+    enabled: enabled && !!id,
+    staleTime: 1000 * 60 * 2,
+  });
+};
+
 // Cancel order (admin override)
 export const useCancelOrderAdmin = () => {
   const queryClient = useQueryClient();

@@ -204,6 +204,58 @@ export const adminApi = {
     return response.data;
   },
 
+  // Get store by ID (admin view with full details)
+  getStoreById: async (id: string): Promise<AdminResponse<Store & {
+    location?: { type: string; coordinates: number[] };
+    storeImages?: string[];
+    openingTime?: string;
+    closingTime?: string;
+    rating?: number;
+    totalReviews?: number;
+    reviews?: any[];
+    isOpen?: boolean;
+    available?: boolean;
+    isVerified?: boolean;
+    verificationNotes?: string;
+    rejectionReason?: string;
+    commissionRate?: number;
+    menu?: any[];
+    statistics?: {
+      orderCount: number;
+      totalRevenue: number;
+      totalEarnings: number;
+      timesOrdered: number;
+    };
+    createdAt?: string;
+    updatedAt?: string;
+  }>> => {
+    const response = await apiClient.get<AdminResponse<Store & {
+      location?: { type: string; coordinates: number[] };
+      storeImages?: string[];
+      openingTime?: string;
+      closingTime?: string;
+      rating?: number;
+      totalReviews?: number;
+      reviews?: any[];
+      isOpen?: boolean;
+      available?: boolean;
+      isVerified?: boolean;
+      verificationNotes?: string;
+      rejectionReason?: string;
+      commissionRate?: number;
+      menu?: any[];
+      statistics?: {
+        orderCount: number;
+        totalRevenue: number;
+        totalEarnings: number;
+        timesOrdered: number;
+      };
+      createdAt?: string;
+      updatedAt?: string;
+    }>>(`/admin/stores/${id}`);
+    return response.data;
+  },
+
   // Analytics: Dashboard
   getDashboardAnalytics: async (params?: {
     startDate?: string;
