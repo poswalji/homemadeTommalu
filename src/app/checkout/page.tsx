@@ -39,7 +39,8 @@ export default function CheckoutPage() {
     coordinates: null as { lat: number; lng: number } | null,
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('cash_on_delivery');
+  // ✅ Payment method is always Cash on Delivery
+  const paymentMethod = 'cash_on_delivery';
 
   // Initialize with default address if available
   useEffect(() => {
@@ -135,7 +136,7 @@ export default function CheckoutPage() {
           pincode: formData.pincode,
           country: formData.country,
         },
-        paymentMethod,
+        // Payment method is always cash_on_delivery (handled by backend)
       });
 
       if (order.success && order.data?.id) {
@@ -381,28 +382,28 @@ export default function CheckoutPage() {
               )}
             </Card>
 
-            {/* Payment Method */}
-            <Card className="p-6">
+            {/* Payment Method - Cash on Delivery Only */}
+            <Card className="p-6 bg-green-50 border-green-200">
               <div className="flex items-center gap-2 mb-4">
-                <CreditCard className="w-5 h-5" />
+                <CreditCard className="w-5 h-5 text-green-600" />
                 <h2 className="text-xl font-semibold">Payment Method</h2>
               </div>
 
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border rounded cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="cash_on_delivery"
-                    checked={paymentMethod === 'cash_on_delivery'}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-4 h-4"
-                  />
-                  <div>
-                    <p className="font-medium">Cash on Delivery</p>
-                    <p className="text-sm text-gray-500">Pay when you receive your order</p>
+                <div className="flex items-center gap-3 p-4 border-2 border-green-300 rounded-lg bg-white">
+                  <div className="flex-shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-green-600 flex items-center justify-center">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
                   </div>
-                </label>
+                  <div>
+                    <p className="font-medium text-green-900">Cash on Delivery</p>
+                    <p className="text-sm text-gray-600">Pay when you receive your order</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 italic">
+                  Currently, only Cash on Delivery payment method is available
+                </p>
               </div>
             </Card>
           </div>
