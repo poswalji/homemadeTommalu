@@ -19,7 +19,8 @@ export const NotificationBell: React.FC = () => {
       try {
         setLoading(true);
         const response = await notificationsApi.getNotifications({ limit: 20 });
-        setAllNotifications(response.data.notifications);
+        console.log(response);
+        setAllNotifications(response.data?.notifications || []);
       } catch (error) {
         console.error('Error loading notifications:', error);
       } finally {
@@ -33,7 +34,7 @@ export const NotificationBell: React.FC = () => {
   // Merge real-time notifications with API notifications
   const mergedNotifications = [
     ...notifications,
-    ...allNotifications.filter(
+    ...allNotifications?.filter(
       (apiNotif) => !notifications.find((n) => n.id === apiNotif.id)
     )
   ].sort((a, b) => {

@@ -3,6 +3,7 @@ import apiClient from '@/lib/axios';
 // Types
 export interface Promotion {
   id: string;
+  _id?: string;
   code: string;
   name: string;
   description?: string;
@@ -12,18 +13,19 @@ export interface Promotion {
   minOrderAmount: number;
   applicableTo: 'all' | 'category' | 'store' | 'item';
   categories?: string[];
-  storeIds?: string[];
-  itemIds?: string[];
+  storeIds?: string[] | Array<{ _id?: string; id?: string; storeName?: string }>; // Backend may populate
+  itemIds?: string[] | Array<{ _id?: string; id?: string; name?: string }>; // Backend may populate
   targetUsers: 'all' | 'new_users' | 'existing_users' | 'vip';
   cityFilter?: string[];
-  maxUses?: number;
+  maxUses?: number | null; // null = unlimited
   usedCount: number;
   maxUsesPerUser: number;
-  validFrom: string;
-  validUntil: string;
+  validFrom: string | Date;
+  validUntil: string | Date;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdBy?: string | { _id?: string; name?: string }; // Backend may populate
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }
 
 export interface ValidatePromotionData {

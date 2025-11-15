@@ -3,14 +3,15 @@ import apiClient from '@/lib/axios';
 // Types
 export interface Payout {
   id: string;
-  storeId: string;
-  ownerId: string;
+  _id?: string;
+  storeId: string | { _id?: string; storeName?: string }; // Backend may populate
+  ownerId: string | { _id?: string; name?: string; email?: string }; // Backend may populate
   totalAmount: number;
   commissionDeducted: number;
   netPayoutAmount: number;
-  periodStart: string;
-  periodEnd: string;
-  paymentIds: string[];
+  periodStart: string | Date;
+  periodEnd: string | Date;
+  paymentIds: string[] | Array<{ _id?: string; id?: string }>; // Backend may populate
   orderCount: number;
   status: 'pending' | 'approved' | 'processing' | 'completed' | 'failed' | 'cancelled';
   bankDetails?: {
@@ -21,12 +22,13 @@ export interface Payout {
   };
   transferId?: string;
   transferMethod?: 'NEFT' | 'RTGS' | 'IMPS' | 'UPI' | 'Wallet';
-  processedBy?: string;
-  processedAt?: string;
+  transferResponse?: any; // Backend stores transfer response
+  processedBy?: string | { _id?: string; name?: string }; // Backend may populate
+  processedAt?: string | Date;
   failureReason?: string;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }
 
 export interface EarningsStatement {

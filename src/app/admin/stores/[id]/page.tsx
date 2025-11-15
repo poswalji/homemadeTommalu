@@ -11,6 +11,10 @@ import {
   useRejectStore,
   useSuspendStore,
   useReactivateStore,
+  useAllPayouts,
+  useGeneratePayout,
+  useApprovePayout,
+  useCompletePayout,
 } from '@/hooks/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -44,11 +48,15 @@ import {
   Percent,
   FileText,
   Image as ImageIcon,
+  CreditCard,
+  Plus,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/axios';
 import Link from 'next/link';
 import { StoreCategory } from '@/services/api/public.api';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function AdminStoreDetailPage() {
   const params = useParams();
@@ -62,6 +70,19 @@ export default function AdminStoreDetailPage() {
     type: 'deliveryFee' | 'metadata' | 'commission' | null;
     isOpen: boolean;
   }>({ type: null, isOpen: false });
+
+  const [payoutDialog, setPayoutDialog] = useState<{
+    type: 'generate' | 'complete' | null;
+    isOpen: boolean;
+  }>({ type: null, isOpen: false });
+
+  const [selectedPayout, setSelectedPayout] = useState<any>(null);
+  const [payoutForm, setPayoutForm] = useState({
+    periodStart: '',
+    periodEnd: '',
+    transferId: '',
+    transferResponse: '',
+  });
 
   const [formData, setFormData] = useState({
     deliveryFee: 30,
@@ -80,6 +101,17 @@ export default function AdminStoreDetailPage() {
   const rejectStore = useRejectStore();
   const suspendStore = useSuspendStore();
   const reactivateStore = useReactivateStore();
+
+  // Payout hooks
+  const { data: payoutsData, isLoading: payoutsLoading } = useAllPayouts({
+    storeId: storeId,
+    limit: 10,
+  });
+  const generatePayout = useGeneratePayout();
+  const approvePayout = useApprovePayout();
+  const completePayout = useCompletePayout();
+
+  const storePayouts = payoutsData?.data || [];
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<
@@ -236,6 +268,89 @@ export default function AdminStoreDetailPage() {
       const errorMessage = handleApiError(error);
       toast.error(errorMessage);
     }
+  };
+
+  const handleGeneratePayout = async () => {
+    if (!payoutForm.periodStart || !payoutForm.periodEnd) {
+      toast.error('Please select both start and end dates');
+      return;
+    }
+
+    try {
+      await generatePayout.mutateAsync({
+        storeId,
+        periodStart: payoutForm.periodStart,
+        periodEnd: payoutForm.periodEnd,
+      });
+      toast.success('Payout generated successfully');
+      setPayoutDialog({ type: null, isOpen: false });
+      setPayoutForm({ periodStart: '', periodEnd: '', transferId: '', transferResponse: '' });
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleApprovePayout = async (payoutId: string) => {
+    try {
+      await approvePayout.mutateAsync(payoutId);
+      toast.success('Payout approved successfully');
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleCompletePayout = async () => {
+    if (!selectedPayout || !payoutForm.transferId) {
+      toast.error('Please enter transfer ID');
+      return;
+    }
+
+    try {
+      await completePayout.mutateAsync({
+        id: selectedPayout.id || selectedPayout._id,
+        data: {
+          transferId: payoutForm.transferId,
+          transferResponse: payoutForm.transferResponse ? JSON.parse(payoutForm.transferResponse) : undefined,
+        },
+      });
+      toast.success('Payout completed successfully');
+      setPayoutDialog({ type: null, isOpen: false });
+      setSelectedPayout(null);
+      setPayoutForm({ periodStart: '', periodEnd: '', transferId: '', transferResponse: '' });
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast.error(errorMessage);
+    }
+  };
+
+  const getPayoutStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'destructive'; label: string }> = {
+      pending: { variant: 'secondary', label: 'Pending' },
+      approved: { variant: 'default', label: 'Approved' },
+      processing: { variant: 'default', label: 'Processing' },
+      completed: { variant: 'default', label: 'Completed' },
+      failed: { variant: 'destructive', label: 'Failed' },
+      cancelled: { variant: 'destructive', label: 'Cancelled' },
+    };
+
+    const config = statusConfig[status] || { variant: 'secondary', label: status };
+    return (
+      <Badge
+        variant={
+          config.variant as
+            | 'default'
+            | 'secondary'
+            | 'success'
+            | 'outline'
+            | null
+            | undefined
+        }
+      >
+        {config.label}
+      </Badge>
+    );
   };
 
   if (isLoading) {
@@ -586,21 +701,21 @@ export default function AdminStoreDetailPage() {
                   <div>
                     <p className="text-sm text-gray-600">Name</p>
                     <p className="font-medium">
-                      {store.ownerId.name || 'N/A'}
+                      {(typeof store.ownerId === 'object' ? store.ownerId?.name : null) || 'N/A'}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Email</p>
                     <p className="font-medium flex items-center gap-2">
                       <Mail className="w-4 h-4" />
-                      {store.ownerId.email || 'N/A'}
+                      {(typeof store.ownerId === 'object' ? store.ownerId?.email : null) || 'N/A'}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Phone</p>
                     <p className="font-medium flex items-center gap-2">
                       <Phone className="w-4 h-4" />
-                      {store.ownerId.phone || 'N/A'}
+                      {(typeof store.ownerId === 'object' ? store.ownerId?.phone : null) || 'N/A'}
                     </p>
                   </div>
                   {(store.ownerId as any).role && (
@@ -645,6 +760,121 @@ export default function AdminStoreDetailPage() {
                   </div>
                 </div>
               </div>
+            </Card>
+
+            {/* Payouts Section */}
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Payouts</h2>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setPayoutDialog({ type: 'generate', isOpen: true });
+                    setPayoutForm({ periodStart: '', periodEnd: '', transferId: '', transferResponse: '' });
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Generate Payout
+                </Button>
+              </div>
+              {payoutsLoading ? (
+                <div className="flex justify-center py-8">
+                  <Spinner size="md" />
+                </div>
+              ) : storePayouts.length > 0 ? (
+                <div className="space-y-3">
+                  {storePayouts.map((payout: any) => (
+                    <div
+                      key={payout.id || payout._id}
+                      className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CreditCard className="w-5 h-5 text-blue-500" />
+                            <div className="flex items-center gap-2">
+                              {getPayoutStatusBadge(payout.status)}
+                              <span className="text-sm text-gray-500">
+                                {new Date(payout.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mb-2">
+                            <div>
+                              <span className="text-gray-500">Amount: </span>
+                              <span className="font-semibold">
+                                ₹{payout.netPayoutAmount?.toLocaleString('en-IN') || 0}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Commission: </span>
+                              <span className="font-semibold">
+                                ₹{payout.commissionDeducted?.toLocaleString('en-IN') || 0}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Orders: </span>
+                              <span className="font-semibold">{payout.orderCount || 0}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Period: </span>
+                              <span className="font-semibold text-xs">
+                                {new Date(payout.periodStart).toLocaleDateString()} -{' '}
+                                {new Date(payout.periodEnd).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {payout.status === 'pending' && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleApprovePayout(payout.id || payout._id)}
+                              disabled={approvePayout.isPending}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Approve
+                            </Button>
+                          )}
+                          {payout.status === 'approved' && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => {
+                                setSelectedPayout(payout);
+                                setPayoutDialog({ type: 'complete', isOpen: true });
+                                setPayoutForm({ periodStart: '', periodEnd: '', transferId: '', transferResponse: '' });
+                              }}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Complete
+                            </Button>
+                          )}
+                          <Link href={`/admin/payouts/${payout.id || payout._id}`}>
+                            <Button size="sm" variant="ghost">
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              View
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pt-2 border-t">
+                    <Link href="/admin/payouts">
+                      <Button variant="outline" className="w-full">
+                        View All Payouts
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <CreditCard className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No payouts found for this store</p>
+                </div>
+              )}
             </Card>
 
             {/* Additional Information */}
@@ -902,6 +1132,146 @@ export default function AdminStoreDetailPage() {
                 </>
               ) : (
                 'Update'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Generate Payout Dialog */}
+      <Dialog
+        open={payoutDialog.isOpen && payoutDialog.type === 'generate'}
+        onOpenChange={(open) =>
+          setPayoutDialog({ type: open ? 'generate' : null, isOpen: open })
+        }
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate New Payout</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="store-name-payout">Store</Label>
+              <Input
+                id="store-name-payout"
+                value={store?.storeName || ''}
+                disabled
+                className="bg-gray-100"
+              />
+            </div>
+            <div>
+              <Label htmlFor="period-start">Period Start *</Label>
+              <Input
+                id="period-start"
+                type="date"
+                value={payoutForm.periodStart}
+                onChange={(e) =>
+                  setPayoutForm({ ...payoutForm, periodStart: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label htmlFor="period-end">Period End *</Label>
+              <Input
+                id="period-end"
+                type="date"
+                value={payoutForm.periodEnd}
+                onChange={(e) =>
+                  setPayoutForm({ ...payoutForm, periodEnd: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPayoutDialog({ type: null, isOpen: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleGeneratePayout}
+              disabled={generatePayout.isPending}
+            >
+              {generatePayout.isPending ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Generating...
+                </>
+              ) : (
+                'Generate'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Complete Payout Dialog */}
+      <Dialog
+        open={payoutDialog.isOpen && payoutDialog.type === 'complete'}
+        onOpenChange={(open) =>
+          setPayoutDialog({ type: open ? 'complete' : null, isOpen: open })
+        }
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete Payout</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedPayout && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">Payout Amount</p>
+                <p className="text-xl font-bold">
+                  ₹{selectedPayout.netPayoutAmount?.toLocaleString('en-IN') || 0}
+                </p>
+              </div>
+            )}
+            <div>
+              <Label htmlFor="transfer-id">Transfer ID *</Label>
+              <Input
+                id="transfer-id"
+                value={payoutForm.transferId}
+                onChange={(e) =>
+                  setPayoutForm({ ...payoutForm, transferId: e.target.value })
+                }
+                placeholder="Enter transfer/transaction ID"
+              />
+            </div>
+            <div>
+              <Label htmlFor="transfer-response">Transfer Response (JSON - Optional)</Label>
+              <Textarea
+                id="transfer-response"
+                value={payoutForm.transferResponse}
+                onChange={(e) =>
+                  setPayoutForm({ ...payoutForm, transferResponse: e.target.value })
+                }
+                placeholder='{"success": true, ...}'
+                className="font-mono text-xs"
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPayoutDialog({ type: null, isOpen: false });
+                setSelectedPayout(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCompletePayout}
+              disabled={completePayout.isPending}
+            >
+              {completePayout.isPending ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Completing...
+                </>
+              ) : (
+                'Complete Payout'
               )}
             </Button>
           </DialogFooter>

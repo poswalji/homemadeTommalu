@@ -3,9 +3,10 @@ import apiClient from '@/lib/axios';
 // Types
 export interface Dispute {
   id: string;
-  orderId: string;
-  userId: string;
-  storeId: string;
+  _id?: string;
+  orderId: string | { _id?: string; id?: string }; // Backend may populate
+  userId: string | { _id?: string; name?: string; email?: string }; // Backend may populate
+  storeId: string | { _id?: string; storeName?: string }; // Backend may populate
   type: 'order_issue' | 'payment_issue' | 'quality_issue' | 'delivery_issue' | 'other';
   title: string;
   description: string;
@@ -16,17 +17,17 @@ export interface Dispute {
     action: 'refund_full' | 'refund_partial' | 'store_action' | 'no_action' | 'other';
     amount?: number;
     notes?: string;
-    resolvedAt?: string;
-    resolvedBy?: string;
+    resolvedAt?: string | Date;
+    resolvedBy?: string | { _id?: string; name?: string }; // Backend may populate
   };
   timeline: Array<{
     action: string;
-    performedBy: string;
+    performedBy: string | { _id?: string; name?: string }; // Backend may populate
     notes?: string;
-    timestamp: string;
+    timestamp: string | Date;
   }>;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }
 
 export interface CreateDisputeData {

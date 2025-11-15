@@ -391,7 +391,7 @@ export default function CustomerOrderDetailPage() {
           open={isReviewModalOpen}
           onOpenChange={setIsReviewModalOpen}
           orderId={order.id}
-          storeId={order.storeId}
+          storeId={typeof order.storeId === 'string' ? order.storeId : (order.storeId?._id || '')}
           storeName={order.storeName}
           items={(order.items || []).map((item: any) => ({
             id: item.menuItemId || item.id || '',

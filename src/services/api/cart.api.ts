@@ -16,17 +16,19 @@ export interface CartItem {
 
 export interface Cart {
   id?: string;
+  _id?: string;
   userId?: string;
   storeId?: string;
   storeName?: string;
   items: CartItem[];
-  totalItems: number;
-  totalAmount: number;
+  totalItems?: number; // Backend may not always include this
+  totalAmount?: number; // Backend may not always include this
   deliveryCharge: number;
   finalAmount: number;
   discount?: {
-    code: string;
+    code?: string;
     discountAmount: number;
+    promotionId?: string; // Backend includes promotionId
   };
 }
 

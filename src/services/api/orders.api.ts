@@ -38,8 +38,9 @@ export interface CreateOrderData {
 
 export interface Order {
   id: string;
-  userId: string;
-  storeId: string;
+  _id?: string;
+  userId: string | { _id?: string; name?: string; email?: string }; // Backend may populate userId
+  storeId: string | { _id?: string; storeName?: string }; // Backend may populate storeId
   items: OrderItem[];
   discount?: number;
   promoCode?: string;
@@ -47,6 +48,8 @@ export interface Order {
   finalPrice: number;
   deliveryAddress: DeliveryAddress;
   status: OrderStatus;
+  orderTime?: string; // Backend has orderTime
+  deliveredTime?: string; // Backend has deliveredTime
   createdAt: string;
   updatedAt: string;
   rejectionReason?: string;
@@ -55,7 +58,8 @@ export interface Order {
   customerEmail?: string;
   storeName?: string;
   storeEmail?: string;
-  paymentMethod?: string;
+  paymentMethod?: 'cash_on_delivery' | 'online' | 'wallet';
+  paymentId?: string; // Backend may include paymentId
 }
 
 export interface UpdateOrderStatusData {

@@ -13,10 +13,21 @@ export type OrderStatus =
 
 export interface StoreOwnerProfile {
   id: string;
+  _id?: string;
   name: string;
   email: string;
   phone?: string;
   role: 'storeOwner';
+  stores?: Array<{
+    id: string;
+    storeName: string;
+    address: string;
+    phone: string;
+    category: string;
+    isOpen: boolean;
+    rating: number;
+    totalReviews: number;
+  }>;
 }
 
 export interface CreateStoreData {

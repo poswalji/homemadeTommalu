@@ -3,21 +3,27 @@ import apiClient from '@/lib/axios';
 // Types
 export interface Payment {
   id: string;
-  orderId: string;
-  userId: string;
-  storeId: string;
+  _id?: string;
+  orderId: string | { _id?: string; id?: string }; // Backend may populate
+  userId: string | { _id?: string; name?: string; email?: string }; // Backend may populate
+  storeId: string | { _id?: string; storeName?: string }; // Backend may populate
   amount: number;
   commissionAmount: number;
   storePayoutAmount: number;
   commissionRate: number;
   paymentMethod: 'cash_on_delivery' | 'online' | 'wallet';
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'cancelled';
-  payoutStatus: 'pending' | 'eligible' | 'processing' | 'completed' | 'cancelled';
-  paymentGateway?: string;
+  payoutStatus?: 'pending' | 'eligible' | 'processing' | 'completed' | 'cancelled'; // May not always be present
+  paymentGateway?: 'razorpay' | 'stripe' | 'paytm' | null;
   transactionId?: string;
+  gatewayOrderId?: string; // Backend has gatewayOrderId
+  gatewayResponse?: any; // Backend stores gateway response
   refundAmount?: number;
-  refundStatus?: string;
+  refundStatus?: 'none' | 'initiated' | 'processing' | 'completed' | 'failed';
+  refundTransactionId?: string; // Backend has refundTransactionId
+  refundReason?: string; // Backend has refundReason
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreatePaymentData {

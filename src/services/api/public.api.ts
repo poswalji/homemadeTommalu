@@ -21,6 +21,7 @@ export interface Store {
   description?: string;
   openingTime?: string;
   closingTime?: string;
+  deliveryTime?: string; // Backend returns this
   deliveryFee?: number;
   minOrder?: number;
   isOpen?: boolean;
@@ -28,20 +29,42 @@ export interface Store {
   totalReviews?: number;
   rating?: number;
   image?: string;
+  storeImages?: string[]; // Backend has storeImages array
   ownerId?: string | { name?: string; email?: string; id?: string };
   status?: 'draft' | 'submitted' | 'pendingApproval' | 'approved' | 'active' | 'rejected' | 'suspended';
   verificationStatus?: string;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
+  menu?: MenuItem[]; // Backend populates menu in some responses
 }
 
 export interface MenuItem {
   id: string;
+  _id?: string;
   name: string;
   price: number;
+  originalPrice?: number; // Backend has originalPrice
   category?: string;
   description?: string;
+  foodType?: 'veg' | 'non-veg' | 'egg' | 'vegan'; // Backend has foodType
   available?: boolean;
+  isAvailable?: boolean; // Backend uses isAvailable
+  inStock?: boolean; // Backend has inStock
   stockQuantity?: number;
   image?: string;
+  images?: string[]; // Backend has images array
+  preparationTime?: number; // Backend has preparationTime in minutes
+  customizations?: Array<{
+    name: string;
+    options: Array<{
+      name: string;
+      price: number;
+    }>;
+    isRequired: boolean;
+  }>;
+  storeId?: string;
 }
 
 export interface StoresResponse {
@@ -51,7 +74,8 @@ export interface StoresResponse {
     page: number;
     limit: number;
     total: number;
-    totalPages: number;
+    totalPages?: number;
+    pages?: number; // Backend sometimes returns 'pages' instead of 'totalPages'
   };
 }
 

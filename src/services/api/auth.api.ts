@@ -46,20 +46,23 @@ export interface ChangePasswordData {
 
 export interface User {
   id: string;
+  _id?: string;
   name: string;
   email: string;
   role: UserRole;
   phone?: string;
   addresses?: Address[];
   emailVerified?: boolean;
+  avatar?: string; // Backend may return avatar for Google users
+  status?: 'active' | 'suspended'; // Backend has status field
 }
 
 export interface AuthResponse {
   success: boolean;
-    token: string;
-    user: User;
+  token: string;
+  user: User;
   message?: string;
-  verificationToken?: string;
+  verificationToken?: string; // Only in registration response
 }
 
 export interface VerifyEmailData {

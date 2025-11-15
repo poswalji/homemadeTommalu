@@ -8,12 +8,23 @@ export type AdminRole = 'superAdmin' | 'supportAdmin';
 
 export interface User {
   id: string;
+  _id?: string;
   name: string;
   email: string;
   role: UserRole;
   phone?: string;
   status?: UserStatus;
   city?: string;
+  addresses?: Array<{
+    label?: string;
+    street: string;
+    city: string;
+    state?: string;
+    pincode: string;
+    country?: string;
+    isDefault?: boolean;
+  }>;
+  emailVerified?: boolean;
 }
 
 export interface Store {
@@ -25,18 +36,33 @@ export interface Store {
   category: StoreCategory;
   description?: string;
   verificationStatus?: string;
+  verificationNotes?: string;
   commissionRate?: number;
   deliveryFee?: number;
-  status?: string;
+  minOrder?: number;
+  status?: 'draft' | 'submitted' | 'pendingApproval' | 'approved' | 'active' | 'rejected' | 'suspended';
   isOpen?: boolean;
   available?: boolean;
-  ownerId?: {
+  isVerified?: boolean;
+  openingTime?: string;
+  closingTime?: string;
+  deliveryTime?: string;
+  rating?: number;
+  totalReviews?: number;
+  storeImages?: string[];
+  location?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  ownerId?: string | {
     _id: string;
     name: string;
     email: string;
     phone?: string;
   };
+  rejectionReason?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UpdateStoreMetadataData {
@@ -79,6 +105,7 @@ export interface UsersListResponse {
     limit: number;
     total: number;
     totalPages?: number;
+    pages?: number; // Backend sometimes returns 'pages'
   };
 }
 
