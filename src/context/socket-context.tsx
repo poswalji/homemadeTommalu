@@ -1,9 +1,9 @@
 'use client';
 
 import { useAuth } from '@/providers/auth-provider';
-import { cookieService } from '@/utills/cookies';
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { ref, onValue, off, query, orderByChild, limitToLast, DatabaseReference } from 'firebase/database';
+import { db } from '@/config/firebase.config';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/config/query.config';
 
@@ -18,7 +18,7 @@ interface Notification {
 }
 
 interface SocketContextType {
-  socket: Socket | null;
+  socket: null; // Kept for backward compatibility, but always null now
   isConnected: boolean;
   notifications: Notification[];
   unreadCount: number;
@@ -44,13 +44,13 @@ interface SocketProviderProps {
 }
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user, isAuthenticated } = useAuth();
-  const QueryClient=useQueryClient();
-  const socketRef = useRef<Socket | null>(null);
+  const QueryClient = useQueryClient();
+  const userNotificationRef = useRef<DatabaseReference | null>(null);
+  const roleNotificationRef = useRef<DatabaseReference | null>(null);
   // Track active audio elements for each order
   const activeAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   // Track pending sounds that couldn't play due to autoplay restrictions
@@ -130,65 +130,101 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     pendingSounds.current.delete(orderId);
   }, []);
 
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      // Disconnect if not authenticated
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
+  // Process notification from Firebase
+  const processNotification = useCallback((snapshot: any, userId: string, userRole: string) => {
+    if (!snapshot.exists()) return;
+
+    const data = snapshot.val();
+    const notificationKey = snapshot.key;
+    
+    // Handle both single notification and object of notifications
+    let notificationsToProcess: any[] = [];
+    
+    if (data.event && data.data) {
+      // Single notification object
+      notificationsToProcess = [{
+        key: notificationKey,
+        event: data.event,
+        data: data.data,
+        timestamp: data.timestamp
+      }];
+    } else {
+      // Object of notifications (multiple)
+      notificationsToProcess = Object.entries(data).map(([key, value]: [string, any]) => ({
+        key,
+        event: value.event,
+        data: value.data,
+        timestamp: value.timestamp
+      }));
+    }
+
+    notificationsToProcess.forEach((notif) => {
+      const { event, data: notificationData } = notif;
+      
+      // Convert Firebase notification to app notification format
+      let notification: Notification;
+      
+      if (event === 'new_notification') {
+        // Direct notification format
+        notification = {
+          id: notificationData.id || notif.key,
+          title: notificationData.title || 'Notification',
+          message: notificationData.message || '',
+          type: notificationData.type || 'general',
+          relatedId: notificationData.relatedId,
+          read: notificationData.read || false,
+          createdAt: notificationData.createdAt || new Date().toISOString()
+        };
+      } else if (event === 'new_order') {
+        notification = {
+          id: `order-${notificationData.orderId}`,
+          title: 'New Order Received',
+          message: `You have received a new order #${notificationData.orderId?.slice(-6)} for ₹${notificationData.finalPrice}`,
+          type: 'order_created',
+          relatedId: notificationData.orderId,
+          read: false,
+          createdAt: notificationData.createdAt || new Date().toISOString()
+        };
+      } else if (event === 'order_status_update') {
+        notification = {
+          id: `order-update-${notificationData.orderId}`,
+          title: 'Order Status Updated',
+          message: notificationData.message || `Order #${notificationData.orderId?.slice(-6)} status updated to ${notificationData.status}`,
+          type: 'order_status_updated',
+          relatedId: notificationData.orderId,
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+      } else if (event === 'delivery_assigned') {
+        notification = {
+          id: `delivery-assigned-${notificationData.orderId}`,
+          title: '🚚 New Delivery Assignment',
+          message: `Order #${notificationData.orderId?.slice(-6)} assigned for delivery. Customer: ${notificationData.customerName || 'N/A'}`,
+          type: 'delivery_assigned',
+          relatedId: notificationData.orderId,
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+      } else {
+        // Generic notification
+        notification = {
+          id: notif.key,
+          title: notificationData.title || 'Notification',
+          message: notificationData.message || '',
+          type: event,
+          relatedId: notificationData.relatedId || notificationData.orderId,
+          read: false,
+          createdAt: new Date(notif.timestamp).toISOString()
+        };
       }
-      // State updates will happen via disconnect event handler
-      return;
-    }
 
-    // Get API URL from environment or config (remove /api suffix for Socket.io)
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-    const API_URL = apiUrl.replace('/api', '');
-    const token = cookieService.getCurrentToken();
-
-    if (!token) {
-      return;
-    }
-
-    // Initialize Socket.io connection
-    // ✅ FIXED: Use polling transport for better CORS compatibility
-    const newSocket = io(API_URL, {
-      auth: {
-        token: token
-      },
-      transports: [ 'websocket'],
-      upgrade: true,
-      rememberUpgrade: false,
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      forceNew: false
-    });
-
-    socketRef.current = newSocket;
-
-    // Connection event handlers
-    newSocket.on('connect', () => {
-      console.log('✅ Socket.io connected');
-      setSocket(newSocket);
-      setIsConnected(true);
-    });
-
-    newSocket.on('disconnect', () => {
-      console.log('❌ Socket.io disconnected');
-      setSocket(null);
-      setIsConnected(false);
-    });
-
-    newSocket.on('connect_error', (error) => {
-      console.error('Socket.io connection error:', error);
-      setIsConnected(false);
-    });
-
-    // Listen for new notifications
-    newSocket.on('new_notification', (notification: Notification) => {
-      console.log('📬 New notification received:', notification);
-      setNotifications((prev) => [notification, ...prev]);
+      // Add notification to state
+      setNotifications((prev) => {
+        // Check if notification already exists
+        const exists = prev.some(n => n.id === notification.id);
+        if (exists) return prev;
+        return [notification, ...prev];
+      });
       setUnreadCount((prev) => prev + 1);
       
       // Show browser notification if permission granted
@@ -200,49 +236,35 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         });
       }
 
-    
-
       // Handle notifications for all user types
       if (notification.relatedId) {
-        // ✅ FIXED: Ensure orderId is converted to string
         const orderId = String(notification.relatedId);
         
         // Play notification sound for store owners on new order notifications
-        if (user?.role === 'storeOwner' && notification.type === 'order_created') {
+        if (userRole === 'storeOwner' && notification.type === 'order_created') {
           playNotificationSound(orderId);
         }
         
         // Handle different notification types for all user roles
         if (notification.type === 'order_created') {
-          // Store owner queries (affects store owners)
+          // Store owner queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.storeOwner() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.earnings() });
           
-          // Customer queries (affects customers)
+          // Customer queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
-          // ✅ FIXED: Invalidate public order query for order tracking page
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.public(orderId) });
           
-          // Admin queries (admin acts as delivery boy - needs to see all orders)
+          // Admin queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.revenue() });
           
-          // General orders queries (affects all users)
+          // General orders queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
-          
-          // Trigger email notification for order creation (tracking)
-          if (user?.role === 'customer' || user?.role === 'storeOwner') {
-            console.log('📧 Email notification should be sent for new order:', {
-              orderId,
-              userId: user?.id,
-              userEmail: user?.email,
-              userRole: user?.role
-            });
-          }
-        } else if (notification.type === 'delivery_assigned' && user?.role === 'admin') {
+        } else if (notification.type === 'delivery_assigned' && userRole === 'admin') {
           // Admin delivery assignment notifications
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
@@ -251,282 +273,143 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           // Order status update notifications for all users
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
-          // ✅ FIXED: Invalidate public order query for order tracking page
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.public(orderId) });
           QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
           
-          // Trigger email notification for status updates (tracking)
-          if (user?.role === 'customer' || user?.role === 'storeOwner') {
-            console.log('📧 Email notification should be sent for order status update:', {
-              orderId,
-              status: notification.message,
-              userId: user?.id,
-              userEmail: user?.email
-            });
-
+          // Stop notification sound for store owners on any status update
+          if (userRole === 'storeOwner') {
+            stopNotificationSound(orderId);
           }
-        }
-      }
-    });
-
-    // Listen for delivery assignment (for admin as delivery boy)
-    newSocket.on('delivery_assigned', (deliveryData: any) => {
-      console.log('🚚 Delivery assigned:', deliveryData);
-      if (user?.role === 'admin' && deliveryData.orderId) {
-        const notification: Notification = {
-          id: `delivery-assigned-${deliveryData.orderId}`,
-          title: '🚚 New Delivery Assignment',
-          message: `Order #${deliveryData.orderId?.slice(-6)} assigned for delivery. Customer: ${deliveryData.customerName || 'N/A'}, Address: ${deliveryData.deliveryAddress || 'N/A'}`,
-          type: 'delivery_assigned',
-          relatedId: deliveryData.orderId,
-          read: false,
-          createdAt: new Date().toISOString()
-        };
-        setNotifications((prev) => [notification, ...prev]);
-        setUnreadCount((prev) => prev + 1);
-
-        // Show browser notification
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification(notification.title, {
-            body: notification.message,
-            icon: '/logo.png',
-            tag: notification.id
-          });
-        }
-
-        // Invalidate admin queries
-        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
-        
-        // Trigger email notification to admin
-        console.log('📧 Email notification should be sent to admin for delivery assignment:', {
-          orderId: deliveryData.orderId,
-          adminEmail: user?.email
-        });
-      }
-    });
-
-    // Listen for new order (for store owners)
-    newSocket.on('new_order', (orderData: any) => {
-      console.log('🆕 New order received:', orderData);
-      const notification: Notification = {
-        id: `order-${orderData.orderId}`,
-        title: 'New Order Received',
-        message: `You have received a new order #${orderData.orderId?.slice(-6)} for ₹${orderData.finalPrice}`,
-        type: 'order_created',
-        relatedId: orderData.orderId,
-        read: false,
-        createdAt: new Date().toISOString()
-      };
-      setNotifications((prev) => [notification, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-
-      // Show browser notification if permission granted
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(notification.title, {
-          body: notification.message,
-          icon: '/logo.png',
-          tag: notification.id
-        });
-      }
-
-      // Handle new order for all user types
-      if (orderData.orderId) {
-        const orderId = orderData.orderId;
-        
-        // Play notification sound for store owners
-        if (user?.role === 'storeOwner') {
-          playNotificationSound(orderId);
-        }
-        
-        // Invalidate queries for all user types
-        // This ensures all users see updated data regardless of their current role
-        // Store owner queries (affects store owners)
-        QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.storeOwner() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.earnings() });
-        
-        // Customer queries (affects customers)
-        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
-        
-        // Admin queries (admin acts as delivery boy - needs to see all orders)
-        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.revenue() });
-        
-        // General orders queries (affects all users)
-        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
-      }
-    });
-
-    // Listen for order status updates (for customers, store owners, and admin)
-    newSocket.on('order_status_update', (orderData: any) => {
-      console.log('📦 Order status update:', orderData);
-      const status = orderData.status;
-      // ✅ FIXED: Ensure orderId is converted to string
-      const orderId = String(orderData.orderId);
-      
-      // Create notification based on user role and order status
-      let notification: Notification;
-      
-      if (user?.role === 'admin' && status === 'OutForDelivery') {
-        // Admin as delivery boy - special notification for delivery assignment
-        notification = {
-          id: `delivery-${orderId}`,
-          title: '🚚 New Delivery Assignment',
-          message: `Order #${orderId?.slice(-6)} is ready for delivery. Customer: ${orderData.customerName || 'N/A'}`,
-          type: 'delivery_assigned',
-          relatedId: orderId,
-          read: false,
-          createdAt: new Date().toISOString()
-        };
-      } else if (user?.role === 'customer') {
-        // Customer notification for order tracking
-        notification = {
-          id: `order-update-${orderId}`,
-          title: 'Order Status Updated',
-          message: orderData.message || `Your order #${orderId?.slice(-6)} status updated to ${status}`,
-          type: 'order_status_updated',
-          relatedId: orderId,
-          read: false,
-          createdAt: new Date().toISOString()
-        };
-      } else {
-        // Store owner or general notification
-        notification = {
-          id: `order-update-${orderId}`,
-          title: 'Order Status Updated',
-          message: orderData.message || `Order #${orderId?.slice(-6)} status updated to ${status}`,
-          type: 'order_status_updated',
-          relatedId: orderId,
-          read: false,
-          createdAt: new Date().toISOString()
-        };
-      }
-      
-      setNotifications((prev) => [notification, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-
-      // Show browser notification if permission granted
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(notification.title, {
-          body: notification.message,
-          icon: '/logo.png',
-          tag: notification.id
-        });
-      }
-
-      // Trigger email notification for order tracking (for customers and store owners)
-      // Email sending is handled by backend, but we log it here for tracking
-      if (user?.role === 'customer' || user?.role === 'storeOwner') {
-        console.log('📧 Email notification should be sent for order tracking:', {
-          orderId,
-          status,
-          userId: user?.id,
-          userEmail: user?.email,
-          userRole: user?.role
-        });
-        // Backend should handle email sending via notification service
-      }
-
-      // Handle order status updates for all user types
-      if (orderData.orderId && orderData.status) {
-        const finalStatuses = ['Confirmed', 'Rejected', 'Cancelled', 'Delivered'];
-        
-        // Stop notification sound for store owners on any status update
-        if (user?.role === 'storeOwner') {
-          stopNotificationSound(orderId);
-        }
-        
-        // Invalidate queries for all user types when order status changes
-        // This ensures all users see updated data regardless of their current role
-        // Store owner queries (affects store owners)
-        QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
-        
-        // Customer queries (affects customers)
-        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
-        // ✅ FIXED: Invalidate public order query for order tracking page
-        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.public(orderId) });
-        
-        // Admin queries (admin acts as delivery boy - needs real-time updates)
-        // Admin needs to see all orders, especially OutForDelivery status for delivery management
-        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
-        QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.revenue() });
-        
-        // Special handling for OutForDelivery status (admin as delivery boy)
-        if (status === 'OutForDelivery') {
-          QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
           
-          // Send notification to admin when order is ready for delivery
-          if (user?.role === 'admin') {
-            console.log('🚚 Admin delivery notification triggered for order:', orderId);
-            // Backend should send email notification to admin for delivery assignment
+          // Update earnings/payouts if order status affects them
+          const finalStatuses = ['Confirmed', 'Rejected', 'Cancelled', 'Delivered'];
+          if (finalStatuses.includes(notificationData.status)) {
+            QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.storeOwner() });
+            QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.earnings() });
+            QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.admin() });
           }
-        }
-        
-        // General orders queries (affects all users)
-        QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
-        
-        // Update earnings/payouts if order status affects them
-        if (finalStatuses.includes(status)) {
-          QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.storeOwner() });
-          QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.earnings() });
-          QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.admin() });
         }
       }
     });
+  }, [QueryClient, playNotificationSound, stopNotificationSound]);
 
-    // Request notification permission on mount
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+  useEffect(() => {
+    if (!isAuthenticated || !user || typeof window === 'undefined' || !db) {
+      // Disconnect if not authenticated or on server
+      if (userNotificationRef.current) {
+        off(userNotificationRef.current);
+        userNotificationRef.current = null;
+      }
+      if (roleNotificationRef.current) {
+        off(roleNotificationRef.current);
+        roleNotificationRef.current = null;
+      }
+      setIsConnected(false);
+      return;
     }
 
-    // Set up user interaction listeners to enable audio playback
-    const handleUserInteraction = () => {
-      if (!hasUserInteracted.current) {
-        hasUserInteracted.current = true;
-        // Try to play any pending sounds
-        playPendingSounds();
+    const userId = user.id || user._id;
+    const userRole = user.role;
+
+    if (!userId) {
+      return;
+    }
+
+    try {
+      // Listen to user-specific notifications
+      const userNotificationsPath = `notifications/user:${userId}`;
+      userNotificationRef.current = query(
+        ref(db, userNotificationsPath),
+        orderByChild('timestamp'),
+        limitToLast(50)
+      );
+
+      const userUnsubscribe = onValue(
+        userNotificationRef.current,
+        (snapshot) => {
+          setIsConnected(true);
+          processNotification(snapshot, userId, userRole);
+        },
+        (error) => {
+          console.error('Firebase user notification error:', error);
+          setIsConnected(false);
+        }
+      );
+
+      // Listen to role-specific notifications
+      const roleNotificationsPath = `notifications/role:${userRole}`;
+      roleNotificationRef.current = query(
+        ref(db, roleNotificationsPath),
+        orderByChild('timestamp'),
+        limitToLast(50)
+      );
+
+      const roleUnsubscribe = onValue(
+        roleNotificationRef.current,
+        (snapshot) => {
+          setIsConnected(true);
+          processNotification(snapshot, userId, userRole);
+        },
+        (error) => {
+          console.error('Firebase role notification error:', error);
+          setIsConnected(false);
+        }
+      );
+
+      // Request notification permission on mount
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
       }
-    };
 
-    // Listen for various user interactions
-    const events = ['click', 'keydown', 'touchstart', 'mousedown'];
-    events.forEach((event) => {
-      document.addEventListener(event, handleUserInteraction, { once: true, passive: true });
-    });
+      // Set up user interaction listeners to enable audio playback
+      const handleUserInteraction = () => {
+        if (!hasUserInteracted.current) {
+          hasUserInteracted.current = true;
+          // Try to play any pending sounds
+          playPendingSounds();
+        }
+      };
 
-    // Cleanup on unmount or dependency change
-    return () => {
-      // Cleanup interaction listeners
+      // Listen for various user interactions
+      const events = ['click', 'keydown', 'touchstart', 'mousedown'];
       events.forEach((event) => {
-        document.removeEventListener(event, handleUserInteraction);
+        document.addEventListener(event, handleUserInteraction, { once: true, passive: true });
       });
 
-      if (socketRef.current) {
-        socketRef.current.removeAllListeners();
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-      // Stop all playing sounds - copy ref values to avoid stale closure
-      const audioRefs = activeAudioRefs.current;
-      const pendingSoundsRef = pendingSounds.current;
-      audioRefs.forEach((audio) => {
-        audio.pause();
-        audio.currentTime = 0;
-      });
-      audioRefs.clear();
-      // Clear pending sounds
-      pendingSoundsRef.clear();
-      setSocket(null);
+      // Cleanup on unmount or dependency change
+      return () => {
+        // Cleanup interaction listeners
+        events.forEach((event) => {
+          document.removeEventListener(event, handleUserInteraction);
+        });
+
+        // Unsubscribe from Firebase listeners
+        if (userNotificationRef.current) {
+          off(userNotificationRef.current);
+          userNotificationRef.current = null;
+        }
+        if (roleNotificationRef.current) {
+          off(roleNotificationRef.current);
+          roleNotificationRef.current = null;
+        }
+
+        // Stop all playing sounds
+        const audioRefs = activeAudioRefs.current;
+        const pendingSoundsRef = pendingSounds.current;
+        audioRefs.forEach((audio) => {
+          audio.pause();
+          audio.currentTime = 0;
+        });
+        audioRefs.clear();
+        pendingSoundsRef.clear();
+        setIsConnected(false);
+      };
+    } catch (error) {
+      console.error('Error setting up Firebase listeners:', error);
       setIsConnected(false);
-    };
-  }, [isAuthenticated, user, playNotificationSound, stopNotificationSound, playPendingSounds, QueryClient]);
+    }
+  }, [isAuthenticated, user, processNotification, playPendingSounds]);
 
   const addNotification = (notification: Notification) => {
     setNotifications((prev) => [notification, ...prev]);
@@ -557,20 +440,18 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   return (
     <SocketContext.Provider
       value={{
-        socket,
+        socket: null, // Kept for backward compatibility
         isConnected,
         notifications,
         unreadCount,
         addNotification,
         markAsRead,
         markAllAsRead,
-        clearNotifications
-,stopNotificationSound
+        clearNotifications,
+        stopNotificationSound
       }}
     >
       {children}
     </SocketContext.Provider>
   );
 };
-
-
