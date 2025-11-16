@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/providers/auth-provider';
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
-import { ref, onValue, off, query, orderByChild, limitToLast, DatabaseReference } from 'firebase/database';
+import { ref, onValue, off, query, orderByChild, limitToLast, Query } from 'firebase/database';
 import { db } from '@/config/firebase.config';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/config/query.config';
@@ -49,8 +49,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const { user, isAuthenticated } = useAuth();
   const QueryClient = useQueryClient();
-  const userNotificationRef = useRef<DatabaseReference | null>(null);
-  const roleNotificationRef = useRef<DatabaseReference | null>(null);
+  const userNotificationRef = useRef<Query | null>(null);
+  const roleNotificationRef = useRef<Query | null>(null);
   // Track active audio elements for each order
   const activeAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   // Track pending sounds that couldn't play due to autoplay restrictions

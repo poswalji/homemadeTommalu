@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Figtree } from 'next/font/google';
 import './globals.css';
@@ -34,7 +34,6 @@ export const metadata: Metadata = {
       apple: '/logo.png',
    },
    category: 'Food & Grocery Delivery',
-   themeColor: '#FF6B6B',
    openGraph: {
       type: 'website',
       locale: 'en_IN',
@@ -65,6 +64,10 @@ export const metadata: Metadata = {
          follow: true,
       },
    },
+};
+
+export const viewport: Viewport = {
+   themeColor: '#FF6B6B',
 };
 
 export default function RootLayout({
