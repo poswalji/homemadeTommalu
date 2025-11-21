@@ -167,8 +167,10 @@ export default function StoreOwnerDashboard() {
             ) : orders.length > 0 ? (
               <div className="space-y-3">
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {orders.slice(0, 5).map((order: any) => (
-                  <Link key={order.id} href={`/store-owner/orders/${order.id}`}>
+                {orders.slice(0, 5).map((order: any) => {
+                  const orderId = order.id || order._id;
+                  return (
+                  <Link key={orderId} href={`/store-owner/orders/${orderId}`}>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -180,7 +182,7 @@ export default function StoreOwnerDashboard() {
                           </Badge>
                         </div>
                         <p className="text-xs text-gray-500 truncate">
-                          Order #{order.id.slice(-8)}
+                          Order #{orderId?.slice(-8) || 'N/A'}
                         </p>
                       </div>
                       <div className="text-right ml-4">
@@ -193,7 +195,8 @@ export default function StoreOwnerDashboard() {
                       </div>
                     </div>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
@@ -224,8 +227,10 @@ export default function StoreOwnerDashboard() {
             ) : payouts.length > 0 ? (
               <div className="space-y-3">
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {payouts.slice(0, 5).map((payout: any) => (
-                  <Link key={payout.id} href={`/store-owner/payouts/${payout.id}`}>
+                {payouts.slice(0, 5).map((payout: any) => {
+                  const payoutId = payout.id || payout._id;
+                  return (
+                  <Link key={payoutId} href={`/store-owner/payouts/${payoutId}`}>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -257,7 +262,8 @@ export default function StoreOwnerDashboard() {
                       </div>
                     </div>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">

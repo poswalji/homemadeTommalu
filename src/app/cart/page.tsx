@@ -204,10 +204,10 @@ export default function CartPage() {
                 })();
                 
                 return (
-                <Card key={menuItemId} className="p-4">
-                  <div className="flex gap-4">
+                <Card key={menuItemId} className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     {/* Item Image */}
-                    <div className="relative w-24 h-24 bg-gray-100 rounded overflow-hidden shrink-0">
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded overflow-hidden shrink-0">
                       {item.image ? (
                         <Image
                           src={item.image}
@@ -223,56 +223,61 @@ export default function CartPage() {
                     </div>
 
                     {/* Item Details */}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">{item.itemName}</h3>
-                      {item.storeName && (
-                        <p className="text-sm text-gray-500 mb-2">{item.storeName}</p>
-                      )}
-                      <p className="text-lg font-bold text-red-600 mb-3">
-                        ₹{item.price.toFixed(2)}
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{item.itemName}</h3>
+                          {item.storeName && (
+                            <p className="text-xs sm:text-sm text-gray-500 mb-2 truncate">{item.storeName}</p>
+                          )}
+                          <p className="text-base sm:text-lg font-bold text-red-600 mb-2 sm:mb-3">
+                            ₹{item.price.toFixed(2)}
+                          </p>
 
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center border rounded">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUpdateQuantity(menuItemId, (item.quantity || 1) - 1)}
-                            disabled={updateQuantity.isPending}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </Button>
-                          <span className="w-12 text-center">{item.quantity || 1}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUpdateQuantity(menuItemId, (item.quantity || 1) + 1)}
-                            disabled={updateQuantity.isPending}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
+                          {/* Quantity Controls */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center border rounded">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleUpdateQuantity(menuItemId, (item.quantity || 1) - 1)}
+                                disabled={updateQuantity.isPending}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Minus className="w-4 h-4" />
+                              </Button>
+                              <span className="w-10 sm:w-12 text-center text-sm sm:text-base">{item.quantity || 1}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleUpdateQuantity(menuItemId, (item.quantity || 1) + 1)}
+                                disabled={updateQuantity.isPending}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveItem(menuItemId)}
+                              disabled={removeItem.isPending}
+                              className="text-red-500 hover:text-red-700 text-xs sm:text-sm"
+                            >
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                              <span className="hidden sm:inline">Remove</span>
+                            </Button>
+                          </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveItem(menuItemId)}
-                          disabled={removeItem.isPending}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" />
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
 
-                    {/* Item Total */}
-                    <div className="text-right">
-                      <p className="font-semibold text-lg">
-                        ₹{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
-                      </p>
+                        {/* Item Total - Responsive */}
+                        <div className="text-left sm:text-right flex items-center justify-between sm:block">
+                          <span className="text-xs sm:text-sm text-gray-500 sm:hidden">Total:</span>
+                          <p className="font-semibold text-base sm:text-lg whitespace-nowrap">
+                            ₹{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </Card>

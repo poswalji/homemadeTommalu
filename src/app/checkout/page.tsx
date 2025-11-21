@@ -139,9 +139,10 @@ export default function CheckoutPage() {
         // Payment method is always cash_on_delivery (handled by backend)
       });
 
-      if (order.success && order.data?.id) {
+      if (order.success && (order.data?.id || order.data?._id)) {
+        const orderId = order.data.id || order.data._id;
         toast.success('Order placed successfully!');
-        router.push(`/orders/${order.data.id}`);
+        router.push(`/orders/${orderId}`);
       }
     } catch (error) {
       const errorMessage = handleApiError(error);

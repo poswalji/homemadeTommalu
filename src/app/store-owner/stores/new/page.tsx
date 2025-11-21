@@ -124,8 +124,9 @@ export default function CreateStorePage() {
             'Store created successfully! Now add menu items to your store.'
          );
          // Redirect to menu management page
-         if (response?.data?.id) {
-            router.push(`/store-owner/stores/${response.data.id}/menu`);
+         const storeId = response?.data?.id || response?.data?._id;
+         if (storeId) {
+            router.push(`/store-owner/stores/${storeId}/menu`);
          } else {
             router.push('/store-owner/stores');
          }

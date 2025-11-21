@@ -218,8 +218,8 @@ export default function DisputesPage() {
                             <span>Type: {dispute.type.replace('_', ' ')}</span>
                             <span>•</span>
                             <span>
-                              Order: <Link href={`/admin/orders/${dispute.orderId}`} className="text-blue-600 hover:underline">
-                                #{dispute.orderId.slice(-8)}
+                              Order: <Link href={`/admin/orders/${dispute.orderId || dispute.orderId?._id}`} className="text-blue-600 hover:underline">
+                                #{dispute.orderId?.slice(-8) || 'N/A'}
                               </Link>
                             </span>
                             <span>•</span>

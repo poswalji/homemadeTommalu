@@ -65,14 +65,29 @@ export function Footer() {
               <li>{appConfig.contact.email}</li>
               <li>{appConfig.contact.address}</li>
             </ul>
-            <div className="flex space-x-4 mt-4">
-              <a href={appConfig.social.facebook} target="_blank" rel="noopener noreferrer">
+            <div className="flex flex-wrap gap-3 mt-4">
+              <a 
+                href={appConfig.social.facebook} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900 text-sm transition-colors"
+              >
                 Facebook
               </a>
-              <a href={appConfig.social.instagram} target="_blank" rel="noopener noreferrer">
+              <a 
+                href={appConfig.social.instagram} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900 text-sm transition-colors"
+              >
                 Instagram
               </a>
-              <a href={appConfig.social.twitter} target="_blank" rel="noopener noreferrer">
+              <a 
+                href={appConfig.social.twitter} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900 text-sm transition-colors"
+              >
                 Twitter
               </a>
             </div>

@@ -43,11 +43,17 @@ export default function PayoutDetailPage() {
   const completeMutation = useCompletePayout();
 
   const handleApprove = async () => {
+    if (!payoutId) {
+      toast.error('Invalid payout ID');
+      
+      return;
+    }
+    
     try {
-      await approveMutation.mutateAsync(payoutId);
+      await approveMutation.mutateAsync(String(payoutId));
       toast.success('Payout approved successfully');
-    } catch (error) {
-      const errorMessage = handleApiError(error);
+    } catch (err) {
+      const errorMessage = handleApiError(err);
       toast.error(errorMessage);
     }
   };
@@ -59,18 +65,28 @@ export default function PayoutDetailPage() {
     }
 
     try {
+      let transferResponse = undefined;
+      if (completeForm.transferResponse && completeForm.transferResponse.trim()) {
+        try {
+          transferResponse = JSON.parse(completeForm.transferResponse);
+        } catch {
+          toast.error('Invalid JSON in transfer response');
+          return;
+        }
+      }
+      
       await completeMutation.mutateAsync({
         id: payoutId,
         data: {
           transferId: completeForm.transferId,
-          transferResponse: completeForm.transferResponse ? JSON.parse(completeForm.transferResponse) : undefined,
+          transferResponse,
         },
       });
       toast.success('Payout completed successfully');
       setCompleteDialogOpen(false);
       setCompleteForm({ transferId: '', transferResponse: '' });
-    } catch (error) {
-      const errorMessage = handleApiError(error);
+    } catch (err) {
+      const errorMessage = handleApiError(err);
       toast.error(errorMessage);
     }
   };

@@ -58,9 +58,15 @@ export default function PayoutsPage() {
     }
   };
 
-  const handleApprove = async (id: string) => {
+  const handleApprove = async (payout: any) => {
+    const payoutId = payout.id || payout._id;
+    if (!payoutId) {
+      toast.error('Invalid payout ID');
+      return;
+    }
+    
     try {
-      await approveMutation.mutateAsync(id);
+      await approveMutation.mutateAsync(String(payoutId));
       toast.success('Payout approved successfully');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -71,12 +77,27 @@ export default function PayoutsPage() {
   const handleComplete = async () => {
     if (!selectedPayout) return;
     
+    if (!completeForm.transferId) {
+      toast.error('Please enter transfer ID');
+      return;
+    }
+    
     try {
+      let transferResponse = undefined;
+      if (completeForm.transferResponse && completeForm.transferResponse.trim()) {
+        try {
+          transferResponse = JSON.parse(completeForm.transferResponse);
+        } catch (parseError) {
+          toast.error('Invalid JSON in transfer response');
+          return;
+        }
+      }
+      
       await completeMutation.mutateAsync({
-        id: selectedPayout.id,
+        id: selectedPayout.id || selectedPayout._id,
         data: {
           transferId: completeForm.transferId,
-          transferResponse: completeForm.transferResponse ? JSON.parse(completeForm.transferResponse) : undefined,
+          transferResponse,
         },
       });
       toast.success('Payout completed successfully');
@@ -347,7 +368,7 @@ export default function PayoutsPage() {
                         <Button
                           size="sm"
                           variant="default"
-                          onClick={() => handleApprove(payout.id)}
+                          onClick={() => handleApprove(payout)}
                           disabled={approveMutation.isPending}
                         >
                           {approveMutation.isPending ? (
@@ -426,7 +447,7 @@ export default function PayoutsPage() {
                           </DialogContent>
                         </Dialog>
                       )}
-                      <Link href={`/admin/payouts/${payout.id}`}>
+                      <Link href={`/admin/payouts/${payout.id || payout._id}`}>
                         <Button size="sm" variant="ghost">
                           <Download className="w-4 h-4 mr-2" />
                           View

@@ -127,9 +127,9 @@ export default function StoreOwnerOrdersPage() {
       if (searchTerm) {
          const searchLower = searchTerm.toLowerCase();
          return (
-            order.id?.toLowerCase().includes(searchLower) ||
-            order.customerName?.toLowerCase().includes(searchLower) ||
-            order.storeName?.toLowerCase().includes(searchLower)
+            order.id?.toLowerCase()?.includes(searchLower) ||
+            order.customerName?.toLowerCase()?.includes(searchLower) ||
+            order.storeName?.toLowerCase()?.includes(searchLower)
          );
       }
       if (statusFilter) {
@@ -240,7 +240,7 @@ export default function StoreOwnerOrdersPage() {
                                     <span className='flex items-center gap-1'>
                                        {getStatusIcon(order.status)}
                                        <span className="hidden sm:inline">{order.status}</span>
-                                       <span className="sm:hidden">{order.status.slice(0, 4)}</span>
+                                       <span className="sm:hidden">{order.status?.slice(0, 4) || ''}</span>
                                     </span>
                                  </Badge>
                               </div>
@@ -362,7 +362,7 @@ export default function StoreOwnerOrdersPage() {
 
                         <div className='flex flex-col sm:flex-row gap-2'>
                            <Link
-                              href={`/store-owner/orders/${order.id}`}
+                              href={`/store-owner/orders/${order.id || order._id}`}
                               className='flex-1'>
                               <Button
                                  variant='outline'

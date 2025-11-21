@@ -308,11 +308,21 @@ export default function AdminStoreDetailPage() {
     }
 
     try {
+      let transferResponse = undefined;
+      if (payoutForm.transferResponse && payoutForm.transferResponse.trim()) {
+        try {
+          transferResponse = JSON.parse(payoutForm.transferResponse);
+        } catch (parseError) {
+          toast.error('Invalid JSON in transfer response');
+          return;
+        }
+      }
+      
       await completePayout.mutateAsync({
         id: selectedPayout.id || selectedPayout._id,
         data: {
           transferId: payoutForm.transferId,
-          transferResponse: payoutForm.transferResponse ? JSON.parse(payoutForm.transferResponse) : undefined,
+          transferResponse,
         },
       });
       toast.success('Payout completed successfully');
@@ -768,6 +778,7 @@ export default function AdminStoreDetailPage() {
                 <h2 className="text-xl font-bold">Payouts</h2>
                 <Button
                   size="sm"
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
                   onClick={() => {
                     setPayoutDialog({ type: 'generate', isOpen: true });
                     setPayoutForm({ periodStart: '', periodEnd: '', transferId: '', transferResponse: '' });
@@ -791,36 +802,37 @@ export default function AdminStoreDetailPage() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <CreditCard className="w-5 h-5 text-blue-500" />
                             <div className="flex items-center gap-2">
                               {getPayoutStatusBadge(payout.status)}
                               <span className="text-sm text-gray-500">
-                                {new Date(payout.createdAt).toLocaleDateString()}
+                                {new Date(payout.createdAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
                               </span>
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mb-2">
-                            <div>
-                              <span className="text-gray-500">Amount: </span>
-                              <span className="font-semibold">
-                                ₹{payout.netPayoutAmount?.toLocaleString('en-IN') || 0}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Commission: </span>
-                              <span className="font-semibold">
-                                ₹{payout.commissionDeducted?.toLocaleString('en-IN') || 0}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Orders: </span>
-                              <span className="font-semibold">{payout.orderCount || 0}</span>
+                          <div className="space-y-1 text-sm mb-2">
+                            <div className="flex flex-wrap gap-4">
+                              <div>
+                                <span className="text-gray-500">Amount </span>
+                                <span className="font-semibold">
+                                  ₹{payout.totalAmount?.toLocaleString('en-IN') || payout.netPayoutAmount?.toLocaleString('en-IN') || 0}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Commission </span>
+                                <span className="font-semibold">
+                                  ₹{payout.commissionDeducted?.toLocaleString('en-IN') || 0}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Orders: </span>
+                                <span className="font-semibold">{payout.orderCount || 0}</span>
+                              </div>
                             </div>
                             <div>
                               <span className="text-gray-500">Period: </span>
                               <span className="font-semibold text-xs">
-                                {new Date(payout.periodStart).toLocaleDateString()} -{' '}
-                                {new Date(payout.periodEnd).toLocaleDateString()}
+                                {new Date(payout.periodStart).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} -{' '}
+                                {new Date(payout.periodEnd).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
                               </span>
                             </div>
                           </div>
@@ -829,7 +841,7 @@ export default function AdminStoreDetailPage() {
                           {payout.status === 'pending' && (
                             <Button
                               size="sm"
-                              variant="default"
+                              className="bg-orange-500 hover:bg-orange-600 text-white"
                               onClick={() => handleApprovePayout(payout.id || payout._id)}
                               disabled={approvePayout.isPending}
                             >
@@ -840,7 +852,7 @@ export default function AdminStoreDetailPage() {
                           {payout.status === 'approved' && (
                             <Button
                               size="sm"
-                              variant="default"
+                              className="bg-orange-500 hover:bg-orange-600 text-white"
                               onClick={() => {
                                 setSelectedPayout(payout);
                                 setPayoutDialog({ type: 'complete', isOpen: true });

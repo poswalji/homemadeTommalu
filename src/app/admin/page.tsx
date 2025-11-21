@@ -56,7 +56,7 @@ export default function AdminDashboard() {
       icon: DollarSign,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
-      link: '/admin/analytics/revenue',
+      link: '/admin/analytics',
     },
     {
       title: 'Active Stores',

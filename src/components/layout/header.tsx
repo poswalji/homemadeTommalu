@@ -98,9 +98,19 @@ export function Header() {
                            Food
                         </Link>
                         <Link
+                           href='/browse?category=Bakery'
+                           className='text-base font-medium text-gray-900'>
+                           Bakery
+                        </Link>
+                        <Link
                            href='/browse?category=Groceries+%26+Essentials'
                            className='text-base font-medium text-gray-900'>
                            Grocery
+                        </Link>
+                        <Link
+                           href='/browse?category=Homemade+Food'
+                           className='text-base font-medium text-gray-900'>
+                           Homemade Food
                         </Link>
                         {!isAuthenticated && (
                            <Link
@@ -220,10 +230,22 @@ export function Header() {
                         Food
                      </Link>
                      <Link
+                        href='/browse?category=Bakery'
+                        className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
+                        onClick={() => setMobileMenuOpen(false)}>
+                        Bakery
+                     </Link>
+                     <Link
                         href='/browse?category=Groceries+%26+Essentials'
                         className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
                         onClick={() => setMobileMenuOpen(false)}>
                         Grocery
+                     </Link>
+                     <Link
+                        href='/browse?category=Homemade+Food'
+                        className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
+                        onClick={() => setMobileMenuOpen(false)}>
+                        Homemade Food
                      </Link>
 
                      <div className='pt-4 border-t space-y-2'>

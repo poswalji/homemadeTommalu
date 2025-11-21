@@ -34,7 +34,7 @@ export default function BrowsePage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: categoriesData } = useCategories();
-  const categories: Array<{ name: string }> = categoriesData?.data || [];
+  const categories: Array<{ name: string; image?: string }> = categoriesData?.data || [];
 
   const { data: productsData, isLoading, isError } = useProducts({
     category: selectedCategory || undefined,
@@ -131,6 +131,58 @@ export default function BrowsePage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8">
+        {/* Categories Horizontal Scroll */}
+        {categories.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-3">Browse Categories</h2>
+            <div className="overflow-x-auto pb-2 -mx-4 px-4">
+              <div className="flex gap-4 min-w-max">
+                <button
+                  onClick={() => handleCategorySelect('')}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all min-w-[100px] ${
+                    selectedCategory === ''
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                    selectedCategory === '' ? 'bg-blue-100' : 'bg-gray-100'
+                  }`}>
+                    <span className="text-2xl">🍽️</span>
+                  </div>
+                  <span className="text-xs font-medium text-center">All</span>
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.name}
+                    onClick={() => handleCategorySelect(cat.name)}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all min-w-[100px] ${
+                      selectedCategory === cat.name
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center overflow-hidden ${
+                      selectedCategory === cat.name ? 'bg-blue-100' : 'bg-gray-100'
+                    }`}>
+                      {cat.image ? (
+                        <img 
+                          src={cat.image} 
+                          alt={cat.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-2xl">📦</span>
+                      )}
+                    </div>
+                    <span className="text-xs font-medium text-center">{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Search and Filters Section */}
         <div className="mb-8">
           <form onSubmit={handleSearch} className="mb-4">
