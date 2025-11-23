@@ -14,9 +14,10 @@ import { Footer } from '@/components/layout/footer';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/axios';
-import { MapPin, CreditCard, Check, Plus } from 'lucide-react';
+import { MapPin, CreditCard, Check, Plus, MessageCircle } from 'lucide-react';
 import { LocationPicker } from '@/components/maps/location-picker';
 import { cn } from '@/lib/utils';
+import { appConfig } from '@/config/app.config';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -148,6 +149,59 @@ export default function CheckoutPage() {
       const errorMessage = handleApiError(error);
       toast.error(errorMessage);
     }
+  };
+
+  const handleWhatsAppOrder = () => {
+    if (!hasItems) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    // Validate form
+    if (!formData.street || !formData.city || !formData.pincode) {
+      toast.error('Please fill in all required address fields');
+      return;
+    }
+
+    // Format order items
+    const itemsText = items
+      .map((item: any) => {
+        const itemName = item.itemName || item.name || 'Item';
+        const quantity = item.quantity || 1;
+        const price = Number(item.price) || 0;
+        const itemTotal = price * quantity;
+        return `• ${itemName} x${quantity} = ₹${itemTotal.toFixed(2)}`;
+      })
+      .join('\n');
+
+    // Format delivery address
+    const addressText = `${formData.label}\n${formData.street}\n${formData.city}${formData.state ? `, ${formData.state}` : ''}\n${formData.pincode}${formData.country ? `, ${formData.country}` : ''}`;
+
+    // Build WhatsApp message
+    let message = `🍽️ *New Order Request*\n\n`;
+    
+    if (cart?.storeName) {
+      message += `🏪 *Store:* ${cart.storeName}\n\n`;
+    }
+    
+    message += `📦 *Order Items:*\n${itemsText}\n\n`;
+    message += `📍 *Delivery Address:*\n${addressText}\n\n`;
+    message += `💰 *Order Summary:*\n`;
+    message += `Items Total: ₹${totalAmount.toFixed(2)}\n`;
+    message += `Delivery Charge: ₹${deliveryCharge.toFixed(2)}\n`;
+    
+    if (cart?.discount) {
+      message += `Discount (${cart.discount.code}): -₹${discountAmount.toFixed(2)}\n`;
+    }
+    
+    message += `\n*Total Amount: ₹${finalAmount.toFixed(2)}*\n\n`;
+    message += `💳 Payment Method: Cash on Delivery\n\n`;
+    message += `Please confirm this order. Thank you! 🙏`;
+
+    const phoneNumber = appConfig.contact.whatsapp;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/91${phoneNumber}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (cartLoading) {
@@ -443,24 +497,34 @@ export default function CheckoutPage() {
                 <span>₹{finalAmount.toFixed(2)}</span>
               </div>
 
+              {/* WhatsApp Order Button */}
               <Button
-                type="submit"
-                className="w-full"
+                type="button"
+                onClick={handleWhatsAppOrder}
+                className="w-full mb-3 bg-[#25D366] hover:bg-[#20BA5A] text-white"
                 size="lg"
-                disabled={createOrder.isPending || !hasItems}
+                disabled={!hasItems}
               >
-                {createOrder.isPending ? (
-                  <>
-                    <Spinner size="sm" className="mr-2" />
-                    Placing Order...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-5 h-5 mr-2" />
-                    Place Order
-                  </>
-                )}
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Order via WhatsApp
               </Button>
+
+              {/* Backend Order Button - Disabled */}
+              <div className="space-y-2">
+                <Button
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                  disabled={true}
+                  variant="outline"
+                >
+                  <Check className="w-5 h-5 mr-2" />
+                  Place Order (Backend)
+                </Button>
+                <p className="text-xs text-center text-amber-600 font-medium">
+                  ⚠️ Currently getting technical error
+                </p>
+              </div>
             </Card>
           </div>
         </form>
