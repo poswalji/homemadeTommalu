@@ -16,7 +16,7 @@ export default function BrowsePage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
+
   // Read initial values from URL params
   const initialCategory = searchParams?.get('category') || '';
   const initialType = searchParams?.get('type') || '';
@@ -53,17 +53,17 @@ export default function BrowsePage() {
   // Update URL params when filters change
   useEffect(() => {
     const params = new URLSearchParams();
-    
+
     if (selectedCategory) params.set('category', selectedCategory);
     if (selectedFoodType) params.set('type', selectedFoodType);
     if (searchQuery) params.set('search', searchQuery);
     if (currentPage > 1) params.set('page', currentPage.toString());
     if (sortBy !== 'name') params.set('sortBy', sortBy);
     if (sortOrder !== 'asc') params.set('sortOrder', sortOrder);
-    
+
     const queryString = params.toString();
     const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
-    
+
     // Only update URL if it's different to avoid infinite loops
     const currentSearch = window.location.search || '';
     const newSearch = queryString ? `?${queryString}` : '';
@@ -81,7 +81,7 @@ export default function BrowsePage() {
     const page = parseInt(searchParams?.get('page') || '1', 10);
     const sort = searchParams?.get('sortBy') || 'name';
     const order = (searchParams?.get('sortOrder') || 'asc') as 'asc' | 'desc';
-    
+
     if (category !== selectedCategory) setSelectedCategory(category);
     if (type !== selectedFoodType) setSelectedFoodType(type);
     if (search !== searchQuery) setSearchQuery(search);
@@ -131,57 +131,8 @@ export default function BrowsePage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8">
-        {/* Categories Horizontal Scroll */}
-        {categories.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-3">Browse Categories</h2>
-            <div className="overflow-x-auto pb-2 -mx-4 px-4">
-              <div className="flex gap-4 min-w-max">
-                <button
-                  onClick={() => handleCategorySelect('')}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all min-w-[100px] ${
-                    selectedCategory === ''
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    selectedCategory === '' ? 'bg-blue-100' : 'bg-gray-100'
-                  }`}>
-                    <span className="text-2xl">🍽️</span>
-                  </div>
-                  <span className="text-xs font-medium text-center">All</span>
-                </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat.name}
-                    onClick={() => handleCategorySelect(cat.name)}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all min-w-[100px] ${
-                      selectedCategory === cat.name
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center overflow-hidden ${
-                      selectedCategory === cat.name ? 'bg-blue-100' : 'bg-gray-100'
-                    }`}>
-                      {cat.image ? (
-                        <img 
-                          src={cat.image} 
-                          alt={cat.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-2xl">📦</span>
-                      )}
-                    </div>
-                    <span className="text-xs font-medium text-center">{cat.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+
+
 
         {/* Search and Filters Section */}
         <div className="mb-8">

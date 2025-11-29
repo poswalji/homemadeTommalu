@@ -19,7 +19,7 @@ const STORE_CATEGORIES = [
    'Grocery Store',
    'Bakery',
    'Pharmacy',
-   'Vegetable & Fruits',
+   'Homemade Food',
    'Dairy',
    'Other',
 ];
@@ -133,8 +133,8 @@ export default function CreateStorePage() {
       } catch (error: any) {
          toast.error(
             error?.response?.data?.error?.message ||
-               error?.response?.data?.message ||
-               'Failed to create store'
+            error?.response?.data?.message ||
+            'Failed to create store'
          );
       }
    };
