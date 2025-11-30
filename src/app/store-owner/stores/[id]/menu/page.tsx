@@ -45,57 +45,7 @@ import {
 } from '@/components/ui/select';
 import { useParams } from 'next/navigation';
 
-const MENU_CATEGORIES = [
-   'Veg Main Course',
-   'Non-Veg Main Course',
-   'Starters & Snacks',
-   'Breads & Rice',
-   'Drinks & Beverages',
-   'Dairy & Eggs',
-   'Groceries & Essentials',
-   'Fruits & Vegetables',
-   'Sweets & Desserts',
-   'Fast Food',
-   'Bakery Items',
-   'Grains & Pulses',
-   'Meat & Seafood',
-   'Other',
-];
-
-const STORE_CATEGORY_MAPPING: Record<string, string[]> = {
-   Restaurant: [
-      'Veg Main Course',
-      'Non-Veg Main Course',
-      'Starters & Snacks',
-      'Breads & Rice',
-      'Drinks & Beverages',
-      'Sweets & Desserts',
-      'Fast Food',
-      'Other',
-   ],
-   'Homemade Food': [
-      'Veg Main Course',
-      'Non-Veg Main Course',
-      'Starters & Snacks',
-      'Breads & Rice',
-      'Drinks & Beverages',
-      'Sweets & Desserts',
-      'Fast Food',
-      'Other',
-   ],
-   'Grocery Store': [
-      'Groceries & Essentials',
-      'Dairy & Eggs',
-      'Fruits & Vegetables',
-      'Grains & Pulses',
-      'Bakery Items',
-      'Other',
-   ],
-   Bakery: ['Bakery Items', 'Sweets & Desserts', 'Drinks & Beverages', 'Other'],
-   Pharmacy: ['Other'],
-   Dairy: ['Dairy & Eggs', 'Sweets & Desserts', 'Other'],
-   Other: MENU_CATEGORIES,
-};
+import { STORE_CATEGORY_MAPPING, MENU_CATEGORIES } from '@/config/categories.config';
 
 const FOOD_TYPES = ['veg', 'non-veg', 'egg', 'vegan'];
 

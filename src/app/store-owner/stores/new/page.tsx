@@ -14,15 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
-const STORE_CATEGORIES = [
-   'Restaurant',
-   'Grocery Store',
-   'Bakery',
-   'Pharmacy',
-   'Homemade Food',
-   'Dairy',
-   'Other',
-];
+import { STORE_CATEGORIES } from '@/config/categories.config';
 
 export default function CreateStorePage() {
    const router = useRouter();

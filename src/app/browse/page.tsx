@@ -11,6 +11,7 @@ import { Search, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { STORE_CATEGORY_MAPPING, MENU_CATEGORIES } from '@/config/categories.config';
 
 export default function BrowsePage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function BrowsePage() {
   const searchParams = useSearchParams();
 
   // Read initial values from URL params
+  const initialStoreType = searchParams?.get('storeType') || '';
   const initialCategory = searchParams?.get('category') || '';
   const initialType = searchParams?.get('type') || '';
   const initialSearch = searchParams?.get('search') || '';
@@ -34,7 +36,15 @@ export default function BrowsePage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: categoriesData } = useCategories();
-  const categories: Array<{ name: string; image?: string }> = categoriesData?.data || [];
+  // Filter categories based on store type if selected
+  const allCategories = categoriesData?.data || [];
+  const availableCategories = initialStoreType
+    ? (STORE_CATEGORY_MAPPING[initialStoreType] || MENU_CATEGORIES)
+    : allCategories.map((c: any) => c.name);
+
+  const displayedCategories = allCategories.filter((cat: any) =>
+    !initialStoreType || availableCategories.includes(cat.name)
+  );
 
   const { data: productsData, isLoading, isError } = useProducts({
     category: selectedCategory || undefined,
@@ -207,7 +217,7 @@ export default function BrowsePage() {
                     >
                       All
                     </Button>
-                    {categories.map((cat) => (
+                    {displayedCategories.map((cat: any) => (
                       <Button
                         key={cat.name}
                         variant={selectedCategory === cat.name ? 'default' : 'outline'}
