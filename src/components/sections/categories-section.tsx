@@ -18,7 +18,7 @@ export function CategoriesSection() {
         <div className="absolute top-0 left-0 w-96 h-96 bg-[lab(66%_50.34_52.19)] rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-[lab(70%_50.34_52.19)] rounded-full blur-3xl"></div>
       </div>
-      
+
       <div className="container px-4 md:px-20 mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -36,7 +36,7 @@ export function CategoriesSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="flex overflow-x-auto pb-6 gap-4 snap-x md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 scrollbar-hide">
           {categories.map((category: any, index: number) => (
             <motion.div
               key={category.name}
@@ -44,10 +44,10 @@ export function CategoriesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="group cursor-pointer"
+              className="group cursor-pointer min-w-[200px] md:min-w-0 snap-center"
               onClick={() => router.push(`/browse?category=${encodeURIComponent(category.name)}`)}
             >
-              <Card className={`h-full transition-all duration-300 bg-gray-50 hover:bg-gray-100 border-none shadow-md hover:shadow-xl transform hover:-translate-y-2`}>
+              <Card className={`h-full transition-all duration-300 bg-gray-50 hover:bg-gray-100 border-none shadow-md hover:shadow-xl transform hover:-translate-y-2 rounded-2xl`}>
                 <CardContent className="p-6">
                   <div className="text-6xl mb-4 text-center">{category.emoji || '🛒'}</div>
                   <h3 className="text-xl font-bold mb-2 text-center">{category.name}</h3>

@@ -1,7 +1,7 @@
 export const appConfig = {
   name: "Tommalu",
   description:
-    "Hyperlocal delivery in Achrol & NIMS — Homemade food, restaurant meals, groceries and daily essentials delivered fast.",
+    "Hyperlocal delivery in Achrol & NIMS — Homemade food, restaurant meals, groceries, bakery items and daily essentials delivered fast.",
 
   url: process.env.NEXT_PUBLIC_APP_URL || "https://tommalu.com",
   apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
