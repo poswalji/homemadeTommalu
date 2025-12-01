@@ -5,14 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCategories } from "@/hooks/api/use-public";
+import { useStoreCategories } from "@/hooks/api/use-public";
 import { STORE_CATEGORY_DETAILS } from "@/config/categories.config";
 import { Spinner } from "@/components/ui/spinner";
 
 export function StoreCategoriesSection() {
     const router = useRouter();
-    const { data: categoriesData, isLoading } = useCategories();
-    const categories = categoriesData?.data || [];
+    const { data: categories, isLoading } = useStoreCategories();
 
     const handleCategoryClick = (categoryName: string) => {
         router.push(`/category/${encodeURIComponent(categoryName)}`);
@@ -26,7 +25,7 @@ export function StoreCategoriesSection() {
         );
     }
 
-    if (!categories.length) return null;
+    if (!categories?.length) return null;
 
     return (
         <section className="py-16 md:py-24 bg-red-500 relative overflow-hidden">
@@ -49,8 +48,8 @@ export function StoreCategoriesSection() {
 
                 <div className="relative">
                     <div className="flex overflow-x-auto pb-8 gap-6 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-                        {categories.map((category: any, index: number) => {
-                            const storeName = category.name;
+                        {categories?.map((category: any, index: number) => {
+                            const storeName = category;
                             const details = STORE_CATEGORY_DETAILS[storeName] || {
                                 emoji: "🏪",
                                 description: "Store",
