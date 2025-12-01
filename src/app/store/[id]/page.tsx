@@ -18,8 +18,8 @@ export default function StorePage() {
 
     const { data: storeData, isLoading, isError } = useStoreMenu(storeId);
 
-    const store = storeData?.data?.store;
-    const menu = storeData?.data?.menu || [];
+    const store = storeData?.store;
+    const menu = storeData?.data || [];
 
     // Group menu items by category
     const groupedMenu = menu.reduce((acc: any, item: any) => {
