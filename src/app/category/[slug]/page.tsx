@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useStores } from "@/hooks/api/use-public";
+import { StoreCategory } from "@/services/api/public.api";
 import { StoreCard } from "@/components/stores/store-card";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -17,7 +18,7 @@ export default function CategoryPage() {
     const categoryName = decodeURIComponent(slug);
 
     const { data: storesData, isLoading, isError } = useStores({
-        category: categoryName,
+        category: categoryName as StoreCategory,
     });
 
     const stores = storesData?.data || [];
