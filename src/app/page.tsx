@@ -20,7 +20,6 @@ export default function Home() {
         <StatsSection />
         <HowItWorksSection />
         <WhatsAppButton />
-
       </main>
       <Footer />
     </div>
