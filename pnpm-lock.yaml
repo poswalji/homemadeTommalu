@@ -27,7 +27,7 @@ importers:
         specifier: ^1.1.13
         version: 1.1.13(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@tanstack/react-query':
-        specifier: ^5.90.11
+        specifier: ^5.90.5
         version: 5.90.11(react@19.2.0)
       '@tanstack/react-query-devtools':
         specifier: ^5.90.2
