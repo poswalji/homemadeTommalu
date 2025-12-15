@@ -1,34 +1,60 @@
 export const appConfig = {
   name: "Tommalu",
-  description: "Your trusted partner for fresh groceries and delicious food delivery in Jaipur",
+  description:
+    "Hyperlocal delivery in Achrol & NIMS — Homemade food, restaurant meals, groceries, bakery items and daily essentials delivered fast.",
+
   url: process.env.NEXT_PUBLIC_APP_URL || "https://tommalu.com",
   apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
+
   keywords: [
-    "food delivery nims",
-    "food delivery Achrol",
-    "fresh groceries Achrol",
-    "online grocery shopping",
-    "restaurant food delivery",
-    "Tommalu food delivery",
-    "fast delivery Jaipur",
-    "best grocery delivery",
+    "homemade food delivery Achrol",
+    "home cooked meals NIMS Jaipur",
+    "Achrol food delivery service",
+    "Jaipur hyperlocal delivery",
+    "grocery delivery Achrol",
+    "tiffin service NIMS",
+    "order homemade lunch Achrol",
+    "order dinner NIMS hostel",
   ],
+
+  ogImage: "/og/og-image.png",
+  favicon: "/favicon.ico",
+  author: "Tommalu",
+  themeColor: "#ffffff",
+
   social: {
     facebook: "https://facebook.com/tommalu",
     instagram: "https://instagram.com/tommalu",
     twitter: "https://twitter.com/tommalu",
   },
+
   contact: {
     phone: "+91 7742892352",
-    whatsapp: "7742892352", // WhatsApp number without country code prefix
+    whatsapp: "7742892352",
     email: "support@tommalu.com",
-    address: "Jaipur, Rajasthan, India",
+    address: "Achrol & NIMS Area, Jaipur",
   },
+
   features: [
-    { icon: "🚚", title: "Fast Delivery", description: "Quick 20-30 min delivery" },
-    { icon: "🌿", title: "Fresh Groceries", description: "Farm-fresh produce daily" },
-    { icon: "🔒", title: "Secure Payment", description: "100% secure transactions" },
-    { icon: "⭐", title: "Quality Assured", description: "Verified restaurants & stores" },
+    {
+      icon: "🍱",
+      title: "Homemade Food",
+      description: "Fresh home-cooked meals on pre-order",
+    },
+    {
+      icon: "🥬",
+      title: "Local Groceries",
+      description: "Fast delivery of essentials from trusted stores",
+    },
+    {
+      icon: "🚚",
+      title: "Hyperfast Delivery",
+      description: "Average 25–40 min within Achrol/NIMS",
+    },
+    {
+      icon: "💳",
+      title: "Easy Payment",
+      description: "Cash, UPI, and wallet payments supported",
+    },
   ],
 };
-

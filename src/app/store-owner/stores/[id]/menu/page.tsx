@@ -7,6 +7,7 @@ import {
    useUpdateMenuItem,
    useDeleteMenuItem,
    useToggleMenuItemAvailability,
+   useStore,
 } from '@/hooks/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,22 +45,7 @@ import {
 } from '@/components/ui/select';
 import { useParams } from 'next/navigation';
 
-const MENU_CATEGORIES = [
-   'Veg Main Course',
-   'Non-Veg Main Course',
-   'Starters & Snacks',
-   'Breads & Rice',
-   'Drinks & Beverages',
-   'Dairy & Eggs',
-   'Groceries & Essentials',
-   'Fruits & Vegetables',
-   'Sweets & Desserts',
-   'Fast Food',
-   'Bakery Items',
-   'Grains & Pulses',
-   'Meat & Seafood',
-   'Other',
-];
+import { STORE_CATEGORY_MAPPING, MENU_CATEGORIES } from '@/config/categories.config';
 
 const FOOD_TYPES = ['veg', 'non-veg', 'egg', 'vegan'];
 
@@ -67,10 +53,15 @@ export default function MenuManagementPage() {
    const params = useParams();
    const id = params?.id as string;
    const { data, isLoading } = useStoreOwnerMenu(id);
+   const { data: storeData } = useStore(id);
    const createMenuItem = useCreateMenuItem();
    const updateMenuItem = useUpdateMenuItem();
    const deleteMenuItem = useDeleteMenuItem();
    const toggleAvailability = useToggleMenuItemAvailability();
+
+   const storeCategory = storeData?.data?.category || 'Other';
+   const availableCategories =
+      STORE_CATEGORY_MAPPING[storeCategory] || MENU_CATEGORIES;
 
    const [showForm, setShowForm] = useState(false);
    const [editingItem, setEditingItem] = useState<any>(null);
@@ -190,7 +181,7 @@ export default function MenuManagementPage() {
       } catch (error: any) {
          toast.error(
             error?.response?.data?.error?.message ||
-               'Failed to delete menu item'
+            'Failed to delete menu item'
          );
       }
    };
@@ -201,7 +192,7 @@ export default function MenuManagementPage() {
       } catch (error: any) {
          toast.error(
             error?.response?.data?.error?.message ||
-               'Failed to toggle availability'
+            'Failed to toggle availability'
          );
       }
    };
@@ -246,308 +237,308 @@ export default function MenuManagementPage() {
                </div>
             </div>
 
-         {/* Menu Items Grid */}
-         {menuItems.length === 0 ? (
-            <Card className='p-12 text-center bg-white border-2 border-dashed border-gray-300 rounded-lg'>
-               <div className='flex flex-col items-center'>
-                  <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4'>
-                     <Package className='w-8 h-8 text-gray-400' />
+            {/* Menu Items Grid */}
+            {menuItems.length === 0 ? (
+               <Card className='p-12 text-center bg-white border-2 border-dashed border-gray-300 rounded-lg'>
+                  <div className='flex flex-col items-center'>
+                     <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4'>
+                        <Package className='w-8 h-8 text-gray-400' />
+                     </div>
+                     <h3 className='text-xl font-semibold text-gray-900 mb-2'>No menu items yet</h3>
+                     <p className='text-gray-600 mb-6 max-w-md'>
+                        Add your first menu item to get started
+                     </p>
+                     <Button
+                        onClick={() => setShowForm(true)}>
+                        <Plus className='w-4 h-4 mr-2' />
+                        Add Menu Item
+                     </Button>
                   </div>
-                  <h3 className='text-xl font-semibold text-gray-900 mb-2'>No menu items yet</h3>
-                  <p className='text-gray-600 mb-6 max-w-md'>
-                     Add your first menu item to get started
-                  </p>
-                  <Button 
-                     onClick={() => setShowForm(true)}>
-                     <Plus className='w-4 h-4 mr-2' />
-                     Add Menu Item
-                  </Button>
-               </div>
-            </Card>
-         ) : (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-               {menuItems.map((item: any) => (
-                  <Card
-                     key={item.id}
-                     className='bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow'>
-                     <div className='flex items-start justify-between mb-4'>
-                        <div className='flex-1 pr-2'>
-                           <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-                              {item.name}
-                           </h3>
-                           <p className='text-2xl font-bold text-gray-900 mb-2'>
-                              ₹{item.price}
-                           </p>
-                           {item.description && (
-                              <p className='text-sm text-gray-600 line-clamp-2'>
-                                 {item.description}
+               </Card>
+            ) : (
+               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                  {menuItems.map((item: any) => (
+                     <Card
+                        key={item.id}
+                        className='bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow'>
+                        <div className='flex items-start justify-between mb-4'>
+                           <div className='flex-1 pr-2'>
+                              <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+                                 {item.name}
+                              </h3>
+                              <p className='text-2xl font-bold text-gray-900 mb-2'>
+                                 ₹{item.price}
                               </p>
+                              {item.description && (
+                                 <p className='text-sm text-gray-600 line-clamp-2'>
+                                    {item.description}
+                                 </p>
+                              )}
+                           </div>
+                           <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => handleToggleAvailability(item.id)}
+                              disabled={toggleAvailability.isPending}>
+                              {item.isAvailable ? (
+                                 <ToggleRight className='w-5 h-5 text-green-600' />
+                              ) : (
+                                 <ToggleLeft className='w-5 h-5 text-gray-400' />
+                              )}
+                           </Button>
+                        </div>
+
+                        <div className='flex items-center gap-2 mb-4 flex-wrap'>
+                           <Badge variant='outline'>{item.category}</Badge>
+                           <Badge variant={item.foodType === 'veg' ? 'default' : 'secondary'}>
+                              {item.foodType}
+                           </Badge>
+                           {!item.isAvailable && (
+                              <Badge variant='secondary'>Unavailable</Badge>
                            )}
                         </div>
-                        <Button
-                           variant='ghost'
-                           size='sm'
-                           onClick={() => handleToggleAvailability(item.id)}
-                           disabled={toggleAvailability.isPending}>
-                           {item.isAvailable ? (
-                              <ToggleRight className='w-5 h-5 text-green-600' />
-                           ) : (
-                              <ToggleLeft className='w-5 h-5 text-gray-400' />
-                           )}
-                        </Button>
-                     </div>
 
-                     <div className='flex items-center gap-2 mb-4 flex-wrap'>
-                        <Badge variant='outline'>{item.category}</Badge>
-                        <Badge variant={item.foodType === 'veg' ? 'default' : 'secondary'}>
-                           {item.foodType}
-                        </Badge>
-                        {!item.isAvailable && (
-                           <Badge variant='secondary'>Unavailable</Badge>
-                        )}
-                     </div>
+                        <div className='flex gap-2 pt-4 border-t border-gray-100'>
+                           <Button
+                              variant='outline'
+                              size='sm'
+                              className='flex-1'
+                              onClick={() => handleEdit(item)}>
+                              <Edit className='w-4 h-4 mr-2' />
+                              Edit
+                           </Button>
+                           <Button
+                              variant='outline'
+                              size='sm'
+                              className='text-red-600 hover:text-red-700'
+                              onClick={() => setShowDeleteDialog(item.id)}>
+                              <Trash2 className='w-4 h-4' />
+                           </Button>
+                        </div>
+                     </Card>
+                  ))}
+               </div>
+            )}
 
-                     <div className='flex gap-2 pt-4 border-t border-gray-100'>
-                        <Button
-                           variant='outline'
-                           size='sm'
-                           className='flex-1'
-                           onClick={() => handleEdit(item)}>
-                           <Edit className='w-4 h-4 mr-2' />
-                           Edit
-                        </Button>
-                        <Button
-                           variant='outline'
-                           size='sm'
-                           className='text-red-600 hover:text-red-700'
-                           onClick={() => setShowDeleteDialog(item.id)}>
-                           <Trash2 className='w-4 h-4' />
-                        </Button>
-                     </div>
-                  </Card>
-               ))}
-            </div>
-         )}
+            {/* Add/Edit Form Dialog */}
+            {showForm && (
+               <Dialog
+                  open={showForm}
+                  onOpenChange={setShowForm}>
+                  <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
+                     <DialogHeader>
+                        <DialogTitle>
+                           {editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
+                        </DialogTitle>
+                        <DialogDescription>
+                           {editingItem
+                              ? 'Update the menu item details'
+                              : 'Add a new item to your menu'}
+                        </DialogDescription>
+                     </DialogHeader>
 
-         {/* Add/Edit Form Dialog */}
-         {showForm && (
-            <Dialog
-               open={showForm}
-               onOpenChange={setShowForm}>
-               <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
-                  <DialogHeader>
-                     <DialogTitle>
-                        {editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
-                     </DialogTitle>
-                     <DialogDescription>
-                        {editingItem
-                           ? 'Update the menu item details'
-                           : 'Add a new item to your menu'}
-                     </DialogDescription>
-                  </DialogHeader>
-
-                  <form
-                     onSubmit={handleSubmit}
-                     className='space-y-4'>
-                     <div>
-                        <Label htmlFor='name'>Name *</Label>
-                        <Input
-                           id='name'
-                           name='name'
-                           value={formData.name}
-                           onChange={handleInputChange}
-                           placeholder='Item name'
-                           required
-                           className='mt-1'
-                        />
-                     </div>
-
-                     <div className='grid grid-cols-2 gap-4'>
+                     <form
+                        onSubmit={handleSubmit}
+                        className='space-y-4'>
                         <div>
-                           <Label htmlFor='price'>Price (₹) *</Label>
+                           <Label htmlFor='name'>Name *</Label>
                            <Input
-                              id='price'
-                              name='price'
-                              type='number'
-                              step='0.01'
-                              min='0'
-                              value={formData.price}
+                              id='name'
+                              name='name'
+                              value={formData.name}
                               onChange={handleInputChange}
-                              placeholder='0.00'
+                              placeholder='Item name'
                               required
                               className='mt-1'
                            />
                         </div>
-                        <div>
-                           <Label htmlFor='category'>Category *</Label>
-                           <Select
-                              value={formData.category}
-                              onValueChange={(value) =>
-                                 setFormData((prev) => ({
-                                    ...prev,
-                                    category: value,
-                                 }))
-                              }>
-                              <SelectTrigger className='mt-1'>
-                                 <SelectValue placeholder='Select category' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                 {MENU_CATEGORIES.map((cat) => (
-                                    <SelectItem
-                                       key={cat}
-                                       value={cat}>
-                                       {cat}
-                                    </SelectItem>
-                                 ))}
-                              </SelectContent>
-                           </Select>
-                        </div>
-                     </div>
 
-                     <div>
-                        <Label htmlFor='description'>Description</Label>
-                        <Textarea
-                           id='description'
-                           name='description'
-                           value={formData.description}
-                           onChange={handleInputChange}
-                           placeholder='Item description'
-                           rows={3}
-                           className='mt-1'
-                        />
-                     </div>
-
-                     <div className='grid grid-cols-2 gap-4'>
-                        <div>
-                           <Label htmlFor='foodType'>Food Type</Label>
-                           <Select
-                              value={formData.foodType}
-                              onValueChange={(value) =>
-                                 setFormData((prev) => ({
-                                    ...prev,
-                                    foodType: value,
-                                 }))
-                              }>
-                              <SelectTrigger className='mt-1'>
-                                 <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                 {FOOD_TYPES.map((type) => (
-                                    <SelectItem
-                                       key={type}
-                                       value={type}>
-                                       {type}
-                                    </SelectItem>
-                                 ))}
-                              </SelectContent>
-                           </Select>
+                        <div className='grid grid-cols-2 gap-4'>
+                           <div>
+                              <Label htmlFor='price'>Price (₹) *</Label>
+                              <Input
+                                 id='price'
+                                 name='price'
+                                 type='number'
+                                 step='0.01'
+                                 min='0'
+                                 value={formData.price}
+                                 onChange={handleInputChange}
+                                 placeholder='0.00'
+                                 required
+                                 className='mt-1'
+                              />
+                           </div>
+                           <div>
+                              <Label htmlFor='category'>Category *</Label>
+                              <Select
+                                 value={formData.category}
+                                 onValueChange={(value) =>
+                                    setFormData((prev) => ({
+                                       ...prev,
+                                       category: value,
+                                    }))
+                                 }>
+                                 <SelectTrigger className='mt-1'>
+                                    <SelectValue placeholder='Select category' />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                    {availableCategories.map((cat) => (
+                                       <SelectItem
+                                          key={cat}
+                                          value={cat}>
+                                          {cat}
+                                       </SelectItem>
+                                    ))}
+                                 </SelectContent>
+                              </Select>
+                           </div>
                         </div>
+
                         <div>
-                           <Label htmlFor='stockQuantity'>Stock Quantity</Label>
-                           <Input
-                              id='stockQuantity'
-                              name='stockQuantity'
-                              type='number'
-                              min='0'
-                              value={formData.stockQuantity}
+                           <Label htmlFor='description'>Description</Label>
+                           <Textarea
+                              id='description'
+                              name='description'
+                              value={formData.description}
                               onChange={handleInputChange}
-                              placeholder='Optional'
+                              placeholder='Item description'
+                              rows={3}
                               className='mt-1'
                            />
                         </div>
-                     </div>
 
-                     <div>
-                        <Label htmlFor='image'>Image</Label>
-                        <Input
-                           id='image'
-                           name='image'
-                           type='file'
-                           accept='image/*'
-                           onChange={handleFileChange}
-                           className='mt-1'
-                        />
-                        {formData.image && (
-                           <p className='text-sm text-gray-600 mt-1'>
-                              {formData.image.name}
-                           </p>
-                        )}
-                     </div>
+                        <div className='grid grid-cols-2 gap-4'>
+                           <div>
+                              <Label htmlFor='foodType'>Food Type</Label>
+                              <Select
+                                 value={formData.foodType}
+                                 onValueChange={(value) =>
+                                    setFormData((prev) => ({
+                                       ...prev,
+                                       foodType: value,
+                                    }))
+                                 }>
+                                 <SelectTrigger className='mt-1'>
+                                    <SelectValue />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                    {FOOD_TYPES.map((type) => (
+                                       <SelectItem
+                                          key={type}
+                                          value={type}>
+                                          {type}
+                                       </SelectItem>
+                                    ))}
+                                 </SelectContent>
+                              </Select>
+                           </div>
+                           <div>
+                              <Label htmlFor='stockQuantity'>Stock Quantity</Label>
+                              <Input
+                                 id='stockQuantity'
+                                 name='stockQuantity'
+                                 type='number'
+                                 min='0'
+                                 value={formData.stockQuantity}
+                                 onChange={handleInputChange}
+                                 placeholder='Optional'
+                                 className='mt-1'
+                              />
+                           </div>
+                        </div>
 
-                     <DialogFooter>
-                        <Button
-                           type='button'
-                           variant='outline'
-                           onClick={resetForm}>
-                           Cancel
-                        </Button>
-                        <Button
-                           type='submit'
-                           disabled={
-                              createMenuItem.isPending ||
-                              updateMenuItem.isPending
-                           }>
-                           {createMenuItem.isPending ||
-                           updateMenuItem.isPending ? (
-                              <>
-                                 <Spinner
-                                    size='sm'
-                                    className='mr-2'
-                                 />
-                                 Saving...
-                              </>
-                           ) : (
-                              <>
-                                 <Save className='w-4 h-4 mr-2' />
-                                 {editingItem ? 'Update' : 'Create'}
-                              </>
+                        <div>
+                           <Label htmlFor='image'>Image</Label>
+                           <Input
+                              id='image'
+                              name='image'
+                              type='file'
+                              accept='image/*'
+                              onChange={handleFileChange}
+                              className='mt-1'
+                           />
+                           {formData.image && (
+                              <p className='text-sm text-gray-600 mt-1'>
+                                 {formData.image.name}
+                              </p>
                            )}
-                        </Button>
-                     </DialogFooter>
-                  </form>
+                        </div>
+
+                        <DialogFooter>
+                           <Button
+                              type='button'
+                              variant='outline'
+                              onClick={resetForm}>
+                              Cancel
+                           </Button>
+                           <Button
+                              type='submit'
+                              disabled={
+                                 createMenuItem.isPending ||
+                                 updateMenuItem.isPending
+                              }>
+                              {createMenuItem.isPending ||
+                                 updateMenuItem.isPending ? (
+                                 <>
+                                    <Spinner
+                                       size='sm'
+                                       className='mr-2'
+                                    />
+                                    Saving...
+                                 </>
+                              ) : (
+                                 <>
+                                    <Save className='w-4 h-4 mr-2' />
+                                    {editingItem ? 'Update' : 'Create'}
+                                 </>
+                              )}
+                           </Button>
+                        </DialogFooter>
+                     </form>
+                  </DialogContent>
+               </Dialog>
+            )}
+
+            {/* Delete Dialog */}
+            <Dialog
+               open={!!showDeleteDialog}
+               onOpenChange={() => setShowDeleteDialog(null)}>
+               <DialogContent>
+                  <DialogHeader>
+                     <DialogTitle>Delete Menu Item</DialogTitle>
+                     <DialogDescription>
+                        Are you sure you want to delete this menu item? This action
+                        cannot be undone.
+                     </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                     <Button
+                        variant='outline'
+                        onClick={() => setShowDeleteDialog(null)}>
+                        Cancel
+                     </Button>
+                     <Button
+                        variant='destructive'
+                        onClick={() =>
+                           showDeleteDialog && handleDelete(showDeleteDialog)
+                        }
+                        disabled={deleteMenuItem.isPending}>
+                        {deleteMenuItem.isPending ? (
+                           <>
+                              <Spinner
+                                 size='sm'
+                                 className='mr-2'
+                              />
+                              Deleting...
+                           </>
+                        ) : (
+                           'Delete'
+                        )}
+                     </Button>
+                  </DialogFooter>
                </DialogContent>
             </Dialog>
-         )}
-
-         {/* Delete Dialog */}
-         <Dialog
-            open={!!showDeleteDialog}
-            onOpenChange={() => setShowDeleteDialog(null)}>
-            <DialogContent>
-               <DialogHeader>
-                  <DialogTitle>Delete Menu Item</DialogTitle>
-                  <DialogDescription>
-                     Are you sure you want to delete this menu item? This action
-                     cannot be undone.
-                  </DialogDescription>
-               </DialogHeader>
-               <DialogFooter>
-                  <Button
-                     variant='outline'
-                     onClick={() => setShowDeleteDialog(null)}>
-                     Cancel
-                  </Button>
-                  <Button
-                     variant='destructive'
-                     onClick={() =>
-                        showDeleteDialog && handleDelete(showDeleteDialog)
-                     }
-                     disabled={deleteMenuItem.isPending}>
-                     {deleteMenuItem.isPending ? (
-                        <>
-                           <Spinner
-                              size='sm'
-                              className='mr-2'
-                           />
-                           Deleting...
-                        </>
-                     ) : (
-                        'Delete'
-                     )}
-                  </Button>
-               </DialogFooter>
-            </DialogContent>
-         </Dialog>
          </div>
       </div>
    );

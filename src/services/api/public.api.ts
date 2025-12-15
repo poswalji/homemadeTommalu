@@ -1,14 +1,14 @@
 import apiClient from '@/lib/axios';
 
 // Types
-export type StoreCategory = 
-  | 'Restaurant' 
-  | 'Grocery Store' 
-  | 'Bakery' 
-  | 'Pharmacy' 
-  | 'Vegetable & Fruits' 
-  | 'Meat & Fish' 
-  | 'Dairy' 
+export type StoreCategory =
+  | 'Restaurant'
+  | 'Grocery Store'
+  | 'Bakery'
+  | 'Pharmacy'
+  | 'Vegetable & Fruits'
+  | 'Meat & Fish'
+  | 'Dairy'
   | 'Other';
 
 export interface Store {
@@ -82,11 +82,7 @@ export interface StoresResponse {
 export interface MenuResponse {
   success: boolean;
   data: MenuItem[];
-  store?: {
-    id: string;
-    storeName: string;
-    isOpen?: boolean;
-  };
+  store?: Store;
   menuByCategory?: Record<string, MenuItem[]>;
   totalItems?: number;
 }

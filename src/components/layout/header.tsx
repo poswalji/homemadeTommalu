@@ -93,17 +93,17 @@ export function Header() {
                            Home
                         </Link>
                         <Link
-                           href='/browse'
+                           href='/category/Restaurant'
                            className='text-base font-medium text-gray-900'>
                            Food
                         </Link>
                         <Link
-                           href='/browse?category=Bakery'
+                           href='/category/Bakery'
                            className='text-base font-medium text-gray-900'>
                            Bakery
                         </Link>
                         <Link
-                           href='/browse?category=Groceries+%26+Essentials'
+                           href='/category/Grocery%20Store'
                            className='text-base font-medium text-gray-900'>
                            Grocery
                         </Link>
@@ -220,25 +220,25 @@ export function Header() {
                         Home
                      </Link>
                      <Link
-                        href='/browse'
+                        href='/category/Restaurant'
                         className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
                         onClick={() => setMobileMenuOpen(false)}>
                         Food
                      </Link>
                      <Link
-                        href='/browse?category=Bakery'
+                        href='/category/Bakery'
                         className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
                         onClick={() => setMobileMenuOpen(false)}>
                         Bakery
                      </Link>
                      <Link
-                        href='/browse?category=Groceries+%26+Essentials'
+                        href='/category/Grocery%20Store'
                         className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
                         onClick={() => setMobileMenuOpen(false)}>
                         Grocery
                      </Link>
                      <Link
-                        href='/browse?category=Homemade+Food'
+                        href='/category/Homemade%20Food'
                         className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
                         onClick={() => setMobileMenuOpen(false)}>
                         Homemade Food

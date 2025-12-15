@@ -1,6 +1,6 @@
 'use client';
 
-import { useCart, useUpdateCartQuantity, useRemoveFromCart, useClearCart, useApplyDiscount, useRemoveDiscount } from '@/hooks/api';
+import { useCart, useUpdateCartQuantity, useRemoveFromCart, useClearCart, useApplyDiscount, useRemoveDiscount, useActivePromotions } from '@/hooks/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
@@ -23,6 +23,7 @@ export default function CartPage() {
   const clearCart = useClearCart();
   const applyDiscount = useApplyDiscount();
   const removeDiscount = useRemoveDiscount();
+  const { data: promotionsData } = useActivePromotions();
   const [couponCode, setCouponCode] = useState('');
 
   const cart = cartData?.data;
@@ -108,18 +109,18 @@ export default function CartPage() {
     (sum, i) => sum + (Number(i.price) || 0) * (Number(i.quantity) || 0),
     0
   );
-  
+
   // Use deliveryCharge from API if exists, otherwise calculate
   const deliveryCharge = cart?.deliveryCharge !== undefined && cart?.deliveryCharge !== null
     ? cart.deliveryCharge
     : (computedItemsTotal >= 100 ? 0 : 30);
-  
+
   // Use finalAmount from API if exists, otherwise calculate
   const discountAmount = cart?.discount?.discountAmount || 0;
   const finalAmount = cart?.finalAmount !== undefined && cart?.finalAmount !== null
     ? cart.finalAmount
     : Math.max(0, computedItemsTotal + deliveryCharge - discountAmount);
-  
+
   // Use totalAmount from API if exists, otherwise use computed
   const totalAmount = cart?.totalAmount !== undefined && cart?.totalAmount !== null
     ? cart.totalAmount
@@ -194,95 +195,95 @@ export default function CartPage() {
 
                 <div className="space-y-4">
                   {items.map((item) => {
-                // ✅ Extract menuItemId - handle both populated object and string ID
-                const menuItemId = (() => {
-                  const id = item.menuItemId as any;
-                  if (id && typeof id === 'object' && '_id' in id && id._id) {
-                    return String(id._id);
-                  }
-                  return String(id || '');
-                })();
-                
-                return (
-                <Card key={menuItemId} className="p-3 sm:p-4">
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                    {/* Item Image */}
-                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded overflow-hidden shrink-0">
-                      {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt={item.itemName}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                          No Image
-                        </div>
-                      )}
-                    </div>
+                    // ✅ Extract menuItemId - handle both populated object and string ID
+                    const menuItemId = (() => {
+                      const id = item.menuItemId as any;
+                      if (id && typeof id === 'object' && '_id' in id && id._id) {
+                        return String(id._id);
+                      }
+                      return String(id || '');
+                    })();
 
-                    {/* Item Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{item.itemName}</h3>
-                          {item.storeName && (
-                            <p className="text-xs sm:text-sm text-gray-500 mb-2 truncate">{item.storeName}</p>
-                          )}
-                          <p className="text-base sm:text-lg font-bold text-red-600 mb-2 sm:mb-3">
-                            ₹{item.price.toFixed(2)}
-                          </p>
+                    return (
+                      <Card key={menuItemId} className="p-3 sm:p-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                          {/* Item Image */}
+                          <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded overflow-hidden shrink-0">
+                            {item.image ? (
+                              <Image
+                                src={item.image}
+                                alt={item.itemName}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                No Image
+                              </div>
+                            )}
+                          </div>
 
-                          {/* Quantity Controls */}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <div className="flex items-center border rounded">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleUpdateQuantity(menuItemId, (item.quantity || 1) - 1)}
-                                disabled={updateQuantity.isPending}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Minus className="w-4 h-4" />
-                              </Button>
-                              <span className="w-10 sm:w-12 text-center text-sm sm:text-base">{item.quantity || 1}</span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleUpdateQuantity(menuItemId, (item.quantity || 1) + 1)}
-                                disabled={updateQuantity.isPending}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Plus className="w-4 h-4" />
-                              </Button>
+                          {/* Item Details */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">{item.itemName}</h3>
+                                {item.storeName && (
+                                  <p className="text-xs sm:text-sm text-gray-500 mb-2 truncate">{item.storeName}</p>
+                                )}
+                                <p className="text-base sm:text-lg font-bold text-red-600 mb-2 sm:mb-3">
+                                  ₹{item.price.toFixed(2)}
+                                </p>
+
+                                {/* Quantity Controls */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <div className="flex items-center border rounded">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleUpdateQuantity(menuItemId, (item.quantity || 1) - 1)}
+                                      disabled={updateQuantity.isPending}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <Minus className="w-4 h-4" />
+                                    </Button>
+                                    <span className="w-10 sm:w-12 text-center text-sm sm:text-base">{item.quantity || 1}</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleUpdateQuantity(menuItemId, (item.quantity || 1) + 1)}
+                                      disabled={updateQuantity.isPending}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <Plus className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveItem(menuItemId)}
+                                    disabled={removeItem.isPending}
+                                    className="text-red-500 hover:text-red-700 text-xs sm:text-sm"
+                                  >
+                                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                                    <span className="hidden sm:inline">Remove</span>
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Item Total - Responsive */}
+                              <div className="text-left sm:text-right flex items-center justify-between sm:block">
+                                <span className="text-xs sm:text-sm text-gray-500 sm:hidden">Total:</span>
+                                <p className="font-semibold text-base sm:text-lg whitespace-nowrap">
+                                  ₹{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                                </p>
+                              </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveItem(menuItemId)}
-                              disabled={removeItem.isPending}
-                              className="text-red-500 hover:text-red-700 text-xs sm:text-sm"
-                            >
-                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                              <span className="hidden sm:inline">Remove</span>
-                            </Button>
                           </div>
                         </div>
-
-                        {/* Item Total - Responsive */}
-                        <div className="text-left sm:text-right flex items-center justify-between sm:block">
-                          <span className="text-xs sm:text-sm text-gray-500 sm:hidden">Total:</span>
-                          <p className="font-semibold text-base sm:text-lg whitespace-nowrap">
-                            ₹{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              );
-              })}
+                      </Card>
+                    );
+                  })}
                 </div>
               </Card>
             </div>
@@ -349,6 +350,41 @@ export default function CartPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Available Coupons */}
+                {promotionsData?.data && promotionsData.data.length > 0 && !cart?.discount && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold mb-3">Available Coupons</h3>
+                    <div className="space-y-3">
+                      {promotionsData.data.map((promo: any) => (
+                        <div
+                          key={promo._id}
+                          className="p-3 border border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-bold text-gray-800 text-sm">{promo.code}</span>
+                            <Button
+                              variant="link"
+                              className="h-auto p-0 text-blue-600 font-semibold text-xs"
+                              onClick={() => {
+                                setCouponCode(promo.code);
+                                applyDiscount.mutate(promo.code);
+                              }}
+                            >
+                              APPLY
+                            </Button>
+                          </div>
+                          <p className="text-xs text-gray-600">{promo.description}</p>
+                          {promo.minOrderAmount > 0 && (
+                            <p className="text-[10px] text-gray-500 mt-1">
+                              Min. order: ₹{promo.minOrderAmount}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">

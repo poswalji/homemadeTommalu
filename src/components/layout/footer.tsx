@@ -9,8 +9,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="mb-4">
-              <Link href="/" aria-label="TomMalu Home">
-                <Image src="/logo.png" alt="TomMalu" width={140} height={36} />
+              <Link href="/" aria-label="Tommalu Home">
+                <Image src="/logo.png" alt="Tommalu" width={140} height={36} />
               </Link>
             </div>
             <p className="text-sm text-gray-600">{appConfig.description}</p>
@@ -66,25 +66,25 @@ export function Footer() {
               <li>{appConfig.contact.address}</li>
             </ul>
             <div className="flex flex-wrap gap-3 mt-4">
-              <a 
-                href={appConfig.social.facebook} 
-                target="_blank" 
+              <a
+                href={appConfig.social.facebook}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-gray-900 text-sm transition-colors"
               >
                 Facebook
               </a>
-              <a 
-                href={appConfig.social.instagram} 
-                target="_blank" 
+              <a
+                href={appConfig.social.instagram}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-gray-900 text-sm transition-colors"
               >
                 Instagram
               </a>
-              <a 
-                href={appConfig.social.twitter} 
-                target="_blank" 
+              <a
+                href={appConfig.social.twitter}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-gray-900 text-sm transition-colors"
               >

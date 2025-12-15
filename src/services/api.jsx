@@ -1,23 +1,23 @@
 // services/api.jsx
 import { cookieService } from '../utills/cookies';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://tommalubackendservice.vercel.app/api' 
-  : 'http://localhost:3000/api';
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://tommalubackendservice.vercel.app/api'
+  : 'http://localhost:5000/api';
 
 // Common headers for API requests
 const getHeaders = (includeAuth = true) => {
   const headers = {
     'Content-Type': 'application/json',
   };
-  
+
   if (includeAuth) {
     const token = cookieService.getCurrentToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
   }
-  
+
   return headers;
 };
 
@@ -41,7 +41,7 @@ export const cartService = {
   addToCart: async (itemData) => {
     try {
       const isLoggedIn = isAuthenticated();
-      
+
       console.log('🛒 Add to Cart - User Status:', isLoggedIn ? 'Logged In' : 'Guest');
       console.log('📦 Item Data:', itemData);
 
@@ -51,7 +51,7 @@ export const cartService = {
         body: JSON.stringify(itemData),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Add to cart success:', result);
       return result;
@@ -117,7 +117,7 @@ export const cartService = {
   updateCartQuantity: async (menuItemId, quantity) => {
     try {
       const isLoggedIn = isAuthenticated();
-      
+
       console.log('🛒 Update Quantity:', { menuItemId, quantity });
 
       const response = await fetch(`${API_BASE_URL}/cart/update`, {
@@ -126,7 +126,7 @@ export const cartService = {
         body: JSON.stringify({ menuItemId, quantity }),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Update quantity success:', result);
       return result;
@@ -140,7 +140,7 @@ export const cartService = {
   removeFromCart: async (menuItemId) => {
     try {
       const isLoggedIn = isAuthenticated();
-      
+
       console.log('🛒 Remove Item:', menuItemId);
 
       const response = await fetch(`${API_BASE_URL}/cart/remove`, {
@@ -149,7 +149,7 @@ export const cartService = {
         body: JSON.stringify({ menuItemId }),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Remove item success:', result);
       return result;
@@ -163,7 +163,7 @@ export const cartService = {
   clearCart: async () => {
     try {
       const isLoggedIn = isAuthenticated();
-      
+
       console.log('🛒 Clear Cart');
 
       const response = await fetch(`${API_BASE_URL}/cart/clear`, {
@@ -171,7 +171,7 @@ export const cartService = {
         headers: getHeaders(isLoggedIn),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Clear cart success:', result);
       return result;
@@ -195,7 +195,7 @@ export const cartService = {
         headers: getHeaders(true),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Merge cart success:', result);
       return result;
@@ -220,7 +220,7 @@ export const cartService = {
         body: JSON.stringify({ discountCode }),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Apply discount success:', result);
       return result;
@@ -244,7 +244,7 @@ export const cartService = {
         headers: getHeaders(true),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Remove discount success:', result);
       return result;
@@ -269,7 +269,7 @@ export const cartService = {
         headers: getHeaders(true),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Cart status:', result);
       return result;
@@ -293,7 +293,7 @@ export const cartService = {
         headers: getHeaders(true),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
       console.log('✅ Clean cart success:', result);
       return result;
@@ -314,13 +314,13 @@ export const authService = {
         body: JSON.stringify(credentials),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
-      
+
       // Save user data and automatically merge cart
       if (result.success && result.data?.token) {
         cookieService.setAuthData(result.data.token, result.data.user);
-        
+
         // Auto-merge guest cart with user cart after login
         try {
           await cartService.mergeCart();
@@ -329,7 +329,7 @@ export const authService = {
           console.warn('⚠️ Cart merge failed after login:', mergeError);
         }
       }
-      
+
       return result;
     } catch (error) {
       console.error('Login error:', error);
@@ -345,13 +345,13 @@ export const authService = {
         body: JSON.stringify(userData),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
-      
+
       // Save user data and automatically merge cart
       if (result.success && result.data?.token) {
         cookieService.setAuthData(result.data.token, result.data.user);
-        
+
         // Auto-merge guest cart with user cart after registration
         try {
           await cartService.mergeCart();
@@ -360,7 +360,7 @@ export const authService = {
           console.warn('⚠️ Cart merge failed after registration:', mergeError);
         }
       }
-      
+
       return result;
     } catch (error) {
       console.error('Registration error:', error);
@@ -376,12 +376,12 @@ export const authService = {
         body: JSON.stringify({ token: googleToken }),
         credentials: 'include'
       });
-      
+
       const result = await handleResponse(response);
-      
+
       if (result.success && result.data?.token) {
         cookieService.setAuthData(result.data.token, result.data.user);
-        
+
         // Auto-merge cart after Google login
         try {
           await cartService.mergeCart();
@@ -390,7 +390,7 @@ export const authService = {
           console.warn('⚠️ Cart merge failed after Google login:', mergeError);
         }
       }
-      
+
       return result;
     } catch (error) {
       console.error('Google login error:', error);
@@ -402,16 +402,16 @@ export const authService = {
     try {
       // Clear cart before logout
       await cartService.clearCart();
-      
+
       const response = await fetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
         headers: getHeaders(),
         credentials: 'include'
       });
-      
+
       // ALWAYS clear frontend cookies
       cookieService.clearAuthData();
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Logout error:', error);
@@ -428,9 +428,9 @@ export const authService = {
         headers: getHeaders(),
         credentials: 'include',
       });
-      
+
       const result = await handleResponse(response);
-      
+
       if (result.success && result.data) {
         const user = result.data.user || result.data;
         const token = cookieService.getCurrentToken();
@@ -438,7 +438,7 @@ export const authService = {
           cookieService.setAuthData(token, user);
         }
       }
-      
+
       return result;
     } catch (error) {
       console.error('Get profile error:', error);
@@ -454,9 +454,9 @@ export const authService = {
         body: JSON.stringify(userData),
         credentials: 'include'
       });
-      
+
       const result = await handleResponse(response);
-      
+
       if (result.success && result.data) {
         const user = result.data.user || result.data;
         const token = cookieService.getCurrentToken();
@@ -464,7 +464,7 @@ export const authService = {
           cookieService.setAuthData(token, user);
         }
       }
-      
+
       return result;
     } catch (error) {
       console.error('Update profile error:', error);
@@ -479,13 +479,13 @@ export const storeService = {
     try {
       const queryParams = new URLSearchParams(filters).toString();
       const url = queryParams ? `${API_BASE_URL}/public/stores?${queryParams}` : `${API_BASE_URL}/public/stores`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: getHeaders(),
         credentials: 'include'
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Get stores error:', error);
@@ -500,7 +500,7 @@ export const storeService = {
         headers: getHeaders(),
         credentials: 'include'
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Get store error:', error);
@@ -515,7 +515,7 @@ export const storeService = {
         headers: getHeaders(),
         credentials: 'include'
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Get stores by category error:', error);
@@ -531,7 +531,7 @@ export const storeService = {
         headers: getHeaders(),
         credentials: 'include'
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Search stores error:', error);
@@ -546,7 +546,7 @@ export const storeService = {
         headers: getHeaders(),
         credentials: 'include'
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Get popular stores error:', error);
@@ -564,7 +564,7 @@ export const menuService = {
         headers: getHeaders(),
         credentials: 'include'
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Get menu error:', error);
@@ -578,7 +578,7 @@ export const menuService = {
         method: 'GET',
         headers: getHeaders(),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Get item error:', error);
@@ -590,13 +590,13 @@ export const menuService = {
     try {
       const params = new URLSearchParams({ q: query });
       if (storeId) params.append('storeId', storeId);
-      
+
       const response = await fetch(`${API_BASE_URL}/public/menu/search?${params}`, {
         method: 'GET',
         headers: getHeaders(),
         credentials: 'include'
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Search menu items error:', error);
@@ -614,7 +614,7 @@ export const orderService = {
         headers: getHeaders(),
         body: JSON.stringify(orderData),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Create order error:', error);
@@ -629,7 +629,7 @@ export const orderService = {
         headers: getHeaders(),
         body: JSON.stringify(orderData),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Create order from cart error:', error);
@@ -643,7 +643,7 @@ export const orderService = {
         method: 'GET',
         headers: getHeaders(),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Get customer orders error:', error);
@@ -657,7 +657,7 @@ export const orderService = {
         method: 'GET',
         headers: getHeaders(),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Get order error:', error);
@@ -672,7 +672,7 @@ export const orderService = {
         headers: getHeaders(),
         body: JSON.stringify({ cancellationReason }),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Cancel order error:', error);
@@ -686,7 +686,7 @@ export const orderService = {
         method: 'GET',
         headers: getHeaders(),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Track order error:', error);
@@ -703,7 +703,7 @@ export const customerService = {
         method: 'GET',
         headers: getHeaders(),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Get customer profile error:', error);
@@ -718,7 +718,7 @@ export const customerService = {
         headers: getHeaders(),
         body: JSON.stringify(userData),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Update customer profile error:', error);
@@ -732,7 +732,7 @@ export const customerService = {
         method: 'DELETE',
         headers: getHeaders(),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Delete customer profile error:', error);
@@ -747,7 +747,7 @@ export const customerService = {
         headers: getHeaders(),
         body: JSON.stringify(addressData),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Add address error:', error);
@@ -762,7 +762,7 @@ export const customerService = {
         headers: getHeaders(),
         body: JSON.stringify(addressData),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Update address error:', error);
@@ -776,7 +776,7 @@ export const customerService = {
         method: 'DELETE',
         headers: getHeaders(),
       });
-      
+
       return await handleResponse(response);
     } catch (error) {
       console.error('Delete address error:', error);
@@ -809,7 +809,7 @@ export default {
   cartService,
   orderService,
   customerService,
-  
+
   isAuthenticated,
   getCurrentToken,
   getCurrentUser,

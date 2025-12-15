@@ -14,15 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
-const STORE_CATEGORIES = [
-   'Restaurant',
-   'Grocery Store',
-   'Bakery',
-   'Pharmacy',
-   'Vegetable & Fruits',
-   'Dairy',
-   'Other',
-];
+import { STORE_CATEGORIES } from '@/config/categories.config';
 
 export default function CreateStorePage() {
    const router = useRouter();
@@ -133,8 +125,8 @@ export default function CreateStorePage() {
       } catch (error: any) {
          toast.error(
             error?.response?.data?.error?.message ||
-               error?.response?.data?.message ||
-               'Failed to create store'
+            error?.response?.data?.message ||
+            'Failed to create store'
          );
       }
    };

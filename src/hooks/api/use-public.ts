@@ -75,6 +75,20 @@ export const useCategories = () => {
   });
 };
 
+// Get store categories (derived from active stores)
+export const useStoreCategories = () => {
+  return useQuery({
+    queryKey: ['store-categories'],
+    queryFn: async () => {
+      const response = await publicApi.getStores();
+      const stores = response.data || [];
+      const uniqueCategories = new Set(stores.map((store) => store.category));
+      return Array.from(uniqueCategories);
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
 
 
 
