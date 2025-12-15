@@ -15,6 +15,7 @@ import {
    Store as StoreIcon,
    ChartBar,
    Banknote,
+   ChefHat,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import { useEffect } from 'react';
 
 const adminNavItems = [
    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+   { name: 'Homemade Food', href: '/admin/homemade-food', icon: ChefHat },
    { name: 'Analytics', href: '/admin/analytics', icon: ChartBar },
    { name: 'Disputes', href: '/admin/disputes', icon: Ticket },
    { name: 'Stores', href: '/admin/stores', icon: StoreIcon },

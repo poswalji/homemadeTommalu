@@ -107,11 +107,7 @@ export function Header() {
                            className='text-base font-medium text-gray-900'>
                            Grocery
                         </Link>
-                        <Link
-                           href='/browse?category=Homemade+Food'
-                           className='text-base font-medium text-gray-900'>
-                           Homemade Food
-                        </Link>
+                       
                         {!isAuthenticated && (
                            <Link
                               href='/partner'

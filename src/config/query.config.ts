@@ -116,3 +116,4 @@ export const reviewKeys = queryKeys.reviews;
 export const promotionKeys = queryKeys.promotions;
 export const disputeKeys = queryKeys.disputes;
 
+// Note: homemadeFoodKeys are defined in use-homemade-food.ts for modularity
