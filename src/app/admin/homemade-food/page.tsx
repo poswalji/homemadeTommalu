@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -75,6 +75,8 @@ import {
 } from '@/hooks/api';
 import { toast } from 'sonner';
 import type { HomemadeFood, HomemadeFoodOrder, HomemadeFoodOrderStatus } from '@/services/api/homemade-food.api';
+import { getTodayMenu, updateHomemadeMenu } from '@/services/homemadeService';
+import { Utensils } from 'lucide-react';
 
 // Status badge colors
 const statusColors: Record<HomemadeFoodOrderStatus, string> = {
@@ -110,7 +112,73 @@ export default function HomemadeFoodAdminPage() {
         limit: 20,
     });
     const [newStatus, setNewStatus] = useState<HomemadeFoodOrderStatus>('pending');
+
     const [adminNotes, setAdminNotes] = useState('');
+
+    // Daily Menu State
+    const [menuForm, setMenuForm] = useState({
+        lunchSabji: "",
+        dinnerSabji: "",
+        weekdayPrice: 89,
+        weekdayItems: "",
+        sundayItemName: "",
+        sundayPrice: 120,
+        sundayDinnerOpen: false
+    });
+
+    useEffect(() => {
+        const loadMenu = async () => {
+            try {
+                const res = await getTodayMenu();
+                if (res.success) {
+                    const d = res.data;
+                    const isSunday = d.isSunday; // Check if api returns this
+                    // We load both/either depending on what backend returns
+                    if (isSunday) {
+                        setMenuForm(prev => ({
+                            ...prev,
+                            sundayItemName: d.product?.itemName || "",
+                            sundayPrice: d.product?.price || 120,
+                            sundayDinnerOpen: d.slots?.dinner?.isOpen || false
+                        }));
+                    } else {
+                        setMenuForm(prev => ({
+                            ...prev,
+                            lunchSabji: d.product?.lunchSabji || "",
+                            dinnerSabji: d.product?.dinnerSabji || "",
+                            weekdayPrice: d.product?.price || 89,
+                            weekdayItems: d.product?.includes?.join(', ') || "",
+                        }));
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load daily menu", e);
+            }
+        };
+        loadMenu();
+    }, []);
+
+    const handleMenuUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const payload: any = {};
+            if (menuForm.lunchSabji) payload.lunchSabji = menuForm.lunchSabji;
+            if (menuForm.dinnerSabji) payload.dinnerSabji = menuForm.dinnerSabji;
+            if (menuForm.weekdayPrice) payload.weekdayPrice = Number(menuForm.weekdayPrice);
+            if (menuForm.weekdayItems) payload.weekdayItems = menuForm.weekdayItems.split(',').map((i: string) => i.trim()); // Typed explicitly
+
+            if (menuForm.sundayItemName) payload.sundayItemName = menuForm.sundayItemName;
+            if (menuForm.sundayPrice) payload.sundayPrice = Number(menuForm.sundayPrice);
+            payload.sundayDinnerOpen = menuForm.sundayDinnerOpen;
+
+            const res = await updateHomemadeMenu(payload);
+            if (res.success) {
+                toast.success("Today's Menu updated successfully!");
+            }
+        } catch (err) {
+            toast.error("Failed to update menu");
+        }
+    };
 
     // Form state for food item
     const [itemForm, setItemForm] = useState({
@@ -345,10 +413,14 @@ export default function HomemadeFoodAdminPage() {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="items" className="flex items-center gap-2">
                         <ChefHat className="w-4 h-4" />
                         Food Items
+                    </TabsTrigger>
+                    <TabsTrigger value="daily-menu" className="flex items-center gap-2">
+                        <Utensils className="w-4 h-4" />
+                        Today's Menu
                     </TabsTrigger>
                     <TabsTrigger value="orders" className="flex items-center gap-2">
                         <Package className="w-4 h-4" />
@@ -694,9 +766,119 @@ export default function HomemadeFoodAdminPage() {
                         </Card>
                     </div>
                 </TabsContent>
+
+                {/* Daily Menu Tab */}
+                <TabsContent value="daily-menu" className="space-y-4">
+                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-4xl mx-auto">
+                        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                            <Utensils className="w-6 h-6 text-orange-600" />
+                            Update Today's Live Menu
+                        </h2>
+
+                        <div className="mb-6 p-4 bg-blue-50 text-blue-700 text-sm rounded-xl">
+                            <p className="font-semibold mb-1">Live Updates</p>
+                            <p>Changes made here are instantly visible on the "Homemade" page for all customers.</p>
+                        </div>
+
+                        <form onSubmit={handleMenuUpdate} className="space-y-8">
+                            {/* Weekday Section */}
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Weekday Details (Mon-Sat)</h3>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Lunch Sabji</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                                            placeholder="e.g. Aloo Gobhi"
+                                            value={menuForm.lunchSabji}
+                                            onChange={(e) => setMenuForm({ ...menuForm, lunchSabji: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Dinner Sabji</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                                            placeholder="e.g. Dal Makhani"
+                                            value={menuForm.dinnerSabji}
+                                            onChange={(e) => setMenuForm({ ...menuForm, dinnerSabji: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Price (₹)</label>
+                                        <input
+                                            type="number"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                                            value={menuForm.weekdayPrice}
+                                            onChange={(e) => setMenuForm({ ...menuForm, weekdayPrice: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Fixed Items</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                                            placeholder="e.g. 4 Roti, Salad, Chhach"
+                                            value={menuForm.weekdayItems}
+                                            onChange={(e) => setMenuForm({ ...menuForm, weekdayItems: e.target.value })}
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">Comma separated list of items</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Sunday Section */}
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2 flex items-center justify-between">
+                                    <span>Sunday Special</span>
+                                    <span className="text-xs font-normal bg-orange-100 text-orange-700 px-2 py-1 rounded">If Today is Sunday</span>
+                                </h3>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Special Item Name</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                                            placeholder="e.g. Chole Bhature"
+                                            value={menuForm.sundayItemName}
+                                            onChange={(e) => setMenuForm({ ...menuForm, sundayItemName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Special Price (₹)</label>
+                                        <input
+                                            type="number"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                                            value={menuForm.sundayPrice}
+                                            onChange={(e) => setMenuForm({ ...menuForm, sundayPrice: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-4">
+                                    <label className="flex items-center space-x-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="w-5 h-5 text-orange-600 rounded border-gray-300 focus:ring-orange-500"
+                                            checked={menuForm.sundayDinnerOpen}
+                                            onChange={(e) => setMenuForm({ ...menuForm, sundayDinnerOpen: e.target.checked })}
+                                        />
+                                        <span className="text-gray-700 font-medium">Open Dinner Slot on Sunday?</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-200 transition-all transform active:scale-95"
+                            >
+                                Save Menu Changes
+                            </button>
+                        </form>
+                    </div>
+                </TabsContent>
             </Tabs>
 
-            {/* Food Item Dialog */}
             <Dialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen}>
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>

@@ -8,6 +8,7 @@ import { QueryProvider } from '@/providers/query-provider';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/providers/auth-provider';
 import { SocketProvider } from '@/context/socket-context';
+import { HomemadeProvider } from '@/context/homemade-context';
 import { Suspense } from 'react';
 
 const figtree = Figtree({
@@ -146,9 +147,11 @@ export default function RootLayout({
             <QueryProvider>
                <AppProvider>
                   <AuthProvider>
-                     <SocketProvider>
-                        <Suspense>{children}</Suspense>
-                     </SocketProvider>
+                     <HomemadeProvider>
+                        <SocketProvider>
+                           <Suspense>{children}</Suspense>
+                        </SocketProvider>
+                     </HomemadeProvider>
                   </AuthProvider>
                </AppProvider>
                <Toaster

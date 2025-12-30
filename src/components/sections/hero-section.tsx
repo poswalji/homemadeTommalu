@@ -51,7 +51,7 @@ export function HeroSection() {
                      <Button
                         size="lg"
                         className="bg-orange-600 hover:bg-orange-700 text-white h-14 px-8 text-lg font-semibold shadow-lg hover:shadow-orange-500/20 transition-all rounded-xl"
-                        onClick={() => router.push('/browse?category=Homemade Food')}
+                        onClick={() => router.push('/homemade')}
                      >
                         Order Homemade Food
                      </Button>
@@ -112,7 +112,11 @@ export function HeroSection() {
                         ].map((cat, idx) => (
                            <button
                               key={idx}
-                              onClick={() => router.push(`/browse?category=${cat.label}`)}
+                              onClick={() => router.push(
+                                 cat.label === 'Local Shops'
+                                    ? '/browse'
+                                    : `/category/${cat.label === 'Grocery' ? 'Grocery Store' : cat.label === 'Restaurants' ? 'Restaurant' : cat.label}`
+                              )}
                               className={`flex items-center gap-3 px-4 py-3 rounded-xl backdrop-blur-md border ${cat.bg} ${cat.border} hover:bg-white/10 transition-all group text-left`}
                            >
                               <div className={`p-2 rounded-full bg-black/20 ${cat.color} group-hover:scale-110 transition-transform`}>

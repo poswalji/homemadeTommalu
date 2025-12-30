@@ -16,11 +16,21 @@ export default function AdminLayout({
    const router = useRouter();
    const [sidebarOpen, setSidebarOpen] = useState(false);
 
+   const [isMounted, setIsMounted] = useState(false);
+
+   useEffect(() => {
+      setIsMounted(true);
+   }, []);
+
    useEffect(() => {
       if (!isLoading && (!authData?.user || authData.user.role !== 'admin')) {
          router.push('/login');
       }
    }, [authData, isLoading, router]);
+
+   if (!isMounted) {
+      return null;
+   }
 
    if (isLoading) {
       return (
@@ -33,7 +43,6 @@ export default function AdminLayout({
                      style={{
                         width: '60px',
                         height: '60px',
-
                         borderTopColor: 'transparent',
                      }}></div>
                </div>
@@ -61,8 +70,8 @@ export default function AdminLayout({
       <div className='flex min-h-screen bg-gray-50'>
          <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
          <div className='flex-1 flex flex-col min-w-0'>
-            <Menubar 
-               title="Tommalu Admin" 
+            <Menubar
+               title="Tommalu Admin"
                isMenuOpen={sidebarOpen}
                onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
             />

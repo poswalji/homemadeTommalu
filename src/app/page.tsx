@@ -14,9 +14,6 @@ export default function Home() {
       <Header />
       <main className=" ">
         <HeroSection />
-        <HomemadeFoodSection />
-
-        <StoreCategoriesSection />
         <StatsSection />
         <HowItWorksSection />
         <WhatsAppButton />
