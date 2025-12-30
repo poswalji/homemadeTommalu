@@ -890,21 +890,21 @@ export default function HomemadeFoodAdminPage() {
                     <div className="space-y-4 mt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="col-span-2 space-y-2">
-                                <Label htmlFor="name">Name *</Label>
+                                <Label htmlFor="name">Item Name *</Label>
                                 <Input
                                     id="name"
                                     value={itemForm.name}
                                     onChange={(e) => setItemForm(prev => ({ ...prev, name: e.target.value }))}
-                                    placeholder="e.g., Dal Rice Thali"
+                                    placeholder="e.g., Standard Homemade Thali"
                                 />
                             </div>
                             <div className="col-span-2 space-y-2">
-                                <Label htmlFor="description">Description *</Label>
+                                <Label htmlFor="description">Description / Sabji Details *</Label>
                                 <Textarea
                                     id="description"
                                     value={itemForm.description}
                                     onChange={(e) => setItemForm(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder="Describe the food item..."
+                                    placeholder="e.g., Aloo Gobhi with mild spices..."
                                     rows={3}
                                 />
                             </div>
@@ -931,7 +931,7 @@ export default function HomemadeFoodAdminPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="availableQuantity">Available Qty (-1 for unlimited)</Label>
+                                <Label htmlFor="availableQuantity">Daily Limit (-1 for unlimited)</Label>
                                 <Input
                                     id="availableQuantity"
                                     type="number"
@@ -983,12 +983,12 @@ export default function HomemadeFoodAdminPage() {
                                 </Select>
                             </div>
                             <div className="col-span-2 space-y-2">
-                                <Label htmlFor="features">Features (comma-separated)</Label>
+                                <Label htmlFor="features">Fixed Items / Includes (comma-separated)</Label>
                                 <Input
                                     id="features"
                                     value={itemForm.features}
                                     onChange={(e) => setItemForm(prev => ({ ...prev, features: e.target.value }))}
-                                    placeholder="Dal, Rice, 2 Roti, Sabzi, Salad"
+                                    placeholder="e.g., 4 Roti, Salad, Chhach, Pickle"
                                 />
                             </div>
                             <div className="col-span-2 flex items-center gap-2">

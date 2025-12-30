@@ -19,7 +19,6 @@ export default function BrowsePage() {
   const searchParams = useSearchParams();
 
   // Read initial values from URL params
-  const initialStoreType = searchParams?.get('storeType') || '';
   const initialCategory = searchParams?.get('category') || '';
   const initialType = searchParams?.get('type') || '';
   const initialSearch = searchParams?.get('search') || '';
@@ -30,22 +29,38 @@ export default function BrowsePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [selectedFoodType, setSelectedFoodType] = useState<string>(initialType);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
+
+  // This helps us track if the user has explicitly started searching/browsing
+  const hasActiveFilters = !!(selectedCategory || selectedFoodType || searchQuery);
+
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [sortBy, setSortBy] = useState(initialSortBy);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialSortOrder);
   const [showFilters, setShowFilters] = useState(false);
 
+  // CATEGORY DATA with Icons
+  const MENU_CATEGORY_DETAILS: Record<string, { emoji: string; color: string }> = {
+    'Veg Main Course': { emoji: '🥗', color: 'bg-green-50 text-green-700' },
+    'Non-Veg Main Course': { emoji: '🍗', color: 'bg-orange-50 text-orange-700' },
+    'Starters & Snacks': { emoji: '🍟', color: 'bg-yellow-50 text-yellow-700' },
+    'Breads & Rice': { emoji: '🥖', color: 'bg-stone-50 text-stone-700' },
+    'Drinks & Beverages': { emoji: '🥤', color: 'bg-blue-50 text-blue-700' },
+    'Dairy & Eggs': { emoji: '🥛', color: 'bg-cyan-50 text-cyan-700' },
+    'Groceries & Essentials': { emoji: '🛒', color: 'bg-emerald-50 text-emerald-700' },
+    'Fruits & Vegetables': { emoji: '🍎', color: 'bg-red-50 text-red-700' },
+    'Sweets & Desserts': { emoji: '🧁', color: 'bg-pink-50 text-pink-700' },
+    'Fast Food': { emoji: '🍔', color: 'bg-orange-100 text-orange-800' },
+    'Bakery Items': { emoji: '🥐', color: 'bg-amber-50 text-amber-700' },
+    'Grains & Pulses': { emoji: '🌾', color: 'bg-lime-50 text-lime-700' },
+    'Meat & Seafood': { emoji: '🍤', color: 'bg-red-100 text-red-800' },
+    'Combo': { emoji: '🍱', color: 'bg-purple-50 text-purple-700' },
+    'Other': { emoji: '📦', color: 'bg-gray-50 text-gray-700' },
+  };
+
   const { data: categoriesData } = useCategories();
-  // Filter categories based on store type if selected
   const allCategories = categoriesData?.data || [];
-  const availableCategories = initialStoreType
-    ? (STORE_CATEGORY_MAPPING[initialStoreType] || MENU_CATEGORIES)
-    : allCategories.map((c: any) => c.name);
 
-  const displayedCategories = allCategories.filter((cat: any) =>
-    !initialStoreType || availableCategories.includes(cat.name)
-  );
-
+  // Only fetch products if we are actually browsing (filters active)
   const { data: productsData, isLoading, isError } = useProducts({
     category: selectedCategory || undefined,
     foodType: selectedFoodType || undefined,
@@ -55,15 +70,14 @@ export default function BrowsePage() {
     page: currentPage,
     limit: 20,
     available: 'true',
-  });
+  }, hasActiveFilters);
 
   const products = productsData?.data || [];
   const pagination = productsData?.pagination;
 
-  // Update URL params when filters change
+  // Update URL params
   useEffect(() => {
     const params = new URLSearchParams();
-
     if (selectedCategory) params.set('category', selectedCategory);
     if (selectedFoodType) params.set('type', selectedFoodType);
     if (searchQuery) params.set('search', searchQuery);
@@ -74,16 +88,16 @@ export default function BrowsePage() {
     const queryString = params.toString();
     const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
-    // Only update URL if it's different to avoid infinite loops
     const currentSearch = window.location.search || '';
     const newSearch = queryString ? `?${queryString}` : '';
+
     if (currentSearch !== newSearch) {
+      // Using replace to avoid clogging history
       router.replace(newUrl || '', { scroll: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, selectedFoodType, searchQuery, currentPage, sortBy, sortOrder]);
 
-  // Sync state with URL params on mount or when URL changes
+  // Sync state with URL params on mount/change
   useEffect(() => {
     const category = searchParams?.get('category') || '';
     const type = searchParams?.get('type') || '';
@@ -98,31 +112,16 @@ export default function BrowsePage() {
     if (page !== currentPage) setCurrentPage(page);
     if (sort !== sortBy) setSortBy(sort);
     if (order !== sortOrder) setSortOrder(order);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category === selectedCategory ? '' : category);
     setCurrentPage(1);
-  };
-
-  const handleFoodTypeSelect = (foodType: string) => {
-    setSelectedFoodType(foodType === selectedFoodType ? '' : foodType);
-    setCurrentPage(1);
+    setSearchQuery(''); // Clear search on category select for cleaner view
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(1);
-  };
-
-  const handleSortByChange = (newSortBy: string) => {
-    setSortBy(newSortBy);
-    setCurrentPage(1);
-  };
-
-  const handleSortOrderChange = () => {
-    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     setCurrentPage(1);
   };
 
@@ -131,195 +130,181 @@ export default function BrowsePage() {
     setSelectedFoodType('');
     setSearchQuery('');
     setCurrentPage(1);
-    setSortBy('name');
-    setSortOrder('asc');
   };
 
-  const hasActiveFilters = selectedCategory || selectedFoodType || searchQuery;
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-stone-50">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
 
+        {/* Search Header */}
+        <div className="mb-10 max-w-2xl mx-auto">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-stone-800 mb-2">
+              {hasActiveFilters ? "Search Results" : "What are you looking for?"}
+            </h1>
+            <p className="text-stone-500">
+              {hasActiveFilters ? "Find exactly what you need" : "Explore our wide range of categories"}
+            </p>
+          </div>
 
-
-        {/* Search and Filters Section */}
-        <div className="mb-8">
-          <form onSubmit={handleSearch} className="mb-4">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-stone-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search for biryani, cake, or groceries..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-14 rounded-full shadow-sm border-stone-200 focus:border-orange-500 focus:ring-orange-500 text-lg bg-white"
+            />
+            {searchQuery && (
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
+                variant="ghost"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 hover:bg-transparent"
               >
-                <Filter className="w-4 h-4" />
-                Filters
+                <X className="w-5 h-5 text-stone-400" />
               </Button>
-            </div>
+            )}
           </form>
-
-          {/* Active Filters */}
-          {hasActiveFilters && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {selectedCategory && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setSelectedCategory('')}
-                  className="flex items-center gap-1"
-                >
-                  {selectedCategory}
-                  <X className="w-3 h-3" />
-                </Button>
-              )}
-              {selectedFoodType && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setSelectedFoodType('')}
-                  className="flex items-center gap-1"
-                >
-                  {selectedFoodType}
-                  <X className="w-3 h-3" />
-                </Button>
-              )}
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Clear All
-                </Button>
-              )}
-            </div>
-          )}
-
-          {/* Expanded Filters */}
-          {showFilters && (
-            <Card className="p-4 mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Category</label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant={selectedCategory === '' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleCategorySelect('')}
-                    >
-                      All
-                    </Button>
-                    {displayedCategories.map((cat: any) => (
-                      <Button
-                        key={cat.name}
-                        variant={selectedCategory === cat.name ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleCategorySelect(cat.name)}
-                      >
-                        {cat.name}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Food Type</label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant={selectedFoodType === '' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleFoodTypeSelect('')}
-                    >
-                      All
-                    </Button>
-                    {['veg', 'non-veg', 'egg', 'vegan'].map((type) => (
-                      <Button
-                        key={type}
-                        variant={selectedFoodType === type ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleFoodTypeSelect(type)}
-                      >
-                        {type}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Sort By</label>
-                  <div className="flex gap-2">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => handleSortByChange(e.target.value)}
-                      className="border rounded px-3 py-2 flex-1"
-                    >
-                      <option value="name">Name</option>
-                      <option value="price">Price</option>
-                    </select>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSortOrderChange}
-                    >
-                      {sortOrder === 'asc' ? '↑' : '↓'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
         </div>
 
-        {/* Products Grid */}
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <Spinner size="lg" />
-          </div>
-        ) : isError ? (
-          <div className="text-center py-20">
-            <p className="text-red-500">Error loading products. Please try again.</p>
-          </div>
-        ) : products.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-gray-500">No products found. Try adjusting your filters.</p>
+        {/* View Switcher: Categories vs Products */}
+        {!hasActiveFilters ? (
+          // CATEGORY GRID View
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {MENU_CATEGORIES.map((category) => {
+              const details = MENU_CATEGORY_DETAILS[category] || { emoji: '🍽️', color: 'bg-gray-50' };
+              return (
+                <div
+                  key={category}
+                  onClick={() => handleCategorySelect(category)}
+                  className={`
+                             group cursor-pointer rounded-2xl p-6 flex flex-col items-center justify-center gap-4 text-center
+                             transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border border-transparent hover:border-stone-100
+                             bg-white shadow-sm
+                           `}
+                >
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl ${details.color} bg-opacity-50 group-hover:scale-110 transition-transform`}>
+                    {details.emoji}
+                  </div>
+                  <span className="font-semibold text-stone-700 group-hover:text-orange-600">
+                    {category}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         ) : (
+          // PRODUCT LIST View
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+            {/* Active Filter Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-8 bg-white p-4 rounded-xl shadow-sm border border-stone-100">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-stone-500 hover:text-stone-900">
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Back to Categories
+                </Button>
+                <div className="h-6 w-px bg-stone-200 mx-2" />
+
+                {selectedCategory && (
+                  <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full text-sm font-medium">
+                    {MENU_CATEGORY_DETAILS[selectedCategory]?.emoji} {selectedCategory}
+                    <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedCategory('')} />
+                  </div>
+                )}
+
+                {/* Food Type Toggles */}
+                <div className="flex items-center gap-1 sm:ml-4">
+                  {['veg', 'non-veg'].map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setSelectedFoodType(selectedFoodType === type ? '' : type)}
+                      className={`
+                                        px-3 py-1 rounded-full text-xs font-bold border transition-colors
+                                        ${selectedFoodType === type
+                          ? (type === 'veg' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200')
+                          : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300'}
+                                    `}
+                    >
+                      {type === 'veg' ? 'VEG' : 'NON-VEG'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sorting */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="text-sm border-stone-200 rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-transparent"
+              >
+                <option value="name">Sort by Name</option>
+                <option value="price">Sort by Price</option>
+              </select>
             </div>
 
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Previous
-                </Button>
-                <span className="text-sm">
-                  Page {pagination.page} of {pagination.totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
-                  disabled={currentPage === pagination.totalPages}
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4" />
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <Spinner size="lg" />
+                <p className="mt-4 text-stone-500 animate-pulse">Finding best items for you...</p>
+              </div>
+            ) : isError ? (
+              <div className="text-center py-20 bg-white rounded-2xl shadow-sm">
+                <p className="text-red-500 mb-4">Something went wrong while loading products.</p>
+                <Button onClick={() => window.location.reload()}>Try Again</Button>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-2xl shadow-sm">
+                <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-10 h-10 text-stone-300" />
+                </div>
+                <h3 className="text-lg font-bold text-stone-900 mb-1">No products found</h3>
+                <p className="text-stone-500">
+                  Try changing your filters or search term.
+                </p>
+                <Button variant="link" onClick={clearFilters} className="mt-2 text-orange-600">
+                  Clear all filters
                 </Button>
               </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      isStoreOpen={product.isStoreOpen}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {pagination && pagination.totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-4 mt-12">
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Previous
+                    </Button>
+                    <span className="text-sm font-medium text-stone-600">
+                      Page {pagination.page} of {pagination.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
+                      disabled={currentPage === pagination.totalPages}
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

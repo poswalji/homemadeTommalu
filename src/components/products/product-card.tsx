@@ -29,13 +29,15 @@ export interface Product {
   storeName?: string;
   isPopular?: boolean;
   isBestSeller?: boolean;
+  isStoreOpen?: boolean;
 }
 
 interface ProductCardProps {
   product: Product;
+  isStoreOpen?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, isStoreOpen = true }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const addToCart = useAddToCart();
   const { isAuthenticated } = useAuth();
@@ -138,11 +140,10 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
           {product.foodType && (
-            <span className={`px-2 py-1 rounded text-xs ${
-              product.foodType === 'veg' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
+            <span className={`px-2 py-1 rounded text-xs ${product.foodType === 'veg'
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+              }`}>
               {product.foodType.toUpperCase()}
             </span>
           )}
@@ -171,14 +172,17 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
           <Button
             onClick={handleAddToCart}
-            disabled={!product.isAvailable || addToCart.isPending}
+            disabled={!product.isAvailable || addToCart.isPending || !isStoreOpen}
             className="flex-1 flex items-center justify-center gap-2"
+            variant={!isStoreOpen ? "secondary" : "default"}
           >
             {addToCart.isPending ? (
               <>
                 <Spinner size="sm" />
                 Adding...
               </>
+            ) : !isStoreOpen ? (
+              "Store Closed"
             ) : (
               <>
                 <ShoppingCart className="w-4 h-4" />
@@ -188,7 +192,10 @@ export function ProductCard({ product }: ProductCardProps) {
           </Button>
         </div>
 
-        {!product.isAvailable && (
+        {!isStoreOpen && (
+          <p className="text-xs text-orange-500 mt-2 text-center">Store is currently closed for orders</p>
+        )}
+        {isStoreOpen && !product.isAvailable && (
           <p className="text-xs text-red-500 mt-2">Currently unavailable</p>
         )}
       </div>

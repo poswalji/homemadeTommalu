@@ -58,10 +58,11 @@ export const useProducts = (params?: {
   sortOrder?: string;
   page?: number;
   limit?: number;
-}) => {
+}, enabled = true) => {
   return useQuery({
     queryKey: publicKeys.products(params),
     queryFn: () => publicApi.getProducts(params),
+    enabled: enabled,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 };

@@ -18,23 +18,10 @@ export default function HomemadePage() {
     const { state } = useHomemade();
     const { data: authData } = useAuthMe();
 
-    const [selectedDate, setSelectedDate] = useState(0);
     const [selectedSlot, setSelectedSlot] = useState<"Lunch" | "Dinner">("Lunch");
     const [quantity, setQuantity] = useState(1);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("one-time");
-
-    // Generate next 5 days
-    const dates = Array.from({ length: 5 }).map((_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() + i);
-        return {
-            day: d.toLocaleDateString("en-US", { weekday: "short" }),
-            date: d.getDate(),
-            fullDate: d,
-            formatted: d.toLocaleDateString("en-US", { month: 'short', day: 'numeric' })
-        };
-    });
 
     const handleOrderClick = () => {
         if (!authData?.user) {
@@ -62,10 +49,10 @@ export default function HomemadePage() {
                         <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                         <div>
                             <p className="font-bold text-amber-800 text-sm md:text-base">
-                                Pre-Order Homemade Thali
+                                Today's Fresh Menu
                             </p>
                             <p className="text-amber-700 text-xs md:text-sm mt-1">
-                                Homemade meals are prepared fresh on order. Limited plates available. Order before 11AM for Lunch or 7PM for Dinner.
+                                Ordering Open: <strong>9:00 AM - 12:00 PM (Lunch)</strong> & <strong>9:00 AM - 7:00 PM (Dinner)</strong>.
                             </p>
                         </div>
                     </motion.div>
@@ -89,29 +76,10 @@ export default function HomemadePage() {
                                     exit={{ opacity: 0, y: -10 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    <h1 className="text-2xl md:text-3xl font-bold text-stone-800 mb-6">Select Your Meal</h1>
-
-                                    {/* Date Selection */}
-                                    <div className="mb-8">
-                                        <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                            <Calendar className="w-4 h-4" /> Select Date
-                                        </h2>
-                                        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                                            {dates.map((item, index) => (
-                                                <button
-                                                    key={index}
-                                                    onClick={() => setSelectedDate(index)}
-                                                    className={`flex flex-col items-center justify-center min-w-[70px] h-20 rounded-2xl border transition-all ${selectedDate === index
-                                                        ? "bg-orange-600 text-white border-orange-600 shadow-md transform scale-105"
-                                                        : "bg-white text-stone-600 border-stone-200 hover:border-orange-300"
-                                                        }`}
-                                                >
-                                                    <span className="text-xs font-medium uppercase">{item.day}</span>
-                                                    <span className="text-xl font-bold">{item.date}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    <h1 className="text-2xl md:text-3xl font-bold text-stone-800 mb-6 flex items-center gap-2">
+                                        <Leaf className="w-8 h-8 text-green-600" />
+                                        Today's Special Thali
+                                    </h1>
 
                                     {/* Slot Selection */}
                                     <div className="mb-8">
@@ -339,7 +307,7 @@ export default function HomemadePage() {
                 isOpen={isDialogOpen}
                 onClose={() => setIsDialogOpen(false)}
                 orderDetails={{
-                    date: dates[selectedDate].formatted,
+                    date: new Date().toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }),
                     slot: selectedSlot,
                     quantity: quantity,
                     totalPrice: activeTab === 'one-time' ? totalPrice : 0,

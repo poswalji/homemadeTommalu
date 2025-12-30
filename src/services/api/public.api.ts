@@ -109,7 +109,9 @@ export const publicApi = {
 
   // Get menu for a store
   getStoreMenu: async (storeId: string): Promise<MenuResponse> => {
-    const response = await apiClient.get<MenuResponse>(`/public/stores/${storeId}/menu`);
+    const response = await apiClient.get<MenuResponse>(`/public/stores/${storeId}/menu`, {
+      params: { available: 'all' }
+    });
     return response.data;
   },
 

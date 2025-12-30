@@ -1,25 +1,9 @@
 
-import axios from 'axios';
-
-// Get base URL from environment or default
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-
-// Setup axios instance with auth interceptor if needed (assuming token is stored in localStorage)
-const api = axios.create({
-    baseURL: API_URL,
-});
-
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+import { apiClient } from '@/lib/axios';
 
 export const getHomemadeDashboardStats = async () => {
     try {
-        const response = await api.get('/homemade/dashboard');
+        const response = await apiClient.get('/homemade/dashboard');
         return response.data;
     } catch (error) {
         throw error;
@@ -28,7 +12,7 @@ export const getHomemadeDashboardStats = async () => {
 
 export const updateHomemadeMenu = async (data: any) => {
     try {
-        const response = await api.patch('/homemade/update', data);
+        const response = await apiClient.patch('/homemade/update', data);
         return response.data;
     } catch (error) {
         throw error;
@@ -37,7 +21,7 @@ export const updateHomemadeMenu = async (data: any) => {
 
 export const confirmHomemadeOrder = async (orderId: string) => {
     try {
-        const response = await api.patch(`/homemade/order/${orderId}/confirm`);
+        const response = await apiClient.patch(`/homemade/order/${orderId}/confirm`);
         return response.data;
     } catch (error) {
         throw error;
@@ -46,7 +30,7 @@ export const confirmHomemadeOrder = async (orderId: string) => {
 
 export const getTodayMenu = async () => {
     try {
-        const response = await api.get('/homemade/today'); // Public route
+        const response = await apiClient.get('/homemade/today'); // Public route
         return response.data;
     } catch (error) {
         throw error;
@@ -55,7 +39,7 @@ export const getTodayMenu = async () => {
 
 export const placeHomemadeOrder = async (orderData: any) => {
     try {
-        const response = await api.post('/homemade/order', orderData);
+        const response = await apiClient.post('/homemade/order', orderData);
         return response.data;
     } catch (error) {
         throw error;
