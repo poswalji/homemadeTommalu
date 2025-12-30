@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-gray-50">
+    <footer className="border-t bg-gray-50 ">
       <div className="container px-4 md:px-20 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>

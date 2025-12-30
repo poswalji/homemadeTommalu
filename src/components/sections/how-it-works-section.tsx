@@ -1,36 +1,29 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, ShoppingCart, MapPin, Package } from "lucide-react";
+import { Search, ShoppingCart, MapPin, Package, Calendar, User, Check } from "lucide-react";
 
 const steps = [
   {
     step: "1",
-    title: "Browse & Select",
-    description: "Explore our wide range of products and add items to your cart",
-    icon: <Search className="h-8 w-8" />,
-    color: "bg-blue-600",
-  },
-  {
-    step: "2",
-    title: "Add to Cart",
-    description: "Review your selections and proceed to checkout",
-    icon: <ShoppingCart className="h-8 w-8" />,
-    color: "bg-green-600",
-  },
-  {
-    step: "3",
-    title: "Enter Address",
-    description: "Provide your delivery address for fast doorstep delivery",
-    icon: <MapPin className="h-8 w-8" />,
+    title: "Pre-order Your Meal",
+    description: "Browse daily menus and pre-order by 11AM (Lunch) or 7PM (Dinner).",
+    icon: <Calendar className="h-8 w-8" />,
     color: "bg-orange-600",
   },
   {
-    step: "4",
-    title: "Track Delivery",
-    description: "Get real-time updates and enjoy your fresh order!",
-    icon: <Package className="h-8 w-8" />,
-    color: "bg-purple-600",
+    step: "2",
+    title: "Enter Details",
+    description: "Provide your name and delivery address to get started.",
+    icon: <User className="h-8 w-8" />,
+    color: "bg-blue-600",
+  },
+  {
+    step: "3",
+    title: "Book & Enjoy",
+    description: "Confirm your order and enjoy fresh, homemade food delivered to you.",
+    icon: <Check className="h-8 w-8" />,
+    color: "bg-green-600",
   },
 ];
 
