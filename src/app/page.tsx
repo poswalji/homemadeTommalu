@@ -5,7 +5,7 @@ import { StoreCategoriesSection } from "@/components/sections/store-categories-s
 import { StatsSection } from "@/components/sections/stats-section";
 import { HowItWorksSection } from "@/components/sections/how-it-works-section";
 import { HeroSection } from "@/components/sections/hero-section";
-import { HomemadeFoodSection } from "@/components/sections/homemade-food-section";
+
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 
 export default function Home() {
