@@ -65,6 +65,7 @@ export interface MenuItem {
     isRequired: boolean;
   }>;
   storeId?: string;
+  isStoreOpen?: boolean;
 }
 
 export interface StoresResponse {

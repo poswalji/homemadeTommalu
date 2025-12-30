@@ -31,7 +31,7 @@ export function ConfirmOrderDialog({ isOpen, onClose, orderDetails }: ConfirmOrd
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [step, setStep] = useState(1);
-    const [address, setAddress] = useState(user?.address || "");
+    const [address, setAddress] = useState(user?.addresses?.[0]?.street || "");
     const [phone, setPhone] = useState(user?.phone || "");
     const [area, setArea] = useState("");
 
