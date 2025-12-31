@@ -1,82 +1,60 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
-import { useSocket } from '@/context/socket-context';
-import { notificationsApi } from '@/services/api/notifications.api';
+import { useNotifications } from '@/hooks/api/use-notifications';
 import { NotificationDropdown } from './notification-dropdown';
 import { Badge } from '@/components/ui/badge';
 
 export const NotificationBell: React.FC = () => {
-  const { unreadCount, notifications } = useSocket();
-  const [isOpen, setIsOpen] = useState(false);
-  const [allNotifications, setAllNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    deleteAllNotifications
+  } = useNotifications();
 
-  useEffect(() => {
-    // Load notifications from API
-    const loadNotifications = async () => {
-      try {
-        setLoading(true);
-        const response = await notificationsApi.getNotifications({ limit: 10 });
-        console.log(response);
-        setAllNotifications(response.data?.notifications || []);
-      } catch (error) {
-        console.error('Error loading notifications:', error);
-      } finally {
-        setLoading(false);
+  // Track previous notifications to detect new ones
+  const [prevNotifications, setPrevNotifications] = React.useState<any[]>([]);
+  const isFirstLoad = React.useRef(true);
+
+  React.useEffect(() => {
+    if (isLoading) return;
+
+    // Skip toast on first load
+    if (isFirstLoad.current) {
+      if (notifications.length > 0) {
+        setPrevNotifications(notifications);
       }
-    };
+      isFirstLoad.current = false;
+      return;
+    }
 
-    loadNotifications();
-  }, []);
+    // Find new notifications
+    const newNotifications = notifications.filter(
+      current => !prevNotifications.find(prev => prev.id === current.id)
+    );
 
-  // Merge real-time notifications with API notifications
-  const mergedNotifications = [
-    ...notifications,
-    ...allNotifications?.filter(
-      (apiNotif) => !notifications.find((n) => n.id === apiNotif.id)
-    )
-  ].sort((a, b) => {
-    const dateA = new Date(a.createdAt || a.createdAt).getTime();
-    const dateB = new Date(b.createdAt || b.createdAt).getTime();
-    return dateB - dateA;
-  });
+    if (newNotifications.length > 0) {
+      newNotifications.forEach(notif => {
+        // Show toast for new notification
+        import('sonner').then(({ toast }) => {
+          toast.success(notif.title, {
+            description: notif.message,
+            duration: 5000,
+          });
+        });
+      });
+      setPrevNotifications(notifications);
+    }
+  }, [notifications, isLoading, prevNotifications]);
+
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
-  };
-
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      await notificationsApi.markAsRead(id);
-      // Update local state
-      setAllNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    try {
-      await notificationsApi.markAllAsRead();
-      setAllNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true }))
-      );
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-    }
-  };
-
-  const handleDeleteAll = async () => {
-    try {
-      await notificationsApi.deleteAll();
-      setAllNotifications([]);
-    } catch (error) {
-      console.error('Error deleting all notifications:', error);
-    }
   };
 
   return (
@@ -99,13 +77,13 @@ export const NotificationBell: React.FC = () => {
 
       {isOpen && (
         <NotificationDropdown
-          notifications={mergedNotifications}
+          notifications={notifications}
           unreadCount={unreadCount}
-          onMarkAsRead={handleMarkAsRead}
-          onMarkAllAsRead={handleMarkAllAsRead}
-          onDeleteAll={handleDeleteAll}
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
+          onDeleteAll={deleteAllNotifications}
           onClose={() => setIsOpen(false)}
-          loading={loading}
+          loading={isLoading}
         />
       )}
     </div>

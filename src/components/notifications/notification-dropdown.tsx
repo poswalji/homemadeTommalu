@@ -199,7 +199,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             variant="ghost"
             size="sm"
             className="text-xs text-gray-600"
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              window.location.href = '/notifications';
+            }}
           >
             View all notifications
           </Button>

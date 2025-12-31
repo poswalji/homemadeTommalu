@@ -96,18 +96,18 @@ export default function CheckoutPage() {
     (sum: number, i: any) => sum + (Number(i.price) || 0) * (Number(i.quantity) || 0),
     0
   );
-  
+
   // Use deliveryCharge from API if exists, otherwise calculate
   const deliveryCharge = cart?.deliveryCharge !== undefined && cart?.deliveryCharge !== null
     ? cart.deliveryCharge
     : (computedItemsTotal >= 100 ? 0 : 30);
-  
+
   // Use finalAmount from API if exists, otherwise calculate
   const discountAmount = cart?.discount?.discountAmount || 0;
   const finalAmount = cart?.finalAmount !== undefined && cart?.finalAmount !== null
     ? cart.finalAmount
     : Math.max(0, computedItemsTotal + deliveryCharge - discountAmount);
-  
+
   // Use totalAmount from API if exists, otherwise use computed
   const totalAmount = cart?.totalAmount !== undefined && cart?.totalAmount !== null
     ? cart.totalAmount
@@ -179,21 +179,21 @@ export default function CheckoutPage() {
 
     // Build WhatsApp message
     let message = `🍽️ *New Order Request*\n\n`;
-    
+
     if (cart?.storeName) {
       message += `🏪 *Store:* ${cart.storeName}\n\n`;
     }
-    
+
     message += `📦 *Order Items:*\n${itemsText}\n\n`;
     message += `📍 *Delivery Address:*\n${addressText}\n\n`;
     message += `💰 *Order Summary:*\n`;
     message += `Items Total: ₹${totalAmount.toFixed(2)}\n`;
     message += `Delivery Charge: ₹${deliveryCharge.toFixed(2)}\n`;
-    
+
     if (cart?.discount) {
       message += `Discount (${cart.discount.code}): -₹${discountAmount.toFixed(2)}\n`;
     }
-    
+
     message += `\n*Total Amount: ₹${finalAmount.toFixed(2)}*\n\n`;
     message += `💳 Payment Method: Cash on Delivery\n\n`;
     message += `Please confirm this order. Thank you! 🙏`;
@@ -340,99 +340,99 @@ export default function CheckoutPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                <div>
-                  <Label htmlFor="label">Address Label</Label>
-                  <select
-                    id="label"
-                    value={formData.label}
-                    onChange={(e) => setFormData({ ...formData, label: e.target.value as 'Home' | 'Work' | 'Other' })}
-                    className="w-full border rounded px-3 py-2 mt-1"
-                  >
-                    <option value="Home">Home</option>
-                    <option value="Work">Work</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div className="col-span-2">
-                  <Label>Location on Map</Label>
-                  <LocationPicker
-                    onLocationSelect={(location) => {
-                      setFormData({
-                        ...formData,
-                        street: location.address.split(',')[0] || location.address,
-                        city: location.city || '',
-                        state: location.state || '',
-                        pincode: location.pincode || '',
-                        coordinates: { lat: location.lat, lng: location.lng },
-                      });
-                    }}
-                    initialLocation={formData.coordinates || undefined}
-                    height="300px"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <Label htmlFor="street">Street Address *</Label>
-                  <Input
-                    id="street"
-                    value={formData.street}
-                    onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                    required
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Select location on map above or enter manually
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="city">City *</Label>
+                    <Label htmlFor="label">Address Label</Label>
+                    <select
+                      id="label"
+                      value={formData.label}
+                      onChange={(e) => setFormData({ ...formData, label: e.target.value as 'Home' | 'Work' | 'Other' })}
+                      className="w-full border rounded px-3 py-2 mt-1"
+                    >
+                      <option value="Home">Home</option>
+                      <option value="Work">Work</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label>Location on Map</Label>
+                    <LocationPicker
+                      onLocationSelect={(location) => {
+                        setFormData({
+                          ...formData,
+                          street: location.address.split(',')[0] || location.address,
+                          city: location.city || '',
+                          state: location.state || '',
+                          pincode: location.pincode || '',
+                          coordinates: { lat: location.lat, lng: location.lng },
+                        });
+                      }}
+                      initialLocation={formData.coordinates || undefined}
+                      height="300px"
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label htmlFor="street">Street Address *</Label>
                     <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      id="street"
+                      value={formData.street}
+                      onChange={(e) => setFormData({ ...formData, street: e.target.value })}
                       required
                       className="mt-1"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Select location on map above or enter manually
+                    </p>
                   </div>
 
-                  <div>
-                    <Label htmlFor="state">State</Label>
-                    <Input
-                      id="state"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="city">City *</Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        required
+                        className="mt-1"
+                      />
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="pincode">Pincode *</Label>
-                    <Input
-                      id="pincode"
-                      value={formData.pincode}
-                      onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                      required
-                      pattern="[0-9]{6}"
-                      maxLength={6}
-                      className="mt-1"
-                    />
+                    <div>
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        value={formData.state}
+                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="country">Country</Label>
-                    <Input
-                      id="country"
-                      value={formData.country}
-                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                      className="mt-1"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="pincode">Pincode *</Label>
+                      <Input
+                        id="pincode"
+                        value={formData.pincode}
+                        onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                        required
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="country">Country</Label>
+                      <Input
+                        id="country"
+                        value={formData.country}
+                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
-                </div>
                 </div>
               )}
             </Card>
@@ -497,33 +497,23 @@ export default function CheckoutPage() {
                 <span>₹{finalAmount.toFixed(2)}</span>
               </div>
 
-              {/* WhatsApp Order Button */}
-              <Button
-                type="button"
-                onClick={handleWhatsAppOrder}
-                className="w-full mb-3 bg-[#25D366] hover:bg-[#20BA5A] text-white"
-                size="lg"
-                disabled={!hasItems}
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Order via WhatsApp
-              </Button>
-
-              {/* Backend Order Button - Disabled */}
+              {/* Backend Order Button - Enabled */}
               <div className="space-y-2">
                 <Button
                   type="submit"
                   className="w-full"
                   size="lg"
-                  disabled={true}
-                  variant="outline"
+                  disabled={!hasItems || (cart?.isStoreOpen === false)}
                 >
                   <Check className="w-5 h-5 mr-2" />
-                  Place Order (Backend)
+                  Place Order
                 </Button>
-                <p className="text-xs text-center text-amber-600 font-medium">
-                  ⚠️ Currently getting technical error
-                </p>
+
+                {cart?.isStoreOpen === false && (
+                  <p className="text-xs text-center text-red-600 font-medium bg-red-50 p-2 rounded">
+                    ⚠️ Store is currently closed ({cart.storeStatusReason || 'Closed'}).
+                  </p>
+                )}
               </div>
             </Card>
           </div>

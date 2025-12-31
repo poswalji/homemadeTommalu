@@ -19,7 +19,10 @@ export interface Cart {
   _id?: string;
   userId?: string;
   storeId?: string;
-  storeName?: string;
+  storeName: string | null;
+  isStoreOpen?: boolean;
+  storeStatusReason?: string;
+  storeNextOpen?: any;
   items: CartItem[];
   totalItems?: number; // Backend may not always include this
   totalAmount?: number; // Backend may not always include this
@@ -72,6 +75,7 @@ export const cartApi = {
           success: true,
           data: {
             items: [],
+            storeName: null,
             totalItems: 0,
             totalAmount: 0,
             deliveryCharge: 0,

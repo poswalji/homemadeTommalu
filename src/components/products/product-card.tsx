@@ -12,6 +12,8 @@ import Image from 'next/image';
 import { useAuth } from '@/providers/auth-provider';
 import { addItemToGuestCart } from '@/lib/cart-storage';
 import { usePathname, useRouter } from 'next/navigation';
+import { useClearCart } from '@/hooks/api';
+import { ClearCartDialog } from '@/components/modals/clear-cart-dialog';
 
 export interface Product {
   id: string;
@@ -44,6 +46,10 @@ export function ProductCard({ product, isStoreOpen = true }: ProductCardProps) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const clearCart = useClearCart();
+  const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+
   const discountPrice = product.discount
     ? product.price - (product.price * product.discount / 100)
     : product.price;
@@ -75,9 +81,37 @@ export function ProductCard({ product, isStoreOpen = true }: ProductCardProps) {
       });
       toast.success(`${product.name} added to cart!`);
       setQuantity(1);
+    } catch (error: any) {
+      // Check for specific backend error about multiple stores
+      // The backend returns "You can only order from one store at a time"
+      const errorMessage = error?.response?.data?.message || handleApiError(error);
+
+      if (errorMessage && (
+        errorMessage.includes('one store') ||
+        errorMessage.includes('Clear cart')
+      )) {
+        setShowClearCartDialog(true);
+      } else {
+        toast.error(errorMessage || "Failed to add to cart");
+      }
+    }
+  };
+
+  const handleClearAndAdd = async () => {
+    try {
+      setIsClearing(true);
+      await clearCart.mutateAsync();
+      await addToCart.mutateAsync({
+        menuItemId: product.id,
+        quantity,
+      });
+      toast.success("Cart cleared and item added!");
+      setQuantity(1);
+      setShowClearCartDialog(false);
     } catch (error) {
-      const errorMessage = handleApiError(error);
-      toast.error(errorMessage);
+      toast.error("Failed to update cart");
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -206,6 +240,12 @@ export function ProductCard({ product, isStoreOpen = true }: ProductCardProps) {
           <p className="text-xs text-red-500 mt-2">Currently unavailable</p>
         )}
       </div>
+      <ClearCartDialog
+        isOpen={showClearCartDialog}
+        onClose={() => setShowClearCartDialog(false)}
+        onConfirm={handleClearAndAdd}
+        isClearing={isClearing}
+      />
     </Card>
   );
 }
