@@ -60,6 +60,12 @@ export const notificationsApi = {
     return response.data;
   },
 
+  // Delete all notifications
+  deleteAll: async (): Promise<{ success: boolean; message: string; data: { deletedCount: number } }> => {
+    const response = await axios.delete('/notifications');
+    return response.data;
+  },
+
   // Update FCM token
   updateFCMToken: async (fcmToken: string): Promise<{ success: boolean; message: string; data: any }> => {
     const response = await axios.post('/notifications/fcm-token', { fcmToken });

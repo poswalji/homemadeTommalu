@@ -18,7 +18,7 @@ export const NotificationBell: React.FC = () => {
     const loadNotifications = async () => {
       try {
         setLoading(true);
-        const response = await notificationsApi.getNotifications({ limit: 20 });
+        const response = await notificationsApi.getNotifications({ limit: 10 });
         console.log(response);
         setAllNotifications(response.data?.notifications || []);
       } catch (error) {
@@ -70,6 +70,15 @@ export const NotificationBell: React.FC = () => {
     }
   };
 
+  const handleDeleteAll = async () => {
+    try {
+      await notificationsApi.deleteAll();
+      setAllNotifications([]);
+    } catch (error) {
+      console.error('Error deleting all notifications:', error);
+    }
+  };
+
   return (
     <div className="relative">
       <button
@@ -94,6 +103,7 @@ export const NotificationBell: React.FC = () => {
           unreadCount={unreadCount}
           onMarkAsRead={handleMarkAsRead}
           onMarkAllAsRead={handleMarkAllAsRead}
+          onDeleteAll={handleDeleteAll}
           onClose={() => setIsOpen(false)}
           loading={loading}
         />

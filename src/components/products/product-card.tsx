@@ -49,6 +49,11 @@ export function ProductCard({ product, isStoreOpen = true }: ProductCardProps) {
     : product.price;
 
   const handleAddToCart = async () => {
+    if (!isStoreOpen) {
+      toast.error('Store is currently closed for orders');
+      return;
+    }
+
     if (!product.isAvailable) {
       toast.error('Product is currently unavailable');
       return;
@@ -157,6 +162,7 @@ export function ProductCard({ product, isStoreOpen = true }: ProductCardProps) {
               size="sm"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               className="h-8 w-8 p-0"
+              disabled={!isStoreOpen}
             >
               <Minus className="w-4 h-4" />
             </Button>
@@ -166,13 +172,14 @@ export function ProductCard({ product, isStoreOpen = true }: ProductCardProps) {
               size="sm"
               onClick={() => setQuantity(quantity + 1)}
               className="h-8 w-8 p-0"
+              disabled={!isStoreOpen}
             >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
           <Button
             onClick={handleAddToCart}
-            disabled={!product.isAvailable || addToCart.isPending || !isStoreOpen}
+            disabled={!product.isAvailable || addToCart.isPending}
             className="flex-1 flex items-center justify-center gap-2"
             variant={!isStoreOpen ? "secondary" : "default"}
           >
