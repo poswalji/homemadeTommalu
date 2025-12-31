@@ -1,381 +1,162 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
-import { useProducts, useCategories } from '@/hooks/api';
-import { ProductCard } from '@/components/products/product-card';
+import { useAuth } from '@/providers/auth-provider';
+import { useMyOrders } from '@/hooks/api/use-orders';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
+import Link from 'next/link';
+import { ShoppingBag, MapPin, Star, User, Package, ChevronRight, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 import { Spinner } from '@/components/ui/spinner';
-import { Search, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 
 export default function CustomerDashboard() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  
-  // Read initial values from URL params
-  const initialCategory = searchParams?.get('category') || '';
-  const initialType = searchParams?.get('type') || '';
-  const initialSearch = searchParams?.get('search') || '';
-  const initialPage = parseInt(searchParams?.get('page') || '1', 10);
-  const initialSortBy = searchParams?.get('sortBy') || 'name';
-  const initialSortOrder = (searchParams?.get('sortOrder') || 'asc') as 'asc' | 'desc';
+  const { user } = useAuth();
+  const { data: ordersData, isLoading } = useMyOrders();
+  const orders = ordersData?.data || [];
 
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
-  const [selectedFoodType, setSelectedFoodType] = useState<string>(initialType);
-  const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [currentPage, setCurrentPage] = useState(initialPage);
-  const [sortBy, setSortBy] = useState(initialSortBy);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialSortOrder);
-  const [showFilters, setShowFilters] = useState(false);
+  // Calculate stats
+  const activeOrders = orders.filter(o =>
+    ['Pending', 'Confirmed', 'OutForDelivery'].includes(o.status)
+  );
+  const totalOrders = orders.length;
+  // Mock total spent calculation or other stats if needed
 
-  const { data: categoriesData } = useCategories();
-  const categories: Array<{ name: string; image?: string }> = categoriesData?.data || [];
+  const recentOrders = orders.slice(0, 5);
 
-  const { data: productsData, isLoading, isError } = useProducts({
-    category: selectedCategory || undefined,
-    foodType: selectedFoodType || undefined,
-    search: searchQuery || undefined,
-    sortBy,
-    sortOrder,
-    page: currentPage,
-    limit: 20,
-    available: 'true',
-  });
-
-  const products = productsData?.data || [];
-  const pagination = productsData?.pagination;
-
-  // Sync state with URL params on mount or when URL changes (only once)
-  useEffect(() => {
-    const category = searchParams?.get('category') || '';
-    const type = searchParams?.get('type') || '';
-    const search = searchParams?.get('search') || '';
-    const page = parseInt(searchParams?.get('page') || '1', 10);
-    const sort = searchParams?.get('sortBy') || 'name';
-    const order = (searchParams?.get('sortOrder') || 'asc') as 'asc' | 'desc';
-    
-    // Only update if different to prevent loops
-    if (category !== selectedCategory) setSelectedCategory(category);
-    if (type !== selectedFoodType) setSelectedFoodType(type);
-    if (search !== searchQuery) setSearchQuery(search);
-    if (page !== currentPage) setCurrentPage(page);
-    if (sort !== sortBy) setSortBy(sort);
-    if (order !== sortOrder) setSortOrder(order);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
-  // Update URL params when filters change (debounced to prevent excessive updates)
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const params = new URLSearchParams();
-      
-      if (selectedCategory) params.set('category', selectedCategory);
-      if (selectedFoodType) params.set('type', selectedFoodType);
-      if (searchQuery) params.set('search', searchQuery);
-      if (currentPage > 1) params.set('page', currentPage.toString());
-      if (sortBy !== 'name') params.set('sortBy', sortBy);
-      if (sortOrder !== 'asc') params.set('sortOrder', sortOrder);
-      
-      const queryString = params.toString();
-      const newUrl = queryString ? `${pathname || ''}?${queryString}` : (pathname || '');
-      
-      // Only update URL if it's different to avoid infinite loops
-      const currentSearch = window.location.search || '';
-      const newSearch = queryString ? `?${queryString}` : '';
-      if (currentSearch !== newSearch && newUrl) {
-        router.replace(newUrl, { scroll: false });
-      }
-    }, 100); // Small delay to batch updates
-
-    return () => clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, selectedFoodType, searchQuery, currentPage, sortBy, sortOrder]);
-
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category === selectedCategory ? '' : category);
-    setCurrentPage(1);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'bg-yellow-100 text-yellow-800';
+      case 'Confirmed': return 'bg-blue-100 text-blue-800';
+      case 'OutForDelivery': return 'bg-purple-100 text-purple-800';
+      case 'Delivered': return 'bg-green-100 text-green-800';
+      case 'Cancelled': return 'bg-red-100 text-red-800';
+      case 'Rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
-
-  const handleFoodTypeSelect = (foodType: string) => {
-    setSelectedFoodType(foodType === selectedFoodType ? '' : foodType);
-    setCurrentPage(1);
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-  };
-
-  const handleSortByChange = (newSortBy: string) => {
-    setSortBy(newSortBy);
-    setCurrentPage(1);
-  };
-
-  const handleSortOrderChange = () => {
-    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    setCurrentPage(1);
-  };
-
-  const clearFilters = () => {
-    setSelectedCategory('');
-    setSelectedFoodType('');
-    setSearchQuery('');
-    setCurrentPage(1);
-    setSortBy('name');
-    setSortOrder('asc');
-  };
-
-  const hasActiveFilters = selectedCategory || selectedFoodType || searchQuery;
 
   return (
-    <Suspense>
-    <div className="space-y-4 sm:space-y-6">
-      {/* Welcome Section */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Browse Products</h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Discover and order from your favorite stores</p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Welcome back, {user?.name?.split(' ')[0]}! 👋
+          </h1>
+          <p className="text-gray-600 mt-1">Here's what's happening with your account.</p>
+        </div>
+        <Link href="/category/Restaurant">
+          <Button className="bg-[lab(66%_50.34_52.19)] hover:bg-[lab(60%_50.34_52.19)]">
+            Browse Food
+          </Button>
+        </Link>
       </div>
 
-      {/* Categories Horizontal Scroll */}
-      {categories.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Browse Categories</h2>
-          <div className="overflow-x-auto pb-2 -mx-4 px-4">
-            <div className="flex gap-4 min-w-max">
-              <button
-                onClick={() => handleCategorySelect('')}
-                className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all min-w-[100px] ${
-                  selectedCategory === ''
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                  selectedCategory === '' ? 'bg-blue-100' : 'bg-gray-100'
-                }`}>
-                  <span className="text-2xl">🍽️</span>
-                </div>
-                <span className="text-xs font-medium text-center">All</span>
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.name}
-                  onClick={() => handleCategorySelect(cat.name)}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all min-w-[100px] ${
-                    selectedCategory === cat.name
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center overflow-hidden ${
-                    selectedCategory === cat.name ? 'bg-blue-100' : 'bg-gray-100'
-                  }`}>
-                    {cat.image ? (
-                      <img 
-                        src={cat.image} 
-                        alt={cat.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-2xl">📦</span>
-                    )}
-                  </div>
-                  <span className="text-xs font-medium text-center">{cat.name}</span>
-                </button>
-              ))}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Active Orders</p>
+              <h3 className="text-2xl font-bold mt-1">{activeOrders.length}</h3>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Search and Filters Section */}
-      <div className="mb-6 sm:mb-8">
-        <form onSubmit={handleSearch} className="mb-3 sm:mb-4">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
-              <Input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 sm:pl-10 text-sm sm:text-base"
-              />
+            <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
+              <Clock className="h-5 w-5 text-orange-600" />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center justify-center gap-2 text-sm sm:text-base"
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-            </Button>
-          </div>
-        </form>
+          </CardContent>
+        </Card>
 
-        {/* Active Filters */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 mb-3 sm:mb-4">
-            {selectedCategory && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setSelectedCategory('')}
-                className="flex items-center gap-1 text-xs sm:text-sm"
-              >
-                <span className="truncate max-w-[120px] sm:max-w-none">{selectedCategory}</span>
-                <X className="w-3 h-3 flex-shrink-0" />
-              </Button>
-            )}
-            {selectedFoodType && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setSelectedFoodType('')}
-                className="flex items-center gap-1 text-xs sm:text-sm"
-              >
-                <span className="truncate max-w-[120px] sm:max-w-none">{selectedFoodType}</span>
-                <X className="w-3 h-3 flex-shrink-0" />
-              </Button>
-            )}
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs sm:text-sm">
-                Clear All
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Expanded Filters */}
-        {showFilters && (
-          <Card className="p-3 sm:p-4 mb-3 sm:mb-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Category</label>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant={selectedCategory === '' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleCategorySelect('')}
-                  >
-                    All
-                  </Button>
-                  {categories.map((cat) => (
-                    <Button
-                      key={cat.name}
-                      variant={selectedCategory === cat.name ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleCategorySelect(cat.name)}
-                    >
-                      {cat.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Food Type</label>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant={selectedFoodType === '' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleFoodTypeSelect('')}
-                  >
-                    All
-                  </Button>
-                  {['veg', 'non-veg', 'egg', 'vegan'].map((type) => (
-                    <Button
-                      key={type}
-                      variant={selectedFoodType === type ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleFoodTypeSelect(type)}
-                    >
-                      {type}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Sort By</label>
-                <div className="flex gap-2">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => handleSortByChange(e.target.value)}
-                    className="border rounded px-3 py-2 flex-1"
-                  >
-                    <option value="name">Name</option>
-                    <option value="price">Price</option>
-                  </select>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSortOrderChange}
-                  >
-                    {sortOrder === 'asc' ? '↑' : '↓'}
-                  </Button>
-                </div>
-              </div>
+        <Card>
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Orders</p>
+              <h3 className="text-2xl font-bold mt-1">{totalOrders}</h3>
             </div>
+            <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <ShoppingBag className="h-5 w-5 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Placeholder for other stats */}
+        <Link href="/customer/addresses" className="block">
+          <Card className="hover:bg-gray-50 transition-colors cursor-pointer h-full">
+            <CardContent className="p-6 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Saved Addresses</p>
+                <h3 className="text-2xl font-bold mt-1">{user?.addresses?.length || 0}</h3>
+              </div>
+              <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-green-600" />
+              </div>
+            </CardContent>
           </Card>
-        )}
+        </Link>
       </div>
 
-      {/* Products Grid */}
-      {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <Spinner size="lg" />
+      {/* Recent Orders */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-bold text-gray-900">Recent Orders</h2>
+          <Link href="/customer/orders">
+            <Button variant="ghost" size="sm" className="text-[lab(66%_50.34_52.19)]">
+              View All <ChevronRight className="ml-1 w-4 h-4" />
+            </Button>
+          </Link>
         </div>
-      ) : isError ? (
-        <div className="text-center py-20">
-          <p className="text-red-500">Error loading products. Please try again.</p>
-        </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-gray-500">No products found. Try adjusting your filters.</p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Spinner />
+          </div>
+        ) : recentOrders.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center text-gray-500">
+              <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p>No orders placed yet.</p>
+              <Link href="/category/Restaurant" className="mt-4 inline-block">
+                <Button variant="outline">Start Ordering</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {recentOrders.map((order) => (
+              <Card key={order.id} className="overflow-hidden hover:border-gray-300 transition-colors">
+                <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+                      <ShoppingBag className="h-6 w-6 text-gray-500" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">
+                          Order #{order.id.slice(-6).toUpperCase()}
+                        </span>
+                        <Badge className={getStatusColor(order.status)} variant="secondary">
+                          {order.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {order.storeName || 'Unknown Store'} • {format(new Date(order.createdAt), 'MMM d, yyyy h:mm a')}
+                      </p>
+                      <p className="text-sm font-medium mt-1">
+                        ₹{order.finalPrice.toFixed(2)} • {order.items.length} items
+                      </p>
+                    </div>
+                  </div>
+                  <Link href={`/customer/orders/${order.id}`}>
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                      View Details
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
             ))}
           </div>
+        )}
+      </div>
 
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="w-full sm:w-auto text-sm"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Previous</span>
-                <span className="sm:hidden">Prev</span>
-              </Button>
-              <span className="text-xs sm:text-sm">
-                Page {pagination.page} of {pagination.totalPages}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
-                disabled={currentPage === pagination.totalPages}
-                className="w-full sm:w-auto text-sm"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <span className="sm:hidden">Next</span>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-        </>
-      )}
     </div>
-    </Suspense>
-
   );
 }

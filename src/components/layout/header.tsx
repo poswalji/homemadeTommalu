@@ -107,7 +107,7 @@ export function Header() {
                            className='text-base font-medium text-gray-900'>
                            Grocery
                         </Link>
-                       
+
                         {!isAuthenticated && (
                            <Link
                               href='/partner'
@@ -130,27 +130,7 @@ export function Header() {
                            </Link>
                         )}
                      </>
-                  ) : (
-                     // Customer navigation items in header for desktop
-                     <>
-                        {customerNavItems.map((item) => {
-                           const isActive = pathname === item.href;
-                           return (
-                              <Link
-                                 key={item.href}
-                                 href={item.href}
-                                 className={cn(
-                                    'text-base font-medium transition-colors',
-                                    isActive
-                                       ? 'text-[lab(66%_50.34_52.19)]'
-                                       : 'text-gray-700 hover:text-gray-900'
-                                 )}>
-                                 {item.name}
-                              </Link>
-                           );
-                        })}
-                     </>
-                  )}
+                  ) : null}
                </nav>
 
                <div className='flex items-center space-x-4'>
@@ -193,14 +173,8 @@ export function Header() {
                      variant='ghost'
                      size='icon'
                      className='md:hidden'
-                     onClick={() => {
-                        if (isCustomerPage) {
-                           setCustomerSidebarOpen(!customerSidebarOpen);
-                        } else {
-                           setMobileMenuOpen(!mobileMenuOpen);
-                        }
-                     }}>
-                     {mobileMenuOpen || customerSidebarOpen ? (
+                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                     {mobileMenuOpen ? (
                         <X className='h-6 w-6' />
                      ) : (
                         <Menu className='h-6 w-6' />
@@ -209,39 +183,37 @@ export function Header() {
                </div>
             </div>
 
-            {/* Mobile Menu - Non-customer pages */}
-            {mobileMenuOpen && !isCustomerPage && (
+            {/* Mobile Menu - All Pages */}
+            {mobileMenuOpen && (
                <div className='md:hidden border-t bg-white'>
-                  <nav className='flex flex-col px-4 py-4 space-y-3'>
+                  <nav className='flex flex-col px-4 py-4 space-y-1'>
                      <Link
                         href='/'
-                        className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
+                        className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
                         onClick={() => setMobileMenuOpen(false)}>
+                        <Home className='w-5 h-5 text-gray-500' />
                         Home
                      </Link>
                      <Link
                         href='/category/Restaurant'
-                        className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
+                        className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
                         onClick={() => setMobileMenuOpen(false)}>
+                        <div className='w-5 h-5 flex items-center justify-center text-xl'>🍽️</div>
                         Food
                      </Link>
                      <Link
                         href='/category/Bakery'
-                        className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
+                        className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
                         onClick={() => setMobileMenuOpen(false)}>
+                        <div className='w-5 h-5 flex items-center justify-center text-xl'>🥐</div>
                         Bakery
                      </Link>
                      <Link
                         href='/category/Grocery%20Store'
-                        className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
+                        className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
                         onClick={() => setMobileMenuOpen(false)}>
+                        <div className='w-5 h-5 flex items-center justify-center text-xl'>🛒</div>
                         Grocery
-                     </Link>
-                     <Link
-                        href='/category/Homemade%20Food'
-                        className='text-base font-medium text-gray-600 hover:text-gray-900 py-2'
-                        onClick={() => setMobileMenuOpen(false)}>
-                        Homemade Food
                      </Link>
 
                      <div className='pt-4 border-t space-y-2'>
@@ -296,93 +268,17 @@ export function Header() {
                   </nav>
                </div>
             )}
-         </header>
+         </header >
 
          {/* Customer Sidebar - Desktop */}
-         {isCustomerPage && (
-            <aside className='hidden md:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 flex-col z-30'>
-               <div className='p-6 border-b border-gray-200'>
-                  <h2 className='text-xl font-bold text-gray-900'>Tommalu</h2>
-               </div>
-
-               <nav className='flex-1 p-4 space-y-2 overflow-y-auto'>
-                  {customerNavItems.map((item) => {
-                     const Icon = item.icon;
-                     const isActive = pathname === item.href;
-
-                     return (
-                        <Link
-                           key={item.href}
-                           href={item.href}
-                           className={cn(
-                              'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
-                              isActive
-                                 ? 'bg-[lab(66%_50.34_52.19)] text-white'
-                                 : 'text-gray-700 hover:bg-gray-100'
-                           )}>
-                           <Icon className='w-5 h-5 shrink-0' />
-                           <span className='font-medium'>{item.name}</span>
-                        </Link>
-                     );
-                  })}
-               </nav>
-
-               <div className='p-4 border-t border-gray-200 bg-white mt-auto'>
-                  <Button
-                     variant='ghost'
-                     className='w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50'
-                     onClick={() => logout.mutate()}
-                     disabled={logout.isPending}>
-                     {logout.isPending ? (
-                        <>
-                           <Spinner
-                              size='sm'
-                              className='mr-3'
-                           />
-                           Logging out...
-                        </>
-                     ) : (
-                        <>
-                           <LogOut className='w-5 h-5 mr-3' />
-                           Logout
-                        </>
-                     )}
-                  </Button>
-               </div>
-            </aside>
-         )}
-
-         {/* Customer Mobile Sidebar */}
-         {isCustomerPage && customerSidebarOpen && (
-            <>
-               {/* Overlay */}
-               <div
-                  className='fixed inset-0 bg-black/50 z-40 md:hidden'
-                  onClick={() => setCustomerSidebarOpen(false)}
-                  aria-hidden='true'
-               />
-
-               {/* Sidebar */}
-               <aside
-                  className={cn(
-                     'fixed left-0 top-0 h-screen bg-white border-r border-gray-200 overflow-y-auto z-50 transition-transform duration-300 ease-in-out md:hidden',
-                     'w-64',
-                     customerSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                  )}>
-                  <div className='p-6 border-b border-gray-200 flex items-center justify-between'>
-                     <h2 className='text-xl font-bold text-gray-900'>
-                        Tommalu
-                     </h2>
-                     <Button
-                        variant='ghost'
-                        size='icon'
-                        onClick={() => setCustomerSidebarOpen(false)}
-                        className='md:hidden'>
-                        <X className='w-5 h-5' />
-                     </Button>
+         {
+            isCustomerPage && (
+               <aside className='hidden md:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 flex-col z-30'>
+                  <div className='p-6 border-b border-gray-200'>
+                     <h2 className='text-xl font-bold text-gray-900'>Tommalu</h2>
                   </div>
 
-                  <nav className='p-4 space-y-2'>
+                  <nav className='flex-1 p-4 space-y-2 overflow-y-auto'>
                      {customerNavItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href;
@@ -391,7 +287,6 @@ export function Header() {
                            <Link
                               key={item.href}
                               href={item.href}
-                              onClick={() => setCustomerSidebarOpen(false)}
                               className={cn(
                                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
                                  isActive
@@ -405,14 +300,11 @@ export function Header() {
                      })}
                   </nav>
 
-                  <div className='absolute bottom-0 w-full p-4 border-t border-gray-200 bg-white'>
+                  <div className='p-4 border-t border-gray-200 bg-white mt-auto'>
                      <Button
                         variant='ghost'
                         className='w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50'
-                        onClick={() => {
-                           logout.mutate();
-                           setCustomerSidebarOpen(false);
-                        }}
+                        onClick={() => logout.mutate()}
                         disabled={logout.isPending}>
                         {logout.isPending ? (
                            <>
@@ -431,8 +323,8 @@ export function Header() {
                      </Button>
                   </div>
                </aside>
-            </>
-         )}
+            )
+         }
 
          {/* Customer Mobile Bottom Navigation */}
          {isCustomerPage && (
@@ -470,6 +362,7 @@ export function Header() {
                </div>
             </nav>
          )}
+
       </>
    );
 }
