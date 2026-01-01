@@ -133,7 +133,12 @@ export default function HomemadePage() {
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div>
                                                         <p className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-1">Sabji of the Day</p>
-                                                        <p className="text-lg font-medium text-stone-800 leading-snug">{state.dailySabji}</p>
+                                                        <p className="text-lg font-medium text-stone-800 leading-snug">
+                                                            {state.isSunday
+                                                                ? (state.sundayItem || state.dailySabji)
+                                                                : (selectedSlot === "Lunch" ? (state.lunchSabji || "Loading...") : (state.dinnerSabji || "Loading..."))
+                                                            }
+                                                        </p>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-3xl font-bold text-stone-800">₹{state.price}</p>

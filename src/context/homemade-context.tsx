@@ -14,6 +14,8 @@ interface HomemadeState {
     isSunday?: boolean;
     sundayItem?: string;
     items: string[];
+    lunchSabji?: string;
+    dinnerSabji?: string;
 }
 
 interface HomemadeContextType {
@@ -30,7 +32,9 @@ const defaultState: HomemadeState = {
     isAvailable: false,
     lunchSlotAvailable: false,
     dinnerSlotAvailable: false,
-    items: []
+    items: [],
+    lunchSabji: "",
+    dinnerSabji: ""
 };
 
 export function HomemadeProvider({ children }: { children: ReactNode }) {
@@ -45,17 +49,21 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                 const data = res.data;
                 const isSunday = data.isSunday;
 
-                // Construct display string for Sabji
+                // Construct display string for Sabji (fallback)
                 let sabjiDisplay = "";
                 let price = 0;
+                let lunchSabji = "";
+                let dinnerSabji = "";
 
                 if (isSunday) {
                     sabjiDisplay = data.product.itemName || "Sunday Special";
                     price = data.product.price;
+                    lunchSabji = sabjiDisplay; // Sunday usually has one special
+                    dinnerSabji = sabjiDisplay;
                 } else {
-                    const lunch = data.product.lunchSabji || "Sabji 1";
-                    const dinner = data.product.dinnerSabji || "Sabji 2";
-                    sabjiDisplay = `Lunch: ${lunch} | Dinner: ${dinner}`;
+                    lunchSabji = data.product.lunchSabji || "Sabji 1";
+                    dinnerSabji = data.product.dinnerSabji || "Sabji 2";
+                    sabjiDisplay = `Lunch: ${lunchSabji} | Dinner: ${dinnerSabji}`;
                     price = data.product.price;
                 }
 
@@ -68,7 +76,9 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                     menuDate: data.date,
                     isSunday: isSunday,
                     sundayItem: isSunday ? data.product.itemName : undefined,
-                    items: data.product.includes || []
+                    items: data.product.includes || [],
+                    lunchSabji,
+                    dinnerSabji
                 });
             }
         } catch (error) {

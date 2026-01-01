@@ -100,7 +100,7 @@ const formatStatus = (status: string) => {
 };
 
 export default function HomemadeFoodAdminPage() {
-    const [activeTab, setActiveTab] = useState('items');
+    const [activeTab, setActiveTab] = useState('daily-menu'); // Default to daily-menu
     const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<HomemadeFood | null>(null);
@@ -325,13 +325,9 @@ export default function HomemadeFoodAdminPage() {
                     <p className="text-gray-600 mt-1">Manage today's special and track orders</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => { refetchFoods(); refetchOrders(); }}>
+                    <Button variant="outline" onClick={() => { refetchOrders(); }}>
                         <RefreshCw className="w-4 h-4 mr-2" />
                         Refresh
-                    </Button>
-                    <Button onClick={() => handleOpenItemDialog()} className="bg-orange-500 hover:bg-orange-600">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Food Item
                     </Button>
                 </div>
             </div>
@@ -413,11 +409,7 @@ export default function HomemadeFoodAdminPage() {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="items" className="flex items-center gap-2">
-                        <ChefHat className="w-4 h-4" />
-                        Food Items
-                    </TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="daily-menu" className="flex items-center gap-2">
                         <Utensils className="w-4 h-4" />
                         Today's Menu
@@ -432,94 +424,7 @@ export default function HomemadeFoodAdminPage() {
                     </TabsTrigger>
                 </TabsList>
 
-                {/* Food Items Tab */}
-                <TabsContent value="items" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Food Items</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {foodsLoading ? (
-                                <div className="space-y-4">
-                                    {[1, 2, 3].map(i => (
-                                        <Skeleton key={i} className="h-20 w-full" />
-                                    ))}
-                                </div>
-                            ) : foods.length === 0 ? (
-                                <div className="text-center py-12 text-gray-500">
-                                    <ChefHat className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                    <p>No food items yet. Add your first item!</p>
-                                </div>
-                            ) : (
-                                <div className="grid gap-4">
-                                    {foods.map((food) => (
-                                        <div
-                                            key={food._id}
-                                            className={`flex items-center gap-4 p-4 rounded-xl border ${food.isTodaysSpecial ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200'
-                                                }`}
-                                        >
-                                            <img
-                                                src={food.image}
-                                                alt={food.name}
-                                                className="w-20 h-20 rounded-lg object-cover"
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="font-semibold text-gray-900 truncate">{food.name}</h3>
-                                                    {food.isTodaysSpecial && (
-                                                        <Badge className="bg-orange-500 text-white">
-                                                            <Star className="w-3 h-3 mr-1" />
-                                                            Today's Special
-                                                        </Badge>
-                                                    )}
-                                                    {!food.isActive && (
-                                                        <Badge variant="secondary">Inactive</Badge>
-                                                    )}
-                                                </div>
-                                                <p className="text-sm text-gray-600 line-clamp-1">{food.description}</p>
-                                                <div className="flex items-center gap-4 mt-2">
-                                                    <span className="text-lg font-bold text-orange-600">₹{food.price}</span>
-                                                    <span className="text-sm text-gray-500">{food.servingSize}</span>
-                                                    {food.availableQuantity !== -1 && (
-                                                        <span className="text-sm text-red-500">
-                                                            {food.availableQuantity} left
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
-                                                        <MoreVertical className="w-4 h-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleOpenItemDialog(food)}>
-                                                        <Edit className="w-4 h-4 mr-2" />
-                                                        Edit
-                                                    </DropdownMenuItem>
-                                                    {!food.isTodaysSpecial && (
-                                                        <DropdownMenuItem onClick={() => handleSetTodaysSpecial(food._id)}>
-                                                            <Star className="w-4 h-4 mr-2" />
-                                                            Set as Today's Special
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                    <DropdownMenuItem
-                                                        onClick={() => handleDeleteItem(food._id)}
-                                                        className="text-red-600"
-                                                    >
-                                                        <Trash2 className="w-4 h-4 mr-2" />
-                                                        Delete
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+
 
                 {/* Orders Tab */}
                 <TabsContent value="orders" className="space-y-4">
@@ -570,54 +475,57 @@ export default function HomemadeFoodAdminPage() {
                                     <p>No orders found</p>
                                 </div>
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Order #</TableHead>
-                                                <TableHead>Customer</TableHead>
-                                                <TableHead>Food Item</TableHead>
-                                                <TableHead>Qty</TableHead>
-                                                <TableHead>Amount</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead>Date</TableHead>
-                                                <TableHead></TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {orders.map((order) => (
-                                                <TableRow key={order._id}>
-                                                    <TableCell className="font-medium">{order.orderNumber}</TableCell>
-                                                    <TableCell>
-                                                        <div>
-                                                            <p className="font-medium">{order.customerName}</p>
-                                                            <p className="text-sm text-gray-500">{order.mobileNumber}</p>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>{order.foodName}</TableCell>
-                                                    <TableCell>{order.quantity}</TableCell>
-                                                    <TableCell className="font-semibold">₹{order.finalAmount}</TableCell>
-                                                    <TableCell>
-                                                        <Badge className={statusColors[order.status]}>
-                                                            {formatStatus(order.status)}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-gray-500">
-                                                        {new Date(order.createdAt).toLocaleDateString()}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleOpenOrderDialog(order)}
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {orders.map((order) => (
+                                        <Card key={order._id} className="overflow-hidden hover:shadow-lg transition-shadow border-stone-200">
+                                            <div className="p-4 space-y-3">
+                                                {/* Header */}
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <p className="text-xs font-medium text-stone-500">Order #{order.orderNumber}</p>
+                                                        <p className="text-sm text-stone-500">{new Date(order.createdAt).toLocaleDateString()} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                    </div>
+                                                    <Badge className={statusColors[order.status]}>
+                                                        {formatStatus(order.status)}
+                                                    </Badge>
+                                                </div>
+
+                                                {/* Customer Info */}
+                                                <div className="bg-stone-50 p-3 rounded-lg text-sm space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <Users className="w-4 h-4 text-stone-400" />
+                                                        <span className="font-medium text-stone-700">{order.customerName}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Phone className="w-4 h-4 text-stone-400" />
+                                                        <a href={`tel:${order.mobileNumber}`} className="text-blue-600 hover:underline">{order.mobileNumber}</a>
+                                                    </div>
+                                                </div>
+
+                                                {/* Price & Quantity */}
+                                                <div className="flex justify-between items-center py-2 border-t border-b border-stone-100">
+                                                    <div>
+                                                        <p className="text-xs text-stone-500">Quantity</p>
+                                                        <p className="font-medium">{order.quantity} Thali(s)</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-xs text-stone-500">Total Amount</p>
+                                                        <p className="text-lg font-bold text-orange-600">₹{order.finalAmount}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Actions */}
+                                                <Button
+                                                    onClick={() => handleOpenOrderDialog(order)}
+                                                    className="w-full bg-stone-800 hover:bg-stone-900 text-white"
+                                                    size="sm"
+                                                >
+                                                    <Eye className="w-4 h-4 mr-2" />
+                                                    View Details
+                                                </Button>
+                                            </div>
+                                        </Card>
+                                    ))}
                                 </div>
                             )}
 
@@ -675,6 +583,11 @@ export default function HomemadeFoodAdminPage() {
                                                     <Badge className={statusColors[item._id as HomemadeFoodOrderStatus] || 'bg-gray-100'}>
                                                         {formatStatus(item._id)}
                                                     </Badge>
+                                                </div>
+
+                                                {/* Food Item Name */}
+                                                <div className="pb-2">
+                                                    <p className="font-bold text-gray-800 text-lg">{order.foodName}</p>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="font-semibold">{item.count} orders</p>
