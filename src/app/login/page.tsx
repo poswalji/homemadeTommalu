@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLogin, useGoogleLogin } from '@/hooks/api';
+import { useGoogleLogin as useGoogleOAuth } from '@react-oauth/google';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,16 +22,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const login = useLogin();
-  const googleLogin = useGoogleLogin();
+  const googleAuthMutation = useGoogleLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     try {
-      const result = await login.mutateAsync({ email, password });
+      const result = await login.mutateAsync({ email, password, rememberMe });
       if (result.success && result.user) {
         const returnUrl = searchParams?.get('returnUrl');
         if (returnUrl) {
@@ -56,10 +58,39 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSuccess = async (tokenResponse: any) => {
+    setError(null);
+    try {
+      // We have access_token.
+      // We will send this to backend.
+      // Backend currently expects JWT. I will fix backend to handle access_token too.
+      const result = await googleAuthMutation.mutateAsync({ token: tokenResponse.access_token });
+      if (result.success && result.user) {
+        const returnUrl = searchParams?.get('returnUrl');
+        if (returnUrl) {
+          router.push(returnUrl);
+        } else {
+          const userRole = result.user.role;
+          const dashboardRoute = getDashboardRoute(userRole);
+          router.push(dashboardRoute);
+        }
+      } else {
+        setError('Google login failed. Please try again.');
+      }
+    } catch (err) {
+      setError(handleApiError(err));
+    }
+  };
+
+  const loginWithGoogle = useGoogleOAuth({
+    onSuccess: handleGoogleSuccess,
+    onError: () => setError('Google login failed'),
+  });
+
   const handleGoogleLogin = async () => {
     setError(null);
     try {
-      alert('Google login integration needed. Please implement Google OAuth.');
+      loginWithGoogle();
     } catch (err) {
       setError(handleApiError(err));
     }
@@ -147,6 +178,8 @@ export default function LoginPage() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-[lab(66%_50.34_52.19)] focus:ring-[lab(66%_50.34_52.19)] border-gray-300 rounded"
                 />
                 <Label htmlFor="remember-me" className="ml-2 text-sm">
@@ -193,9 +226,9 @@ export default function LoginPage() {
                 variant="outline"
                 className="w-full"
                 onClick={handleGoogleLogin}
-                disabled={googleLogin.isPending}
+                disabled={googleAuthMutation.isPending}
               >
-                {googleLogin.isPending ? (
+                {googleAuthMutation.isPending ? (
                   <>
                     <Spinner size="sm" className="mr-2" />
                     Signing in...

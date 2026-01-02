@@ -7,6 +7,7 @@ import { appConfig } from '@/config/app.config';
 import { QueryProvider } from '@/providers/query-provider';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/providers/auth-provider';
+import { GoogleAuthProvider } from '@/providers/google-auth-provider';
 import { SocketProvider } from '@/context/socket-context';
 import { HomemadeProvider } from '@/context/homemade-context';
 import { Suspense } from 'react';
@@ -147,11 +148,13 @@ export default function RootLayout({
             <QueryProvider>
                <AppProvider>
                   <AuthProvider>
-                     <HomemadeProvider>
-                        <SocketProvider>
-                           <Suspense>{children}</Suspense>
-                        </SocketProvider>
-                     </HomemadeProvider>
+                     <GoogleAuthProvider>
+                        <HomemadeProvider>
+                           <SocketProvider>
+                              <Suspense>{children}</Suspense>
+                           </SocketProvider>
+                        </HomemadeProvider>
+                     </GoogleAuthProvider>
                   </AuthProvider>
                </AppProvider>
                <Toaster

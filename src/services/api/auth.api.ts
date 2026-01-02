@@ -27,6 +27,7 @@ export interface RegisterData {
 export interface LoginData {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface GoogleLoginData {
@@ -113,7 +114,7 @@ export const authApi = {
   register: async (data: RegisterData): Promise<AuthResponse> => {
     try {
       const response = await apiClient.post<AuthResponse>('/auth/register', data);
-      
+
       // Auto-save auth data if token is present
       if (response.data?.token) {
         cookieService.setAuthData(response.data.token);
@@ -121,7 +122,7 @@ export const authApi = {
       if (response.data?.user) {
         cookieService.setUser(response.data.user);
       }
-      
+
       return response.data;
     } catch (error) {
       // Re-throw error to be handled by the calling component
@@ -140,7 +141,7 @@ export const authApi = {
       if (response.data?.user) {
         cookieService.setUser(response.data.user);
       }
-      
+
       return response.data;
     } catch (error) {
       // Re-throw error to be handled by the calling component
@@ -165,7 +166,7 @@ export const authApi = {
   googleLogin: async (data: GoogleLoginData): Promise<AuthResponse> => {
     try {
       const response = await apiClient.post<AuthResponse>('/auth/google', data);
-      
+
       // Auto-save auth data if token is present
       if (response.data?.token) {
         cookieService.setAuthData(response.data.token);
@@ -173,7 +174,7 @@ export const authApi = {
       if (response.data?.user) {
         cookieService.setUser(response.data.user);
       }
-      
+
       return response.data;
     } catch (error) {
       // Re-throw error to be handled by the calling component
@@ -185,7 +186,7 @@ export const authApi = {
   getMe: async (): Promise<{ success: boolean; user: User }> => {
     try {
       const response = await apiClient.get<{ success: boolean; user: User }>('/auth/me');
-      
+
       // Update stored user data
       if (response.data?.success && response.data.user) {
         const token = cookieService.getCurrentToken();
@@ -194,7 +195,7 @@ export const authApi = {
         }
         cookieService.setUser(response.data.user);
       }
-      
+
       return {
         success: response.data?.success || false,
         user: response.data?.user || null,
@@ -212,7 +213,7 @@ export const authApi = {
   updateProfile: async (data: UpdateUserData): Promise<{ success: boolean; data: User }> => {
     try {
       const response = await apiClient.put<{ success: boolean; data: User }>('/auth/update', data);
-      
+
       // Update stored user data
       if (response.data.success && response.data.data) {
         const token = cookieService.getCurrentToken();
@@ -221,7 +222,7 @@ export const authApi = {
         }
         cookieService.setUser(response.data.data);
       }
-      
+
       return response.data;
     } catch (error) {
       // Re-throw error to be handled by the calling component
@@ -255,15 +256,15 @@ export const authApi = {
   verifyEmail: async (data: VerifyEmailData): Promise<VerifyEmailResponse> => {
     try {
       const response = await apiClient.post<VerifyEmailResponse>('/auth/verify-email', data);
-      
+
       // Auto-save auth data if token is present
       if (response.data?.token) {
-          cookieService.setAuthData(response.data.token);
+        cookieService.setAuthData(response.data.token);
       }
       if (response.data?.user) {
-          cookieService.setUser(response.data.user);
+        cookieService.setUser(response.data.user);
       }
-      
+
       return response.data;
     } catch (error) {
       // Re-throw error to be handled by the calling component
@@ -297,7 +298,7 @@ export const authApi = {
   resetPassword: async (data: ResetPasswordData): Promise<ResetPasswordResponse> => {
     try {
       const response = await apiClient.post<ResetPasswordResponse>('/auth/reset-password', data);
-      
+
       // Auto-save auth data if token is present
       if (response.data?.token) {
         cookieService.setAuthData(response.data.token);
@@ -305,7 +306,7 @@ export const authApi = {
       if (response.data?.user) {
         cookieService.setUser(response.data.user);
       }
-      
+
       return response.data;
     } catch (error) {
       // Re-throw error to be handled by the calling component

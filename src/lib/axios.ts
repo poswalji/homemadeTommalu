@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 import { cookieService } from '@/utills/cookies';
 
 // API Base URL from environment or config
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({
@@ -18,7 +18,7 @@ export const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = cookieService.getCurrentToken();
-    
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -94,7 +94,7 @@ apiClient.interceptors.response.use(
 // Helper function for handling API errors
 export const handleApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<{ 
+    const axiosError = error as AxiosError<{
       success?: boolean;
       error?: {
         message?: string;
@@ -105,37 +105,37 @@ export const handleApiError = (error: unknown): string => {
       };
       message?: string;
     }>;
-    
+
     if (axiosError.response?.data) {
       const data = axiosError.response.data;
-      
+
       // Handle backend error format: { success: false, error: { message: ... } }
       if (data.error?.message) {
         return data.error.message;
       }
-      
+
       // Fallback to direct message property
       if (data.message) {
         return data.message;
       }
-      
+
       // Fallback to axios error message
       if (axiosError.message) {
         return axiosError.message;
       }
     }
-    
+
     if (axiosError.request) {
       return 'Network error. Please check your connection.';
     }
-    
+
     return 'An error occurred';
   }
-  
+
   if (error instanceof Error) {
     return error.message;
   }
-  
+
   return 'An unexpected error occurred';
 };
 

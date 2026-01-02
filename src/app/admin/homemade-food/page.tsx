@@ -490,6 +490,13 @@ export default function HomemadeFoodAdminPage() {
                                                     </Badge>
                                                 </div>
 
+                                                {/* Food Item Name */}
+                                                <div className="pb-2">
+                                                    <p className="font-bold text-gray-800 text-lg">{order.foodName}</p>
+                                                </div>
+
+
+
                                                 {/* Customer Info */}
                                                 <div className="bg-stone-50 p-3 rounded-lg text-sm space-y-1">
                                                     <div className="flex items-center gap-2">
@@ -585,10 +592,7 @@ export default function HomemadeFoodAdminPage() {
                                                     </Badge>
                                                 </div>
 
-                                                {/* Food Item Name */}
-                                                <div className="pb-2">
-                                                    <p className="font-bold text-gray-800 text-lg">{order.foodName}</p>
-                                                </div>
+
                                                 <div className="text-right">
                                                     <p className="font-semibold">{item.count} orders</p>
                                                     <p className="text-sm text-gray-500">₹{item.revenue.toLocaleString('en-IN')}</p>
@@ -1056,6 +1060,6 @@ export default function HomemadeFoodAdminPage() {
                     )}
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }

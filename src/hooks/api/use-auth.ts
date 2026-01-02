@@ -87,8 +87,10 @@ export const useGoogleLogin = () => {
     mutationFn: (data: GoogleLoginData) => authApi.googleLogin(data),
     onSuccess: (data) => {
       if (data.success) {
-        queryClient.setQueryData(authKeys.me(), { success: true, data: data.user });
-        // Redirect is handled by the component to support role-based routing
+        // Fix: Structure must match AuthResponse (user, not data)
+        queryClient.setQueryData(authKeys.me(), { success: true, user: data.user });
+        queryClient.invalidateQueries({ queryKey: authKeys.me() });
+        // Redirect is handled by the component
       }
     },
   });
@@ -99,14 +101,14 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const {setUser}= useAuth()
+  const { setUser } = useAuth()
 
   return useMutation({
     mutationFn: async () => {
       await authApi.logout();
       const { cookieService } = await import('@/utills/cookies');
       cookieService.clearAuthData();
-      
+
     },
     onSuccess: () => {
       queryClient.clear();
