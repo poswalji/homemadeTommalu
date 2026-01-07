@@ -58,7 +58,7 @@ export function HeroSection() {
                      <Button
                         size="lg"
                         variant="outline"
-                        className="border-2 border-white/20 bg-white/5 backdrop-blur-sm text-white h-14 px-8 text-lg font-medium hover:bg-white/10 hover:border-white/30 rounded-xl"
+                        className="border-2 border-white/20 bg-white/5 backdrop-blur-sm text-white h-14 px-8 text-lg font-medium  hover:border-white/30 rounded-xl"
                         onClick={() => router.push('/browse')}
                      >
                         Browse All Categories

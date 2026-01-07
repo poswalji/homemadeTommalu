@@ -48,7 +48,7 @@ export function HowItWorksSection() {
 
         <div className="relative">
           <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-blue-500 transform -translate-y-1/2" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+          <div className="flex flex-col md:flex-row gap-8 relative">
             {steps.map((item, index) => (
               <motion.div
                 key={index}
