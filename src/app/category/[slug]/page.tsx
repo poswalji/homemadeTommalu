@@ -58,9 +58,9 @@ export default function CategoryPage() {
         <div className="min-h-screen flex flex-col bg-stone-50 selection:bg-orange-100 selection:text-orange-900">
             <Header />
 
-            <main className="flex-1 pb-20">
+            <main className="flex-1 pb-20 ">
                 {/* Hero Section */}
-                <div className="bg-white border-b border-stone-100 shadow-sm relative overflow-hidden">
+                <div className="bg-white p-4 border-b border-stone-100 shadow-sm relative overflow-hidden">
                     <div className="absolute inset-0 bg-orange-50/50" />
                     <div className="absolute -top-24 -right-24 w-64 h-64 bg-orange-100 rounded-full blur-3xl opacity-50" />
 

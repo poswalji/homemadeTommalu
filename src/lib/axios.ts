@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 import { cookieService } from '@/utills/cookies';
 
 // API Base URL from environment or config
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tommalubackendservice.vercel.app/api';
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({

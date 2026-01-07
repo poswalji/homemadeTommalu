@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer className="border-t bg-gray-50 ">
       <div className="container px-4 md:px-20 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8">
           <div>
             <div className="mb-4">
               <Link href="/" aria-label="Tommalu Home">
@@ -32,27 +32,6 @@ export function Footer() {
               <li>
                 <Link href="/orders" className="text-gray-600 hover:text-gray-900">
                   My Orders
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/privacy-policy" className="text-gray-600 hover:text-gray-900">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms-of-service" className="text-gray-600 hover:text-gray-900">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link href="/cookie-policy" className="text-gray-600 hover:text-gray-900">
-                  Cookie Policy
                 </Link>
               </li>
             </ul>

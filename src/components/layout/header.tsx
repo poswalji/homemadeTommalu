@@ -95,7 +95,7 @@ export function Header() {
                         <Link
                            href='/category/Restaurant'
                            className='text-base font-medium text-gray-900'>
-                           Food
+                           Restaurant
                         </Link>
                         <Link
                            href='/category/Bakery'
@@ -151,10 +151,10 @@ export function Header() {
                   {!isAuthenticated ? (
                      <>
                         <Button
-                           onClick={() => router.push('/login')}
+                           onClick={() => router.push('/register')}
                            variant='default'
                            className='hidden md:inline-flex'>
-                           Sign In
+                           Sign Up
                         </Button>
                      </>
                   ) : (
@@ -199,7 +199,7 @@ export function Header() {
                         className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
                         onClick={() => setMobileMenuOpen(false)}>
                         <div className='w-5 h-5 flex items-center justify-center text-xl'>🍽️</div>
-                        Food
+                        Restaurant
                      </Link>
                      <Link
                         href='/category/Bakery'
@@ -221,12 +221,12 @@ export function Header() {
                            <>
                               <Button
                                  onClick={() => {
-                                    router.push('/login');
+                                    router.push('/register');
                                     setMobileMenuOpen(false);
                                  }}
                                  variant='default'
                                  className='w-full'>
-                                 Sign In
+                                 Sign Up
                               </Button>
                               <Button
                                  onClick={() => {

@@ -3,7 +3,7 @@ import { cookieService } from '../utills/cookies';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://tommalubackendservice.vercel.app/api'
-  : 'http://localhost:5000/api';
+  : 'https://tommalubackendservice.vercel.app/api';
 
 // Common headers for API requests
 const getHeaders = (includeAuth = true) => {

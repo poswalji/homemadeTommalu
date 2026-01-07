@@ -138,7 +138,7 @@ export default function BrowsePage() {
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
 
         {/* Search Header */}
-        <div className="mb-10 max-w-2xl mx-auto">
+        <div className="my-10 max-w-2xl mx-auto">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-stone-800 mb-2">
               {hasActiveFilters ? "Search Results" : "What are you looking for?"}
@@ -215,23 +215,6 @@ export default function BrowsePage() {
                   </div>
                 )}
 
-                {/* Food Type Toggles */}
-                <div className="flex items-center gap-1 sm:ml-4">
-                  {['veg', 'non-veg'].map(type => (
-                    <button
-                      key={type}
-                      onClick={() => setSelectedFoodType(selectedFoodType === type ? '' : type)}
-                      className={`
-                                        px-3 py-1 rounded-full text-xs font-bold border transition-colors
-                                        ${selectedFoodType === type
-                          ? (type === 'veg' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200')
-                          : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300'}
-                                    `}
-                    >
-                      {type === 'veg' ? 'VEG' : 'NON-VEG'}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               {/* Sorting */}
@@ -270,7 +253,7 @@ export default function BrowsePage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2  lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {products.map((product) => (
                     <ProductCard
                       key={product.id}
