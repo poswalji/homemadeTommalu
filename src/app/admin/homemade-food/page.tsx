@@ -181,7 +181,7 @@ export default function HomemadeFoodAdminPage() {
                 {/* Dashboard Tab */}
                 <TabsContent value="dashboard" className="space-y-4">
                     <AnalyticsDashboard
-                        data={analyticsData?.data}
+                        data={analyticsData?.data || {}}
                         isLoading={analyticsLoading}
                         onPendingOrdersClick={() => {
                             setActiveTab('orders');

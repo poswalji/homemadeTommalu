@@ -61,6 +61,7 @@ export function SubscriptionManager() {
         try {
             const payload = {
                 ...form,
+                planType: form.planType as 'lunch' | 'dinner' | 'both',
                 features: form.description.split(',').map(s => s.trim()).filter(Boolean)
             };
 

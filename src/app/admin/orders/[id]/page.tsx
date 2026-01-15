@@ -177,10 +177,10 @@ export default function AdminOrderDetailPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold">
-                      ₹{((item.itemPrice || item.price) * (item.quantity || 1)).toFixed(2)}
+                      ₹{(Number(item.itemPrice || item.price || 0) * Number(item.quantity || 1)).toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-600">
-                      ₹{(item.itemPrice || item.price).toFixed(2)} each
+                      ₹{Number(item.itemPrice || item.price || 0).toFixed(2)} each
                     </p>
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function AdminOrderDetailPage() {
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
                 <span className="font-medium">
-                  ₹{order.items?.reduce((acc: number, item: any) => acc + (Number(item.itemPrice || 0) * Number(item.quantity || 1)), 0).toFixed(2)}
+                  ₹{order.items?.reduce((acc: number, item: any) => acc + (Number(item.itemPrice || item.price || 0) * Number(item.quantity || 1)), 0).toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -263,7 +263,7 @@ export default function AdminOrderDetailPage() {
               {order.discount && order.discount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount</span>
-                  <span>-₹{order.discount.toFixed(2)}</span>
+                  <span>-₹{Number(order.discount || 0).toFixed(2)}</span>
                 </div>
               )}
               {order.promoCode && (
@@ -274,7 +274,7 @@ export default function AdminOrderDetailPage() {
               )}
               <div className="border-t pt-3 flex justify-between">
                 <span className="font-semibold text-lg">Total</span>
-                <span className="font-bold text-lg">₹{order.finalPrice.toFixed(2)}</span>
+                <span className="font-bold text-lg">₹{Number(order.finalPrice || 0).toFixed(2)}</span>
               </div>
             </div>
           </Card>
