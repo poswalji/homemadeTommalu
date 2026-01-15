@@ -176,18 +176,18 @@ export default function PublicOrderTrackingPage() {
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Delivery Charge</span>
               <span className="font-medium text-green-600">
-                {order.deliveryCharge ? `₹${Number(order.deliveryCharge).toFixed(2)}` : 'Free'}
+                {order.deliveryCharge ? `₹${Number(order.deliveryCharge || 0).toFixed(2)}` : 'Free'}
               </span>
             </div>
-            {order.discount > 0 && (
+            {(order.discount || 0) > 0 && (
               <div className="flex justify-between items-center text-sm text-green-600">
                 <span>Discount {order.promoCode ? `(${order.promoCode})` : ''}</span>
-                <span className="font-medium">-₹{Number(order.discount).toFixed(2)}</span>
+                <span className="font-medium">-₹{Number(order.discount || 0).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between items-center pt-2 border-t mt-2">
               <span className="font-bold text-gray-900">Total Amount</span>
-              <span className="font-bold text-lg text-gray-900">₹{Number(order.finalPrice).toFixed(2)}</span>
+              <span className="font-bold text-lg text-gray-900">₹{Number(order.finalPrice || 0).toFixed(2)}</span>
             </div>
           </div>
 
@@ -227,8 +227,8 @@ export default function PublicOrderTrackingPage() {
             {statusSteps.map((step, index) => (
               <div key={step.id} className="flex items-start gap-4">
                 <div className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${step.isCompleted
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-200 text-gray-500'
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-200 text-gray-500'
                   }`}>
                   {step.isCompleted ? (
                     <CheckCircle className="w-6 h-6" />

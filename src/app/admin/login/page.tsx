@@ -58,7 +58,7 @@ export default function AdminLoginPage() {
                 </div>
 
                 {error && (
-                    <Alert variant="destructive" className="mb-6 bg-red-50 text-red-900 border-red-200">
+                    <Alert variant="error" className="mb-6 bg-red-50 text-red-900 border-red-200">
                         {error}
                     </Alert>
                 )}

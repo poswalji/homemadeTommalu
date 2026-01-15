@@ -96,7 +96,10 @@ export default function HomemadeFoodAdminPage() {
     const handleSaveItem = () => {
         if (!itemForm.name || !itemForm.price) return;
 
-        const payload = { ...itemForm };
+        const payload = {
+            ...itemForm,
+            features: itemForm.features.split(',').map(f => f.trim()).filter(Boolean)
+        };
 
         if (editingItem) {
             updateFood.mutate({ id: editingItem._id, data: payload }, {
