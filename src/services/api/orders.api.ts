@@ -1,12 +1,12 @@
 import apiClient from '@/lib/axios';
 
 // Types
-export type OrderStatus = 
-  | 'Pending' 
-  | 'Confirmed' 
-  | 'OutForDelivery' 
-  | 'Delivered' 
-  | 'Cancelled' 
+export type OrderStatus =
+  | 'Pending'
+  | 'Confirmed'
+  | 'OutForDelivery'
+  | 'Delivered'
+  | 'Cancelled'
   | 'Rejected';
 
 export type AddressLabel = 'Home' | 'Work' | 'Other';
@@ -60,6 +60,10 @@ export interface Order {
   storeEmail?: string;
   paymentMethod?: 'cash_on_delivery' | 'online' | 'wallet';
   paymentId?: string; // Backend may include paymentId
+  metadata?: {
+    orderedItems?: string;
+    [key: string]: any;
+  };
 }
 
 export interface UpdateOrderStatusData {

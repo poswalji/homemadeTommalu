@@ -48,7 +48,18 @@ export const placeHomemadeOrder = async (orderData: any) => {
 
 export const purchaseSubscriptionPlan = async (data: any) => {
     try {
+        // This endpoint is DEPRECATED on backend, but leaving wrapper for now if needed.
+        // Ideally should not be called.
         const response = await apiClient.post('/homemade/plans/purchase', data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const submitSubscription = async (data: any) => {
+    try {
+        const response = await apiClient.post('/subscriptions/request', data);
         return response.data;
     } catch (error) {
         throw error;

@@ -8,6 +8,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AddressManager } from '@/components/customer/address-manager';
+import { DisputeManager } from '@/components/customer/dispute-manager';
 import { User, Mail, Phone, Save, Lock } from 'lucide-react';
 
 export default function CustomerProfilePage() {
@@ -100,193 +103,214 @@ export default function CustomerProfilePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-        <p className="text-gray-600 mt-2">Manage your personal information</p>
+        <p className="text-gray-600 mt-2">Manage your account settings</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Profile Information */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <User className="w-6 h-6 text-gray-600" />
-            <h2 className="text-xl font-semibold">Profile Information</h2>
-          </div>
+      <Tabs defaultValue="details" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsTrigger value="details">Profile Details</TabsTrigger>
+          <TabsTrigger value="addresses">Addresses</TabsTrigger>
+          <TabsTrigger value="disputes">Disputes</TabsTrigger>
+        </TabsList>
 
-          {profileSuccess && (
-            <Alert variant="success" className="mb-4">
-              Profile updated successfully!
-            </Alert>
-          )}
-
-          <form onSubmit={handleProfileSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <div className="relative mt-1">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={user?.email || ''}
-                  disabled
-                  className="pl-10 bg-gray-50"
-                />
+        {/* Tab: Profile Details */}
+        <TabsContent value="details">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Profile Information */}
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <User className="w-6 h-6 text-gray-600" />
+                <h2 className="text-xl font-semibold">Profile Information</h2>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Email cannot be changed
-              </p>
-            </div>
 
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <div className="relative mt-1">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  id="name"
-                  value={profileData.name}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, name: e.target.value })
-                  }
-                  placeholder="Your name"
-                  required
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <div className="relative mt-1">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={profileData.phone}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, phone: e.target.value })
-                  }
-                  placeholder="Your phone number"
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={updateProfile.isPending}
-              className="w-full"
-            >
-              {updateProfile.isPending ? (
-                <>
-                  <Spinner size="sm" className="mr-2" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Changes
-                </>
+              {profileSuccess && (
+                <Alert variant="success" className="mb-4">
+                  Profile updated successfully!
+                </Alert>
               )}
-            </Button>
-          </form>
-        </Card>
 
-        {/* Change Password */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Lock className="w-6 h-6 text-gray-600" />
-            <h2 className="text-xl font-semibold">Change Password</h2>
-          </div>
+              <form onSubmit={handleProfileSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative mt-1">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user?.email || ''}
+                      disabled
+                      className="pl-10 bg-gray-50"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Email cannot be changed
+                  </p>
+                </div>
 
-          {passwordSuccess && (
-            <Alert variant="success" className="mb-4">
-              Password changed successfully!
-            </Alert>
-          )}
+                <div>
+                  <Label htmlFor="name">Name</Label>
+                  <div className="relative mt-1">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      id="name"
+                      value={profileData.name}
+                      onChange={(e) =>
+                        setProfileData({ ...profileData, name: e.target.value })
+                      }
+                      placeholder="Your name"
+                      required
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
 
-          {passwordError && (
-            <Alert variant="error" className="mb-4">
-              {passwordError}
-            </Alert>
-          )}
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <div className="relative mt-1">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={profileData.phone}
+                      onChange={(e) =>
+                        setProfileData({ ...profileData, phone: e.target.value })
+                      }
+                      placeholder="Your phone number"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
 
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) =>
-                  setPasswordData({
-                    ...passwordData,
-                    currentPassword: e.target.value,
-                  })
-                }
-                placeholder="Enter current password"
-                required
-                className="mt-1"
-              />
-            </div>
+                <Button
+                  type="submit"
+                  disabled={updateProfile.isPending}
+                  className="w-full"
+                >
+                  {updateProfile.isPending ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Card>
 
-            <div>
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={passwordData.newPassword}
-                onChange={(e) =>
-                  setPasswordData({
-                    ...passwordData,
-                    newPassword: e.target.value,
-                  })
-                }
-                placeholder="Enter new password"
-                required
-                minLength={6}
-                className="mt-1"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Must be at least 6 characters
-              </p>
-            </div>
+            {/* Change Password */}
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <Lock className="w-6 h-6 text-gray-600" />
+                <h2 className="text-xl font-semibold">Change Password</h2>
+              </div>
 
-            <div>
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) =>
-                  setPasswordData({
-                    ...passwordData,
-                    confirmPassword: e.target.value,
-                  })
-                }
-                placeholder="Confirm new password"
-                required
-                className="mt-1"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={changePassword.isPending}
-              className="w-full"
-            >
-              {changePassword.isPending ? (
-                <>
-                  <Spinner size="sm" className="mr-2" />
-                  Changing...
-                </>
-              ) : (
-                <>
-                  <Lock className="w-4 h-4 mr-2" />
-                  Change Password
-                </>
+              {passwordSuccess && (
+                <Alert variant="success" className="mb-4">
+                  Password changed successfully!
+                </Alert>
               )}
-            </Button>
-          </form>
-        </Card>
-      </div>
+
+              {passwordError && (
+                <Alert variant="error" className="mb-4">
+                  {passwordError}
+                </Alert>
+              )}
+
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        currentPassword: e.target.value,
+                      })
+                    }
+                    placeholder="Enter current password"
+                    required
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        newPassword: e.target.value,
+                      })
+                    }
+                    placeholder="Enter new password"
+                    required
+                    minLength={6}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Must be at least 6 characters
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    placeholder="Confirm new password"
+                    required
+                    className="mt-1"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={changePassword.isPending}
+                  className="w-full"
+                >
+                  {changePassword.isPending ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Changing...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Change Password
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Tab: Addresses */}
+        <TabsContent value="addresses">
+          <AddressManager />
+        </TabsContent>
+
+        {/* Tab: Disputes */}
+        <TabsContent value="disputes">
+          <DisputeManager />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

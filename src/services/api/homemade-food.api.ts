@@ -251,6 +251,12 @@ export const homemadeFoodPublicApi = {
     getSubscriptionPlans: async (): Promise<ApiResponse<SubscriptionPlan[]> & { count: number }> => {
         const response = await apiClient.get<ApiResponse<SubscriptionPlan[]> & { count: number }>('/homemade/plans');
         return response.data;
+    },
+
+    // Get My Subscriptions
+    getMySubscriptions: async (): Promise<ApiResponse<Subscription[]> & { count: number }> => {
+        const response = await apiClient.get<ApiResponse<Subscription[]> & { count: number }>('/subscriptions/my-subscriptions');
+        return response.data;
     }
 };
 

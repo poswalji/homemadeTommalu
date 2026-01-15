@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuthMe } from "@/hooks/api";
 import { toast } from "sonner";
 import { Calendar, Clock, MapPin, Phone, Loader2, User } from "lucide-react";
-import { placeHomemadeOrder, purchaseSubscriptionPlan } from "@/services/homemadeService";
+import { placeHomemadeOrder, purchaseSubscriptionPlan, submitSubscription } from "@/services/homemadeService";
 import { useRouter } from "next/navigation";
 
 interface ConfirmOrderDialogProps {
@@ -58,10 +58,15 @@ export function ConfirmOrderDialog({ isOpen, onClose, orderDetails }: ConfirmOrd
                     planId: orderDetails.planId,
                     customerName: name,
                     mobileNumber: phone,
-                    area: area,
-                    customAddress: address
+                    deliveryAddress: {
+                        street: address,
+                        city: 'Jaipur',
+                        pincode: '302001'
+                    },
+                    startDate: new Date().toISOString(), // Default to today/tomorrow
+                    quantity: orderDetails.quantity,
                 };
-                res = await purchaseSubscriptionPlan(payload);
+                res = await submitSubscription(payload);
             } else {
                 const payload = {
                     customerName: name,
@@ -69,13 +74,15 @@ export function ConfirmOrderDialog({ isOpen, onClose, orderDetails }: ConfirmOrd
                     area: area,
                     customAddress: address,
                     quantity: orderDetails.quantity,
-                    slot: orderDetails.slot // "Lunch" or "Dinner"
+                    slot: orderDetails.slot, // "Lunch" or "Dinner"
+                    items: orderDetails.items, // Array of strings e.g. ["Dal Bati", "Extra Roti x2"]
+                    totalPrice: orderDetails.totalPrice // Full calculated price including extras
                 };
                 res = await placeHomemadeOrder(payload);
             }
 
             if (res.success) {
-                toast.success("Order placed successfully!");
+                toast.success(orderDetails.isSubscription ? "Subscription request sent successfully!" : "Order placed successfully!");
                 onClose();
                 // Redirect user to their orders page to check details as requested
                 router.push("/customer/orders");

@@ -13,6 +13,7 @@ import {
    MapPin,
    Star,
    AlertCircle,
+   CalendarDays,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo, useState, useEffect } from 'react';
@@ -28,9 +29,7 @@ import { Spinner } from '@/components/ui/spinner';
 const customerNavItems = [
    { name: 'Dashboard', href: '/customer', icon: Home },
    { name: 'Orders', href: '/customer/orders', icon: ShoppingBag },
-   { name: 'Addresses', href: '/customer/addresses', icon: MapPin },
-   { name: 'Reviews', href: '/customer/reviews', icon: Star },
-   { name: 'Disputes', href: '/customer/disputes', icon: AlertCircle },
+   { name: 'Subscriptions', href: '/customer/subscriptions', icon: CalendarDays },
    { name: 'Profile', href: '/customer/profile', icon: User },
 ];
 

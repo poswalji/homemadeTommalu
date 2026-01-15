@@ -280,32 +280,102 @@ export default function HomemadePage() {
                                         </div>
                                     ) : (
                                         <div className="grid md:grid-cols-3 gap-6">
-                                            {plans.map((plan: any) => (
-                                                <div key={plan._id} className="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm hover:shadow-xl hover:border-orange-200 transition-all relative overflow-hidden group flex flex-col">
-                                                    {plan.discount > 0 && (
-                                                        <div className="absolute top-0 right-0 bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-bl-xl">{plan.discount}% OFF</div>
-                                                    )}
-                                                    <h3 className="text-xl font-bold text-stone-800 mb-2">{plan.title}</h3>
-                                                    <p className="text-stone-500 text-sm mb-6 capitalize">{plan.planType} Plan</p>
-                                                    <div className="mb-6">
-                                                        <span className="text-4xl font-bold text-stone-800">₹{plan.price}</span>
-                                                    </div>
-                                                    <ul className="space-y-3 mb-8 flex-grow">
-                                                        {plan.features?.map((feature: string, idx: number) => (
-                                                            <li key={idx} className="flex items-center gap-2 text-stone-600 text-sm">
-                                                                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                                                <span>{feature}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                    <Button
-                                                        onClick={() => handleOrderClick(plan)}
-                                                        className="w-full bg-stone-800 hover:bg-orange-600 text-white rounded-xl py-6 font-bold transition-all"
+                                            {plans.map((plan: any) => {
+                                                const isLunch = plan.planType === 'lunch';
+                                                const isDinner = plan.planType === 'dinner';
+                                                const isBoth = plan.planType === 'both';
+
+                                                // Dynamic Theme Colors
+                                                // Dynamic Theme Colors (Strictly Brand Aligned: Orange/Stone/Amber)
+                                                let theme = {
+                                                    // Lunch: Fresh Orange
+                                                    bg: "from-white to-orange-50",
+                                                    border: "border-orange-100",
+                                                    text: "text-stone-800",
+                                                    badge: "bg-orange-100 text-orange-800",
+                                                    btn: "bg-orange-600 hover:bg-orange-700",
+                                                    icon: "text-orange-500 bg-orange-50",
+                                                    accent: "bg-orange-500"
+                                                };
+
+                                                if (isDinner) {
+                                                    theme = {
+                                                        // Dinner: Warm Stone/Evening
+                                                        bg: "from-white to-stone-100",
+                                                        border: "border-stone-200",
+                                                        text: "text-stone-800",
+                                                        badge: "bg-stone-100 text-stone-700",
+                                                        btn: "bg-stone-800 hover:bg-stone-900",
+                                                        icon: "text-stone-600 bg-stone-100",
+                                                        accent: "bg-stone-600"
+                                                    };
+                                                } else if (isBoth) {
+                                                    theme = {
+                                                        // Both: Premium Amber/Gold
+                                                        bg: "from-amber-50 to-orange-50",
+                                                        border: "border-amber-200",
+                                                        text: "text-amber-950",
+                                                        badge: "bg-amber-100 text-amber-800",
+                                                        btn: "bg-gradient-to-r from-orange-600 to-amber-600 hover:to-amber-700 hover:from-orange-700",
+                                                        icon: "text-amber-600 bg-amber-50",
+                                                        accent: "bg-amber-500"
+                                                    };
+                                                }
+
+                                                return (
+                                                    <motion.div
+                                                        key={plan._id}
+                                                        whileHover={{ y: -8 }}
+                                                        className={`relative rounded-3xl p-1 bg-gradient-to-br ${theme.border} shadow-sm hover:shadow-xl transition-all duration-300`}
                                                     >
-                                                        Subscribe Now
-                                                    </Button>
-                                                </div>
-                                            ))}
+                                                        <div className={`h-full bg-gradient-to-br ${theme.bg} rounded-[22px] p-6 lg:p-8 flex flex-col relative overflow-hidden`}>
+
+                                                            {/* Background Pattern Decoration */}
+                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/40 rounded-full blur-3xl -mr-10 -mt-10" />
+                                                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/40 rounded-full blur-2xl -ml-5 -mb-5" />
+
+                                                            {/* Discount Badge */}
+                                                            {plan.discount > 0 && (
+                                                                <div className="absolute top-4 right-4 animate-pulse">
+                                                                    <Badge className="bg-red-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg">
+                                                                        {plan.discount}% SAVE
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+
+                                                            <div className="relative z-10 mb-6">
+                                                                <Badge variant="outline" className={`mb-3 border-0 px-3 py-1 capitalize font-bold tracking-wide ${theme.badge}`}>
+                                                                    {plan.planType} Plan
+                                                                </Badge>
+                                                                <h3 className={`text-2xl font-black ${theme.text} mb-2 leading-tight`}>{plan.title}</h3>
+                                                                <div className="flex items-baseline gap-1">
+                                                                    <span className="text-4xl font-extrabold text-stone-900">₹{plan.price}</span>
+                                                                    <span className="text-stone-500 font-medium text-sm">/ month</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="relative z-10 space-y-4 mb-8 flex-grow">
+                                                                <div className="h-px w-full bg-black/5 mb-4" />
+                                                                {plan.features?.map((feature: string, idx: number) => (
+                                                                    <div key={idx} className="flex items-start gap-3">
+                                                                        <div className={`mt-0.5 w-5 h-5 rounded-full bg-white/80 flex items-center justify-center shadow-sm ${theme.icon}`}>
+                                                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                        </div>
+                                                                        <span className="text-stone-700 font-medium text-sm leading-relaxed">{feature}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+
+                                                            <Button
+                                                                onClick={() => handleOrderClick(plan)}
+                                                                className={`w-full py-6 text-base font-bold text-white shadow-lg shadow-black/5 rounded-xl transition-all ${theme.btn}`}
+                                                            >
+                                                                Choose {plan.planType === 'both' ? 'Combine' : 'Plan'}
+                                                            </Button>
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </motion.div>
@@ -340,7 +410,7 @@ export default function HomemadePage() {
                     quantity: quantity,
                     totalPrice: activeTab === 'one-time' ? totalPrice : (selectedPlan?.price || 0),
                     items: activeTab === 'one-time' ? [
-                        state.dailySabji,
+                        state.isSunday ? state.sundayItem : (selectedSlot === 'Lunch' ? state.lunchSabji : state.dinnerSabji),
                         "Roti, Salad, Chhach",
                         extraRotiCount > 0 ? `Extra Roti x${extraRotiCount}` : null
                     ].filter(Boolean) as string[] : [selectedPlan?.title],

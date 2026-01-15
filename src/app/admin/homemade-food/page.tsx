@@ -342,6 +342,11 @@ export default function HomemadeFoodAdminPage() {
                                                 <p className="font-medium text-gray-900">
                                                     {order.foodName || order.items?.[0]?.itemName || 'Ordered Item'} x{order.quantity}
                                                 </p>
+                                                {order.specialInstructions && (
+                                                    <p className="text-sm font-semibold text-orange-600">
+                                                        {order.specialInstructions}
+                                                    </p>
+                                                )}
                                                 <div className="text-sm text-gray-500">
                                                     {order.customerName} • {order.mobileNumber}
                                                 </div>

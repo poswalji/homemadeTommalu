@@ -17,12 +17,12 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Package, 
-  MapPin, 
-  Calendar, 
-  XCircle, 
-  CheckCircle, 
+import {
+  Package,
+  MapPin,
+  Calendar,
+  XCircle,
+  CheckCircle,
   Truck,
   ArrowLeft,
   Star
@@ -166,6 +166,12 @@ export default function CustomerOrderDetailPage() {
                 <div key={idx} className="flex items-center justify-between pb-4 border-b last:border-0">
                   <div>
                     <p className="font-medium">{item.itemName || item.name}</p>
+                    {/* Show special items/instructions like Extra Roti */}
+                    {order.metadata?.orderedItems && (
+                      <p className="text-sm font-medium text-orange-600 mt-0.5">
+                        {order.metadata.orderedItems}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-600">
                       Quantity: {item.quantity || 1}
                     </p>
@@ -204,17 +210,14 @@ export default function CustomerOrderDetailPage() {
           )}
 
           {(order.rejectionReason || order.cancellationReason) && (
-            <Card className={`p-6 ${
-              order.rejectionReason ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'
-            }`}>
-              <h2 className={`text-xl font-semibold mb-4 ${
-                order.rejectionReason ? 'text-red-800' : 'text-orange-800'
+            <Card className={`p-6 ${order.rejectionReason ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'
               }`}>
+              <h2 className={`text-xl font-semibold mb-4 ${order.rejectionReason ? 'text-red-800' : 'text-orange-800'
+                }`}>
                 {order.rejectionReason ? 'Rejection Reason' : 'Cancellation Reason'}
               </h2>
-              <p className={`${
-                order.rejectionReason ? 'text-red-700' : 'text-orange-700'
-              }`}>
+              <p className={`${order.rejectionReason ? 'text-red-700' : 'text-orange-700'
+                }`}>
                 {order.rejectionReason || order.cancellationReason}
               </p>
             </Card>

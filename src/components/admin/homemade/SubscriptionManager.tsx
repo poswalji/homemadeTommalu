@@ -58,6 +58,11 @@ export function SubscriptionManager() {
     };
 
     const handleSave = async () => {
+        if (!form.title || !form.price) {
+            toast.error("Please fill in Title and Price");
+            return;
+        }
+
         try {
             const payload = {
                 ...form,

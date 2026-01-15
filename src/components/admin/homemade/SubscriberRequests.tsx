@@ -3,24 +3,26 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, X, Clock, Loader2 } from 'lucide-react';
-import { useAdminHomemadeFoodOrders, useUpdateHomemadeFoodOrderStatus } from '@/hooks/api/use-homemade-food';
+import { useAdminSubscriptions, useUpdateSubscriptionStatus } from '@/hooks/api/use-homemade-food';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 export function SubscriberRequests() {
-    const { data: ordersData, isLoading, refetch } = useAdminHomemadeFoodOrders({
-        type: 'subscription',
-        status: 'pending' // Only show pending requests initially? Or all? User said "accept or reject", implying pending queue.
-        // Let's show all or just pending. Usually pending is the focus.
+    const { data: ordersData, isLoading, refetch } = useAdminSubscriptions({
+        status: 'pending',
+        page: 1,
+        limit: 50
     });
 
-    const updateStatus = useUpdateHomemadeFoodOrderStatus();
+    const updateStatus = useUpdateSubscriptionStatus();
     const [processingId, setProcessingId] = useState<string | null>(null);
 
     const handleAction = async (id: string, status: 'confirmed' | 'cancelled') => {
         try {
             setProcessingId(id);
-            await updateStatus.mutateAsync({ id, data: { status } });
+            // Map 'confirmed' to 'active' for subscriptions
+            const backendStatus = status === 'confirmed' ? 'active' : 'cancelled';
+            await updateStatus.mutateAsync({ id, data: { status: backendStatus } });
             toast.success(`Request ${status === 'confirmed' ? 'Accepted' : 'Rejected'}`);
             refetch();
         } catch (error) {
@@ -58,14 +60,14 @@ export function SubscriberRequests() {
                             <div key={req._id} className="bg-white border rounded-xl p-4 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center shadow-sm">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-bold text-gray-800">{req.foodName || 'Subscription Plan'}</h3>
-                                        <Badge variant="outline" className="text-xs">{req.orderNumber}</Badge>
+                                        <h3 className="font-bold text-gray-800">{req.planName || req.foodName || 'Subscription Plan'}</h3>
+                                        <Badge variant="outline" className="text-xs">SUB-{req._id.slice(-6).toUpperCase()}</Badge>
                                     </div>
                                     <div className="text-sm text-gray-500 space-y-1">
                                         <p><span className="font-medium">Customer:</span> {req.customerName} ({req.mobileNumber})</p>
                                         <p><span className="font-medium">Address:</span> {req.deliveryAddress?.street}</p>
                                         <p><span className="font-medium">Date:</span> {format(new Date(req.createdAt), 'PPp')}</p>
-                                        <p><span className="font-medium text-green-600">Amount:</span> ₹{req.finalAmount}</p>
+                                        <p><span className="font-medium text-green-600">Amount:</span> ₹{req.price || req.finalAmount}</p>
                                     </div>
                                 </div>
 

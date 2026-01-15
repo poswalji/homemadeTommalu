@@ -240,6 +240,15 @@ export const useSubscriptionPlans = () => {
     });
 };
 
+// Get My Subscriptions
+export const useMySubscriptions = () => {
+    return useQuery({
+        queryKey: ['homemade-food', 'subscriptions', 'my'],
+        queryFn: () => homemadeFoodPublicApi.getMySubscriptions(),
+        staleTime: 1000 * 60 * 5,
+    });
+};
+
 // Get All Plans (Admin)
 export const useAdminSubscriptionPlans = () => {
     return useQuery({
