@@ -144,7 +144,7 @@ export default function RootLayout({
                </>
             ) : null}
          </head>
-         <body className={`${figtree.className} antialiased`}>
+         <body className={`${figtree.className} antialiased`} suppressHydrationWarning>
             <QueryProvider>
                <AppProvider>
                   <AuthProvider>

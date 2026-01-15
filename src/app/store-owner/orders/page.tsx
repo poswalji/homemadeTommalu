@@ -69,11 +69,11 @@ export default function StoreOwnerOrdersPage() {
             data: {
                status: statusUpdate.status as any,
                ...(statusUpdate.status === 'Rejected' &&
-               statusUpdate.rejectionReason
+                  statusUpdate.rejectionReason
                   ? { rejectionReason: statusUpdate.rejectionReason }
                   : {}),
                ...(statusUpdate.status === 'Cancelled' &&
-               statusUpdate.cancellationReason
+                  statusUpdate.cancellationReason
                   ? { cancellationReason: statusUpdate.cancellationReason }
                   : {}),
             },
@@ -245,17 +245,20 @@ export default function StoreOwnerOrdersPage() {
                                  </Badge>
                               </div>
                               <div className="space-y-1">
-                                <p className='text-xs sm:text-sm text-gray-600'>
-                                   <span className="font-medium">Customer:</span> {order.customerName || 'N/A'}
-                                </p>
-                                <p className='text-xs sm:text-sm text-gray-600'>
-                                   <span className="font-medium">Store:</span> {order.storeName || 'N/A'}
-                                </p>
+                                 <p className='text-xs sm:text-sm text-gray-600'>
+                                    <span className="font-medium">Customer:</span> {order.customerName || 'N/A'}
+                                 </p>
+                                 <p className='text-xs sm:text-sm text-gray-600'>
+                                    <span className="font-medium">Store:</span> {order.storeName || 'N/A'}
+                                 </p>
                               </div>
                            </div>
                            <div className='text-left sm:text-right'>
                               <p className='text-xl sm:text-2xl font-bold'>
-                                 ₹{order.finalPrice?.toFixed(2) || order.finalPrice}
+                                 ₹{order.items?.reduce((acc: number, item: any) => acc + (Number(item.itemPrice || 0) * Number(item.quantity || 1)), 0).toFixed(2)}
+                              </p>
+                              <p className='text-xs text-gray-500 text-right'>
+                                 Item Total
                               </p>
                               <p className='text-xs sm:text-sm text-gray-600'>
                                  {order.items?.length || 0} items

@@ -23,12 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  Package, 
-  MapPin, 
-  Calendar, 
-  XCircle, 
-  CheckCircle, 
+import {
+  Package,
+  MapPin,
+  Calendar,
+  XCircle,
+  CheckCircle,
   Truck,
   ArrowLeft,
   User,
@@ -230,17 +230,14 @@ export default function AdminOrderDetailPage() {
           )}
 
           {(order.rejectionReason || order.cancellationReason) && (
-            <Card className={`p-6 ${
-              order.rejectionReason ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'
-            }`}>
-              <h2 className={`text-xl font-semibold mb-4 ${
-                order.rejectionReason ? 'text-red-800' : 'text-orange-800'
+            <Card className={`p-6 ${order.rejectionReason ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'
               }`}>
+              <h2 className={`text-xl font-semibold mb-4 ${order.rejectionReason ? 'text-red-800' : 'text-orange-800'
+                }`}>
                 {order.rejectionReason ? 'Rejection Reason' : 'Cancellation Reason'}
               </h2>
-              <p className={`${
-                order.rejectionReason ? 'text-red-700' : 'text-orange-700'
-              }`}>
+              <p className={`${order.rejectionReason ? 'text-red-700' : 'text-orange-700'
+                }`}>
                 {order.rejectionReason || order.cancellationReason}
               </p>
             </Card>
@@ -254,7 +251,13 @@ export default function AdminOrderDetailPage() {
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
                 <span className="font-medium">
-                  ₹{(order.finalPrice + (order.discount || 0)).toFixed(2)}
+                  ₹{order.items?.reduce((acc: number, item: any) => acc + (Number(item.itemPrice || 0) * Number(item.quantity || 1)), 0).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Delivery Charge</span>
+                <span className="font-medium text-green-600">
+                  {order.deliveryCharge ? `₹${Number(order.deliveryCharge).toFixed(2)}` : 'Free'}
                 </span>
               </div>
               {order.discount && order.discount > 0 && (
@@ -317,7 +320,7 @@ export default function AdminOrderDetailPage() {
           <Card className="p-6">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button 
+                <Button
                   className="w-full"
                   onClick={() => setStatusUpdate(order.status)}
                 >

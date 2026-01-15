@@ -115,6 +115,13 @@ export function Header() {
                               Partner with Tommalu
                            </Link>
                         )}
+                        {user?.role === 'admin' && (
+                           <Link
+                              href='/admin'
+                              className='text-base font-medium text-gray-900'>
+                              Dashboard
+                           </Link>
+                        )}
                         {user?.role === 'storeOwner' && (
                            <Link
                               href='/store-owner/stores'
@@ -242,11 +249,8 @@ export function Header() {
                            <div className='flex justify-between space-x-2'>
                               <Button
                                  onClick={() => {
-                                    router.push(
-                                       user?.role === 'storeOwner'
-                                          ? '/store-owner/stores'
-                                          : '/customer'
-                                    );
+                                    const targetPath = user?.role === 'admin' ? '/admin' : (user?.role === 'storeOwner' ? '/store-owner/stores' : '/customer');
+                                    router.push(targetPath);
                                     setMobileMenuOpen(false);
                                  }}
                                  variant='outline'

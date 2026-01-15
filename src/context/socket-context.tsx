@@ -73,13 +73,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       const audio = new Audio('/notification-ring.wav');
       audio.loop = true; // Loop until stopped
       audio.volume = 0.7; // Set volume to 70%
-      
+
       // Store the audio element for this order
       activeAudioRefs.current.set(orderId, audio);
-      
+
       // Try to play the sound
       const playPromise = audio.play();
-      
+
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
@@ -136,10 +136,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     const data = snapshot.val();
     const notificationKey = snapshot.key;
-    
+
     // Handle both single notification and object of notifications
     let notificationsToProcess: any[] = [];
-    
+
     if (data.event && data.data) {
       // Single notification object
       notificationsToProcess = [{
@@ -160,10 +160,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     notificationsToProcess.forEach((notif) => {
       const { event, data: notificationData } = notif;
-      
+
       // Convert Firebase notification to app notification format
       let notification: Notification;
-      
+
       if (event === 'new_notification') {
         // Direct notification format
         notification = {
@@ -226,7 +226,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         return [notification, ...prev];
       });
       setUnreadCount((prev) => prev + 1);
-      
+
       // Show browser notification if permission granted
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(notification.title, {
@@ -239,29 +239,29 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       // Handle notifications for all user types
       if (notification.relatedId) {
         const orderId = String(notification.relatedId);
-        
+
         // Play notification sound for store owners on new order notifications
         if (userRole === 'storeOwner' && notification.type === 'order_created') {
           playNotificationSound(orderId);
         }
-        
+
         // Handle different notification types for all user roles
         if (notification.type === 'order_created') {
           // Store owner queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.storeOwner() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.earnings() });
-          
+
           // Customer queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.public(orderId) });
-          
+
           // Admin queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.revenue() });
-          
+
           // General orders queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
         } else if (notification.type === 'delivery_assigned' && userRole === 'admin') {
@@ -276,12 +276,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.public(orderId) });
           QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
-          
+
           // Stop notification sound for store owners on any status update
           if (userRole === 'storeOwner') {
             stopNotificationSound(orderId);
           }
-          
+
           // Update earnings/payouts if order status affects them
           const finalStatuses = ['Confirmed', 'Rejected', 'Cancelled', 'Delivered'];
           if (finalStatuses.includes(notificationData.status)) {
@@ -318,7 +318,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     try {
       // Listen to user-specific notifications
-      const userNotificationsPath = `notifications/user:${userId}`;
+      const userNotificationsPath = `notifications/${userId}`;
       userNotificationRef.current = query(
         ref(db, userNotificationsPath),
         orderByChild('timestamp'),

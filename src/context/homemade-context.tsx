@@ -16,6 +16,8 @@ interface HomemadeState {
     items: string[];
     lunchSabji?: string;
     dinnerSabji?: string;
+    availableRotis?: Array<{ type: string; priceExtra: number; isDefault: boolean }>;
+    extraRotiPrice?: number;
 }
 
 interface HomemadeContextType {
@@ -34,7 +36,9 @@ const defaultState: HomemadeState = {
     dinnerSlotAvailable: false,
     items: [],
     lunchSabji: "",
-    dinnerSabji: ""
+    dinnerSabji: "",
+    availableRotis: [],
+    extraRotiPrice: 10
 };
 
 export function HomemadeProvider({ children }: { children: ReactNode }) {
@@ -78,7 +82,9 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                     sundayItem: isSunday ? data.product.itemName : undefined,
                     items: data.product.includes || [],
                     lunchSabji,
-                    dinnerSabji
+                    dinnerSabji,
+                    availableRotis: data.weekdayMenu?.availableRotis || [],
+                    extraRotiPrice: data.product.extraRotiPrice || 10
                 });
             }
         } catch (error) {

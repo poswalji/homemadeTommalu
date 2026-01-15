@@ -45,3 +45,12 @@ export const placeHomemadeOrder = async (orderData: any) => {
         throw error;
     }
 };
+
+export const purchaseSubscriptionPlan = async (data: any) => {
+    try {
+        const response = await apiClient.post('/homemade/plans/purchase', data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

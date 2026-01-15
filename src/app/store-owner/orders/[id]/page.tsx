@@ -24,15 +24,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  Package, 
-  MapPin, 
-  Calendar, 
-  XCircle, 
-  CheckCircle, 
+import {
+  Package,
+  MapPin,
+  Calendar,
+  XCircle,
+  CheckCircle,
   Truck,
   ArrowLeft,
-  User 
+  User
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -72,7 +72,7 @@ export default function StoreOwnerOrderDetailPage() {
             : {}),
         },
       });
-      if (orderId && statusUpdate.status!=="Pending") {
+      if (orderId && statusUpdate.status !== "Pending") {
         stopNotificationSound(orderId);
       }
       toast.success(`Order status updated to ${statusUpdate.status}`);
@@ -240,12 +240,12 @@ export default function StoreOwnerOrderDetailPage() {
             <Card className="p-6">
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button 
+                  <Button
                     className="w-full"
-                    onClick={() => setStatusUpdate({ 
-                      status: '', 
-                      rejectionReason: '', 
-                      cancellationReason: '' 
+                    onClick={() => setStatusUpdate({
+                      status: '',
+                      rejectionReason: '',
+                      cancellationReason: ''
                     })}
                   >
                     Mark as Out for Delivery
@@ -270,7 +270,7 @@ export default function StoreOwnerOrderDetailPage() {
                     >
                       Cancel
                     </Button>
-                    <Button 
+                    <Button
                       onClick={async () => {
                         try {
                           await updateStatus.mutateAsync({
@@ -305,17 +305,14 @@ export default function StoreOwnerOrderDetailPage() {
           )}
 
           {(order.rejectionReason || order.cancellationReason) && (
-            <Card className={`p-6 ${
-              order.rejectionReason ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'
-            }`}>
-              <h2 className={`text-xl font-semibold mb-4 ${
-                order.rejectionReason ? 'text-red-800' : 'text-orange-800'
+            <Card className={`p-6 ${order.rejectionReason ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'
               }`}>
+              <h2 className={`text-xl font-semibold mb-4 ${order.rejectionReason ? 'text-red-800' : 'text-orange-800'
+                }`}>
                 {order.rejectionReason ? 'Rejection Reason' : 'Cancellation Reason'}
               </h2>
-              <p className={`${
-                order.rejectionReason ? 'text-red-700' : 'text-orange-700'
-              }`}>
+              <p className={`${order.rejectionReason ? 'text-red-700' : 'text-orange-700'
+                }`}>
                 {order.rejectionReason || order.cancellationReason}
               </p>
             </Card>
@@ -327,26 +324,16 @@ export default function StoreOwnerOrderDetailPage() {
             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-600">Item Total</span>
                 <span className="font-medium">
-                  ₹{(order.finalPrice + (order.discount || 0)).toFixed(2)}
+                  ₹{order.items?.reduce((acc: number, item: any) => acc + (Number(item.itemPrice || 0) * Number(item.quantity || 1)), 0).toFixed(2)}
                 </span>
               </div>
-              {order.discount && order.discount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>-₹{order.discount.toFixed(2)}</span>
-                </div>
-              )}
-              {order.promoCode && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Promo Code</span>
-                  <span className="font-medium">{order.promoCode}</span>
-                </div>
-              )}
               <div className="border-t pt-3 flex justify-between">
-                <span className="font-semibold text-lg">Total</span>
-                <span className="font-bold text-lg">₹{order.finalPrice.toFixed(2)}</span>
+                <span className="font-semibold text-lg">Total Order Value</span>
+                <span className="font-bold text-lg">
+                  ₹{order.items?.reduce((acc: number, item: any) => acc + (Number(item.itemPrice || 0) * Number(item.quantity || 1)), 0).toFixed(2)}
+                </span>
               </div>
             </div>
           </Card>
@@ -393,12 +380,12 @@ export default function StoreOwnerOrderDetailPage() {
             <Card className="p-6">
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button 
+                  <Button
                     className="w-full"
-                    onClick={() => setStatusUpdate({ 
-                      status: '', 
-                      rejectionReason: '', 
-                      cancellationReason: '' 
+                    onClick={() => setStatusUpdate({
+                      status: '',
+                      rejectionReason: '',
+                      cancellationReason: ''
                     })}
                   >
                     Update Status

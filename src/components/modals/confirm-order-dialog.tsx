@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuthMe } from "@/hooks/api";
 import { toast } from "sonner";
 import { Calendar, Clock, MapPin, Phone, Loader2, User } from "lucide-react";
-import { placeHomemadeOrder } from "@/services/homemadeService";
+import { placeHomemadeOrder, purchaseSubscriptionPlan } from "@/services/homemadeService";
 import { useRouter } from "next/navigation";
 
 interface ConfirmOrderDialogProps {
@@ -25,6 +25,7 @@ interface ConfirmOrderDialogProps {
         items: string[];
         isSubscription?: boolean;
         planName?: string;
+        planId?: string;
     };
 }
 
@@ -51,16 +52,27 @@ export function ConfirmOrderDialog({ isOpen, onClose, orderDetails }: ConfirmOrd
         try {
             setIsSubmitting(true);
 
-            const payload = {
-                customerName: name,
-                mobileNumber: phone,
-                area: area,
-                customAddress: address,
-                quantity: orderDetails.quantity,
-                slot: orderDetails.slot // "Lunch" or "Dinner"
-            };
-
-            const res = await placeHomemadeOrder(payload);
+            let res;
+            if (orderDetails.isSubscription) {
+                const payload = {
+                    planId: orderDetails.planId,
+                    customerName: name,
+                    mobileNumber: phone,
+                    area: area,
+                    customAddress: address
+                };
+                res = await purchaseSubscriptionPlan(payload);
+            } else {
+                const payload = {
+                    customerName: name,
+                    mobileNumber: phone,
+                    area: area,
+                    customAddress: address,
+                    quantity: orderDetails.quantity,
+                    slot: orderDetails.slot // "Lunch" or "Dinner"
+                };
+                res = await placeHomemadeOrder(payload);
+            }
 
             if (res.success) {
                 toast.success("Order placed successfully!");

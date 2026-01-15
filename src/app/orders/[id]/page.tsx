@@ -7,9 +7,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Package, 
-  CheckCircle, 
+import {
+  Package,
+  CheckCircle,
   Truck,
   XCircle,
   Clock,
@@ -40,7 +40,7 @@ export default function PublicOrderTrackingPage() {
   const isOrderOwner = useMemo(() => {
     if (!isAuthenticated || !user || !data?.data) return false;
     const order = data.data;
-    return order.userId === user.id 
+    return order.userId === user.id
   }, [isAuthenticated, user, data]);
 
   if (isLoading) {
@@ -166,15 +166,28 @@ export default function PublicOrderTrackingPage() {
             <p className="font-medium">{order.storeName || 'N/A'}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Items</p>
-              <p className="font-medium">{order?.items?.length || 'N/A'} items</p>
-              
+          <div className="mb-6 border-t pt-4 space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Item Total</span>
+              <span className="font-medium">
+                ₹{order.items?.reduce((acc: number, item: any) => acc + (Number(item.itemPrice || 0) * Number(item.quantity || 1)), 0).toFixed(2)}
+              </span>
             </div>
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Amount</p>
-              <p className="font-medium">₹{order.finalPrice?.toFixed(2) || '0.00'}</p>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Delivery Charge</span>
+              <span className="font-medium text-green-600">
+                {order.deliveryCharge ? `₹${Number(order.deliveryCharge).toFixed(2)}` : 'Free'}
+              </span>
+            </div>
+            {order.discount > 0 && (
+              <div className="flex justify-between items-center text-sm text-green-600">
+                <span>Discount {order.promoCode ? `(${order.promoCode})` : ''}</span>
+                <span className="font-medium">-₹{Number(order.discount).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center pt-2 border-t mt-2">
+              <span className="font-bold text-gray-900">Total Amount</span>
+              <span className="font-bold text-lg text-gray-900">₹{Number(order.finalPrice).toFixed(2)}</span>
             </div>
           </div>
 
@@ -213,23 +226,20 @@ export default function PublicOrderTrackingPage() {
           <div className="space-y-6">
             {statusSteps.map((step, index) => (
               <div key={step.id} className="flex items-start gap-4">
-                <div className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                  step.isCompleted
+                <div className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${step.isCompleted
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-200 text-gray-500'
-                }`}>
+                  }`}>
                   {step.isCompleted ? (
                     <CheckCircle className="w-6 h-6" />
                   ) : (
-                    <div className={`w-4 h-4 rounded-full ${
-                      step.isCurrent ? 'bg-blue-500' : 'bg-gray-400'
-                    }`} />
+                    <div className={`w-4 h-4 rounded-full ${step.isCurrent ? 'bg-blue-500' : 'bg-gray-400'
+                      }`} />
                   )}
                 </div>
                 <div className="flex-1 pt-2">
-                  <p className={`font-medium ${
-                    step.isCompleted ? 'text-gray-900' : 'text-gray-500'
-                  }`}>
+                  <p className={`font-medium ${step.isCompleted ? 'text-gray-900' : 'text-gray-500'
+                    }`}>
                     {step.name}
                   </p>
                   {step.isCurrent && (
@@ -305,7 +315,7 @@ export default function PublicOrderTrackingPage() {
           onOpenChange={setIsReviewModalOpen}
           orderId={order.id}
           storeId={typeof order.storeId === 'string' ? order.storeId : (order.storeId?._id || '')}
-          storeName={order.storeName }
+          storeName={order.storeName}
           items={(order.items || []).map((item: any) => ({
             id: item.menuItemId || item.id || item.menuId || '',
             name: item.itemName || item.name || 'Item',

@@ -1,6 +1,38 @@
 import apiClient from '@/lib/axios';
 
 // Types
+export interface Subscription {
+    _id: string;
+    customerName: string;
+    mobileNumber: string;
+    deliveryAddress: {
+        street: string;
+        landmark?: string;
+        city: string;
+        pincode: string;
+    };
+    planType: 'lunch' | 'dinner' | 'both';
+    duration: number;
+    startDate: string;
+    endDate: string;
+    status: 'pending' | 'active' | 'paused' | 'completed' | 'cancelled';
+    quantity: number;
+    rotiPreference: string;
+    createdAt: string;
+}
+
+export interface SubscriptionPlan {
+    _id: string;
+    planType: 'lunch' | 'dinner' | 'both';
+    title: string;
+    description: string;
+    price: number;
+    discountPercentage: number;
+    features: string[];
+    isActive: boolean;
+    colorTheme: string;
+}
+
 export interface HomemadeFood {
     _id: string;
     name: string;
@@ -134,15 +166,22 @@ export interface HomemadeFoodAnalytics {
         totalPending: number;
         totalQuantitySold: number;
     };
+    monthly?: {
+        uniqueCustomers: number;
+        repeatCustomers: number;
+        totalMonthlyOrders: number;
+        monthlyRevenue: number;
+    };
     statusBreakdown: Array<{
         _id: string;
         count: number;
         revenue: number;
     }>;
-    dailyRevenue: Array<{
+    dailyTrend: Array<{
         _id: string;
+        lunch: number;
+        dinner: number;
         revenue: number;
-        orders: number;
     }>;
     popularItems: Array<{
         _id: string;
@@ -154,13 +193,13 @@ export interface HomemadeFoodAnalytics {
 }
 
 // API Response types
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
     success: boolean;
     data: T;
     message?: string;
 }
 
-interface PaginatedResponse<T> {
+export interface PaginatedResponse<T> {
     success: boolean;
     data: T[];
     pagination: {
@@ -200,6 +239,18 @@ export const homemadeFoodPublicApi = {
             params: { orderNumber, mobileNumber }
         });
         return response.data;
+    },
+
+    // Submit Subscription
+    submitSubscription: async (data: any): Promise<ApiResponse<Subscription>> => {
+        const response = await apiClient.post<ApiResponse<Subscription>>('/subscriptions/request', data);
+        return response.data;
+    },
+
+    // Get Active Plans
+    getSubscriptionPlans: async (): Promise<ApiResponse<SubscriptionPlan[]> & { count: number }> => {
+        const response = await apiClient.get<ApiResponse<SubscriptionPlan[]> & { count: number }>('/homemade/plans');
+        return response.data;
     }
 };
 
@@ -208,6 +259,21 @@ export const homemadeFoodPublicApi = {
 // ============================================
 
 export const homemadeFoodAdminApi = {
+    // ... (keep existing methods)
+
+    // Get daily menu for a specific date
+    getDailyMenu: async (date: string): Promise<ApiResponse<any>> => {
+        // Use PATCH to update endpoint which returns the full menu structure (find or create)
+        const response = await apiClient.patch<ApiResponse<any>>('/admin/homemade-food/update', { date });
+        return response.data;
+    },
+
+    // Update daily menu
+    updateDailyMenu: async (data: any): Promise<ApiResponse<any>> => {
+        const response = await apiClient.patch<ApiResponse<any>>('/admin/homemade-food/update', data);
+        return response.data;
+    },
+
     // Get all food items (admin)
     getAllHomemadeFoods: async (params?: {
         isActive?: boolean;
@@ -216,6 +282,8 @@ export const homemadeFoodAdminApi = {
         const response = await apiClient.get<ApiResponse<HomemadeFood[]> & { total: number }>('/admin/homemade-food', { params });
         return response.data;
     },
+
+    // ... (rest of existing admin methods)
 
     // Create food item
     createHomemadeFood: async (data: CreateHomemadeFoodData): Promise<ApiResponse<HomemadeFood>> => {
@@ -286,6 +354,38 @@ export const homemadeFoodAdminApi = {
         format?: 'json' | 'csv';
     }): Promise<ApiResponse<HomemadeFoodOrder[]> & { total: number }> => {
         const response = await apiClient.get<ApiResponse<HomemadeFoodOrder[]> & { total: number }>('/admin/homemade-food/orders/export', { params });
+        return response.data;
+    },
+
+    // Subscriptions
+    getSubscriptions: async (params?: { status?: string; page?: number; limit?: number }): Promise<PaginatedResponse<Subscription>> => {
+        const response = await apiClient.get<PaginatedResponse<Subscription>>('/subscriptions', { params });
+        return response.data;
+    },
+
+    updateSubscriptionStatus: async (id: string, data: { status: string; adminNotes?: string }): Promise<ApiResponse<Subscription>> => {
+        const response = await apiClient.patch<ApiResponse<Subscription>>(`/subscriptions/${id}/status`, data);
+        return response.data;
+    },
+
+    // Subscription Plans Management
+    getAllSubscriptionPlans: async (): Promise<ApiResponse<SubscriptionPlan[]>> => {
+        const response = await apiClient.get<ApiResponse<SubscriptionPlan[]>>('/admin/homemade-food/plans/all');
+        return response.data;
+    },
+
+    createSubscriptionPlan: async (data: Partial<SubscriptionPlan>): Promise<ApiResponse<SubscriptionPlan>> => {
+        const response = await apiClient.post<ApiResponse<SubscriptionPlan>>('/admin/homemade-food/plans', data);
+        return response.data;
+    },
+
+    updateSubscriptionPlan: async (id: string, data: Partial<SubscriptionPlan>): Promise<ApiResponse<SubscriptionPlan>> => {
+        const response = await apiClient.patch<ApiResponse<SubscriptionPlan>>(`/admin/homemade-food/plans/${id}`, data);
+        return response.data;
+    },
+
+    deleteSubscriptionPlan: async (id: string): Promise<ApiResponse<null>> => {
+        const response = await apiClient.delete<ApiResponse<null>>(`/admin/homemade-food/plans/${id}`);
         return response.data;
     }
 };

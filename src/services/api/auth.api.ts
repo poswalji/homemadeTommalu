@@ -313,5 +313,17 @@ export const authApi = {
       throw error;
     }
   },
+
+  // Get Firebase Custom Token
+  getFirebaseToken: async (): Promise<{ success: boolean; firebaseToken: string }> => {
+    try {
+      const response = await apiClient.get<{ success: boolean; firebaseToken: string }>('/auth/firebase-token');
+      return response.data;
+    } catch (error: any) {
+      console.error('🔥 Firebase Token Error MESSAGE:', error.response?.data?.error?.message || error.message);
+      console.error('🔥 Firebase Token Error FULL:', JSON.stringify(error.response?.data || {}, null, 2));
+      throw error;
+    }
+  },
 };
 

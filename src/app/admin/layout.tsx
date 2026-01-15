@@ -3,7 +3,7 @@
 import { AdminSidebar } from '@/components/layout/admin-sidebar';
 import { Menubar } from '@/components/layout/menubar';
 import { useAuthMe } from '@/hooks/api';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
@@ -14,6 +14,7 @@ export default function AdminLayout({
 }) {
    const { data: authData, isLoading } = useAuthMe();
    const router = useRouter();
+   const pathname = usePathname();
    const [sidebarOpen, setSidebarOpen] = useState(false);
 
    const [isMounted, setIsMounted] = useState(false);
@@ -23,13 +24,21 @@ export default function AdminLayout({
    }, []);
 
    useEffect(() => {
+      // Don't redirect if we are on the admin login page
+      if (pathname === '/admin/login') return;
+
       if (!isLoading && (!authData?.user || authData.user.role !== 'admin')) {
-         router.push('/login');
+         router.push('/admin/login'); // Redirect to ADMIN login, not generic login
       }
-   }, [authData, isLoading, router]);
+   }, [authData, isLoading, router, pathname]);
 
    if (!isMounted) {
       return null;
+   }
+
+   // If accessing login page, just render it without layout
+   if (pathname === '/admin/login') {
+      return <>{children}</>;
    }
 
    if (isLoading) {
@@ -62,6 +71,8 @@ export default function AdminLayout({
          </>
       );
    }
+
+   // Extra protection: If not admin, don't show layout content (though useEffect should redirect)
    if (!authData?.user || authData.user.role !== 'admin') {
       return null;
    }
