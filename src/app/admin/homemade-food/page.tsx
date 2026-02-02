@@ -9,6 +9,7 @@ import { AnalyticsDashboard } from '@/components/admin/homemade/AnalyticsDashboa
 import { DailyMenuEditor } from '@/components/admin/homemade/DailyMenuEditor';
 import { SubscriptionManager } from '@/components/admin/homemade/SubscriptionManager';
 import { SubscriberRequests } from '@/components/admin/homemade/SubscriberRequests';
+import { ActiveSubscriptions } from '@/components/admin/homemade/ActiveSubscriptions';
 import {
     Activity,
     Utensils,
@@ -17,7 +18,6 @@ import {
     RefreshCw,
     Search,
     Truck,
-    Clock,
     ShoppingCart,
     Loader2,
     Users,
@@ -30,8 +30,7 @@ import {
     useHomemadeFoodAnalytics,
     useCreateHomemadeFood,
     useUpdateHomemadeFood,
-    useUpdateHomemadeFoodOrderStatus,
-    useAdminHomemadeFoods
+    useUpdateHomemadeFoodOrderStatus
 } from '@/hooks/api';
 import { toast } from 'sonner';
 import { type HomemadeFoodOrderStatus } from '@/services/api/homemade-food.api';
@@ -200,13 +199,15 @@ export default function HomemadeFoodAdminPage() {
 
                 {/* Subscriptions Tab */}
                 <TabsContent value="subscriptions" className="space-y-6">
-                    <Tabs defaultValue="models" className="w-full">
+                    <Tabs defaultValue="requests" className="w-full">
                         <div className="flex items-center justify-between mb-4">
                             <TabsList>
                                 <TabsTrigger value="models">Plan Models</TabsTrigger>
                                 <TabsTrigger value="requests" className="relative">
                                     Requests
-                                    {/* Optional: Add badge for count if we had it in context */}
+                                </TabsTrigger>
+                                <TabsTrigger value="active_subs">
+                                    Active Subscribers
                                 </TabsTrigger>
                             </TabsList>
                         </div>
@@ -218,64 +219,14 @@ export default function HomemadeFoodAdminPage() {
                         <TabsContent value="requests" className="mt-0">
                             <SubscriberRequests />
                         </TabsContent>
+
+                        <TabsContent value="active_subs" className="mt-0">
+                            <ActiveSubscriptions />
+                        </TabsContent>
                     </Tabs>
                 </TabsContent>
 
-                {/* Pending Stores Tab */}
-                <TabsContent value="pending_stores" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Stores with Pending Orders</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {analyticsLoading ? (
-                                <div className="space-y-4">
-                                    <Skeleton className="h-20 w-full" />
-                                </div>
-                            ) : (() => {
-                                const pendingCount = analyticsData?.data?.statusBreakdown?.find((s: any) => s._id.toLowerCase() === 'pending')?.count || 0;
-
-                                if (pendingCount === 0) {
-                                    return (
-                                        <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
-                                            <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-30 text-green-500" />
-                                            <p>No stores have pending orders right now.</p>
-                                        </div>
-                                    );
-                                }
-
-                                return (
-                                    <div className="space-y-4">
-                                        <div className="flex flex-col sm:flex-row justify-between p-6 bg-white border border-orange-200 rounded-lg shadow-sm hover:shadow-md transition-all gap-4">
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-bold text-lg text-gray-800">Tommalu Home Kitchen</span>
-                                                    <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200 border-none">
-                                                        {pendingCount} Pending Orders
-                                                    </Badge>
-                                                </div>
-                                                <p className="font-medium text-gray-600">Jaipur, Rajasthan</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    onClick={() => {
-                                                        setActiveTab('orders');
-                                                        setOrderFilters(prev => ({ ...prev, status: 'pending' }));
-                                                    }}
-                                                    className="bg-orange-600 hover:bg-orange-700"
-                                                >
-                                                    View Orders
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* Orders Tab (Preserved & Simplified) */}
+                {/* Orders Tab */}
                 <TabsContent value="orders" className="space-y-4">
                     <Card>
                         <CardHeader>
@@ -394,6 +345,7 @@ export default function HomemadeFoodAdminPage() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
             <Dialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen}>
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
@@ -402,6 +354,7 @@ export default function HomemadeFoodAdminPage() {
                             {editingItem ? 'Update the details of this food item' : 'Create a new homemade food item'}
                         </DialogDescription>
                     </DialogHeader>
+                    {/* Item Form Implementation - Same as before */}
                     <div className="space-y-4 mt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="col-span-2 space-y-2">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
@@ -13,7 +12,9 @@ interface HomemadeState {
     menuDate?: string;
     isSunday?: boolean;
     sundayItem?: string;
-    items: string[];
+    items: string[]; // Legacy/General items
+    lunchItems: string[]; // Explicit Lunch Items
+    dinnerItems: string[]; // Explicit Dinner Items
     lunchSabji?: string;
     dinnerSabji?: string;
     availableRotis?: Array<{ type: string; priceExtra: number; isDefault: boolean }>;
@@ -35,6 +36,8 @@ const defaultState: HomemadeState = {
     lunchSlotAvailable: false,
     dinnerSlotAvailable: false,
     items: [],
+    lunchItems: [],
+    dinnerItems: [],
     lunchSabji: "",
     dinnerSabji: "",
     availableRotis: [],
@@ -58,17 +61,37 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                 let price = 0;
                 let lunchSabji = "";
                 let dinnerSabji = "";
+                let lunchItems: string[] = [];
+                let dinnerItems: string[] = [];
 
                 if (isSunday) {
                     sabjiDisplay = data.product.itemName || "Sunday Special";
                     price = data.product.price;
-                    lunchSabji = sabjiDisplay; // Sunday usually has one special
-                    dinnerSabji = sabjiDisplay;
+
+                    // Hybrid Sunday Logic handling
+                    if (data.product.lunchProduct) {
+                        lunchSabji = data.product.lunchProduct.sabji || "Standard Lunch";
+                        lunchItems = data.product.lunchProduct.includes || [];
+                    } else {
+                        lunchSabji = sabjiDisplay;
+                        lunchItems = data.product.includes || [];
+                    }
+
+                    if (data.product.dinnerProduct) {
+                        dinnerSabji = data.product.dinnerProduct.name || sabjiDisplay; // Name often used as item name
+                        dinnerItems = data.product.dinnerProduct.includes || ["Special Preparation"];
+                    } else {
+                        dinnerSabji = sabjiDisplay;
+                        dinnerItems = data.product.includes || [];
+                    }
                 } else {
                     lunchSabji = data.product.lunchSabji || "Sabji 1";
                     dinnerSabji = data.product.dinnerSabji || "Sabji 2";
                     sabjiDisplay = `Lunch: ${lunchSabji} | Dinner: ${dinnerSabji}`;
                     price = data.product.price;
+
+                    lunchItems = data.product.lunchItems || data.product.includes || [];
+                    dinnerItems = data.product.dinnerItems || data.product.includes || [];
                 }
 
                 setState({
@@ -81,6 +104,8 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                     isSunday: isSunday,
                     sundayItem: isSunday ? data.product.itemName : undefined,
                     items: data.product.includes || [],
+                    lunchItems: lunchItems,
+                    dinnerItems: dinnerItems,
                     lunchSabji,
                     dinnerSabji,
                     availableRotis: data.weekdayMenu?.availableRotis || [],

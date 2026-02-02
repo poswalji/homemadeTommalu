@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Clock, Info, ShieldCheck, Leaf, Flame, Minus, Plus, CheckCircle2, Star } from "lucide-react";
+import { Calendar, Clock, Info, ShieldCheck, Leaf, Flame, Minus, Plus, CheckCircle2, Share2, Sun, Moon, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHomemade } from "@/context/homemade-context";
 import { useAuthMe } from "@/hooks/api";
@@ -12,9 +12,11 @@ import { useRouter } from "next/navigation";
 import { ConfirmOrderDialog } from "@/components/modals/confirm-order-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Lock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { useSubscriptionPlans } from "@/hooks/api/use-homemade-food";
+import { format } from "date-fns";
+import { generateMenuShareText } from "@/utils/menuShare";
+import { toast } from "sonner";
 
 export default function HomemadePage() {
     const router = useRouter();
@@ -49,37 +51,72 @@ export default function HomemadePage() {
 
     const totalPrice = (state.price * quantity) + ((state.extraRotiPrice || 10) * extraRotiCount);
 
+    const formattedDate = state.menuDate ? format(new Date(state.menuDate), 'EEEE, MMM do') : "Today's Menu";
+
     return (
         <div className="min-h-screen bg-stone-50 flex flex-col font-sans">
             <Header />
 
             <main className="flex-grow pt-24 pb-12 px-4 md:px-8">
-                <div className="max-w-3xl mx-auto">
-                    {/* ... Top Warning Banner ... */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-amber-100 border-l-4 border-amber-500 p-4 mb-8 rounded-r-lg shadow-sm flex items-start gap-3"
-                    >
-                        <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                            <p className="font-bold text-amber-800 text-sm md:text-base">
-                                Today's Fresh Menu
-                            </p>
-                            <p className="text-amber-700 text-xs md:text-sm mt-1">
-                                Ordering Open: <strong>9:00 AM - 12:00 PM (Lunch)</strong> & <strong>9:00 AM - 7:00 PM (Dinner)</strong>.
-                            </p>
+                <div className="max-w-4xl mx-auto">
+
+                    {/* Header Section */}
+                    <div className="text-center mb-8">
+                        <Badge variant="outline" className="mb-2 border-orange-200 text-orange-700 bg-orange-50 px-4 py-1 text-sm font-medium tracking-wide">
+                            Jaipur's Finest Homemade Food
+                        </Badge>
+                        <h1 className="text-3xl md:text-5xl font-black text-stone-800 tracking-tight mb-2">
+                            Tommalu <span className="text-orange-600">Home Kitchen</span>
+                        </h1>
+                        <p className="text-stone-500 font-medium">Authentic • Hygienic • Ghar Jaisa Swaad</p>
+
+                        {/* Share Button Mobile/Desktop */}
+                        <div className="mt-4 flex justify-center">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="rounded-full border-orange-200 text-orange-700 bg-orange-50 hover:bg-orange-100 gap-2"
+                                onClick={async () => {
+                                    const shareText = generateMenuShareText({
+                                        date: state.menuDate || new Date(),
+                                        lunchSabji: state.lunchSabji || "Lunch Special",
+                                        lunchItems: state.lunchItems,
+                                        dinnerSabji: state.dinnerSabji || "Dinner Special",
+                                        dinnerItems: state.dinnerItems,
+                                        lunchPrice: state.price,
+                                        dinnerPrice: state.isSunday ? 120 : state.price, // Approx logic for Sunday
+                                        isSunday: state.isSunday,
+                                        sundayItem: state.sundayItem
+                                    });
+
+                                    try {
+                                        if (navigator.share) {
+                                            await navigator.share({
+                                                title: 'Tommalu Daily Menu',
+                                                text: shareText
+                                            });
+                                        } else {
+                                            await navigator.clipboard.writeText(shareText);
+                                            toast.success("Menu copied to clipboard!");
+                                        }
+                                    } catch (err) {
+                                        console.error("Share failed:", err);
+                                    }
+                                }}
+                            >
+                                <Share2 className="w-4 h-4" /> Share Menu
+                            </Button>
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Main Tabs */}
                     <Tabs defaultValue="one-time" className="mb-8" onValueChange={setActiveTab}>
-                        <TabsList className="grid w-full grid-cols-2 h-14 p-1 bg-stone-200/50 rounded-2xl">
-                            <TabsTrigger value="one-time" className="rounded-xl text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm transition-all">
-                                One-Time Order
+                        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-12 p-1 bg-stone-200/50 rounded-full mb-8">
+                            <TabsTrigger value="one-time" className="rounded-full text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm transition-all">
+                                Daily Menu
                             </TabsTrigger>
-                            <TabsTrigger value="subscription" className="rounded-xl text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm transition-all">
-                                Monthly Subscription
+                            <TabsTrigger value="subscription" className="rounded-full text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm transition-all">
+                                Subscription Plans
                             </TabsTrigger>
                         </TabsList>
 
@@ -91,168 +128,189 @@ export default function HomemadePage() {
                                     exit={{ opacity: 0, y: -10 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    <h1 className="text-2xl md:text-3xl font-bold text-stone-800 mb-6 flex items-center gap-2">
-                                        <Leaf className="w-8 h-8 text-green-600" />
-                                        Today's Special Thali
-                                    </h1>
+                                    {/* MENU CARD DESIGN */}
+                                    <div className="bg-white rounded-3xl shadow-xl shadow-stone-200/50 overflow-hidden border border-stone-100 max-w-3xl mx-auto relative">
 
-                                    {/* Slot Selection */}
-                                    <div className="mb-8">
-                                        <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                            <Clock className="w-4 h-4" /> Select Time Slot
-                                        </h2>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <button
-                                                onClick={() => setSelectedSlot("Lunch")}
-                                                disabled={!state.lunchSlotAvailable}
-                                                className={`py-3 px-4 rounded-xl border-2 text-center transition-all font-semibold relative overflow-hidden ${selectedSlot === "Lunch"
-                                                    ? "border-orange-600 bg-orange-50 text-orange-700"
-                                                    : "border-stone-200 bg-white text-stone-500 hover:border-orange-200"
-                                                    } ${!state.lunchSlotAvailable ? "opacity-50 cursor-not-allowed grayscale" : ""}`}
-                                            >
-                                                Lunch
-                                                {!state.lunchSlotAvailable && <span className="absolute inset-0 flex items-center justify-center bg-stone-100/80 text-xs font-bold text-red-500">SOLD OUT</span>}
-                                            </button>
+                                        {/* Decorative Header Bar */}
+                                        <div className="h-3 bg-gradient-to-r from-orange-400 via-red-500 to-orange-400" />
 
-                                            <button
-                                                onClick={() => setSelectedSlot("Dinner")}
-                                                disabled={!state.dinnerSlotAvailable}
-                                                className={`py-3 px-4 rounded-xl border-2 text-center transition-all font-semibold relative overflow-hidden ${selectedSlot === "Dinner"
-                                                    ? "border-orange-600 bg-orange-50 text-orange-700"
-                                                    : "border-stone-200 bg-white text-stone-500 hover:border-orange-200"
-                                                    } ${!state.dinnerSlotAvailable ? "opacity-50 cursor-not-allowed grayscale" : ""}`}
-                                            >
-                                                Dinner
-                                                {!state.dinnerSlotAvailable && <span className="absolute inset-0 flex items-center justify-center bg-stone-100/80 text-xs font-bold text-red-500">SOLD OUT</span>}
-                                            </button>
+                                        {/* Menu Header */}
+                                        <div className="p-6 md:p-8 border-b border-stone-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-stone-50/30">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-orange-100 p-2.5 rounded-xl text-orange-600">
+                                                    <Calendar className="w-6 h-6" />
+                                                </div>
+                                                <div className="text-left">
+                                                    <h2 className="text-xl font-bold text-stone-800 leading-none">{formattedDate}</h2>
+                                                    <p className="text-stone-500 text-sm mt-1">Freshly prepared for you</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-0">Pure Veg</Badge>
+                                                <Badge variant="secondary" className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-0">Desi Ghee</Badge>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {/* Thali Card - Matching Admin Editor Style */}
-                                    <Card className="shadow-lg border-orange-100 overflow-hidden">
-                                        <div className="relative h-48 bg-stone-200">
-                                            <div
-                                                className="absolute inset-0 bg-cover bg-center"
-                                                style={{ backgroundImage: "url('/thali-special.jpeg')" }}
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end p-6">
-                                                <div>
-                                                    <Badge className="bg-orange-500 hover:bg-orange-600 mb-2 border-0">Today's Special</Badge>
-                                                    <h3 className="text-white text-2xl font-bold">Standard Homemade Thali</h3>
+                                        {/* Menu Content - Split View */}
+                                        <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-stone-100">
+
+                                            {/* LUNCH SECTION */}
+                                            <div className="p-6 md:p-8 bg-orange-50/10 hover:bg-orange-50/30 transition-colors relative group">
+                                                <div className="absolute top-4 right-4">
+                                                    {state.lunchSlotAvailable ? (
+                                                        <Badge className="bg-green-500 hover:bg-green-600 border-0">Open</Badge>
+                                                    ) : (
+                                                        <Badge variant="destructive">Closed</Badge>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <Sun className="w-5 h-5 text-orange-500" />
+                                                    <h3 className="text-lg font-bold text-stone-800 uppercase tracking-wide">Lunch Menu</h3>
+                                                </div>
+
+                                                <div className="min-h-[120px]">
+                                                    <h4 className="text-xl font-black text-orange-700 mb-3 leading-tight">
+                                                        {state.lunchSabji || "Today's Special Sabji"}
+                                                    </h4>
+                                                    <ul className="space-y-2">
+                                                        {state.lunchItems.map((item, idx) => (
+                                                            <li key={idx} className="flex items-start gap-2 text-sm font-medium text-stone-600">
+                                                                <CheckCircle2 className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                                                                <span>{item}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+
+                                                <div className="mt-6 pt-4 border-t border-dashed border-stone-200 flex items-end justify-between">
+                                                    <div>
+                                                        <p className="text-xs text-stone-400 font-bold uppercase">Price</p>
+                                                        <p className="text-2xl font-bold text-stone-800">₹{state.isSunday ? (state?.sundayItem ? state.price : 89) : state.price}</p>
+                                                    </div>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => setSelectedSlot("Lunch")}
+                                                        variant={selectedSlot === "Lunch" ? "default" : "outline"}
+                                                        className={`rounded-xl ${selectedSlot === "Lunch" ? "bg-orange-600 hover:bg-orange-700" : "border-orange-200 text-orange-700 hover:bg-orange-50"}`}
+                                                        disabled={!state.lunchSlotAvailable}
+                                                    >
+                                                        {selectedSlot === "Lunch" ? "Selected" : "Select Lunch"}
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            {/* DINNER SECTION */}
+                                            <div className="p-6 md:p-8 bg-indigo-50/10 hover:bg-indigo-50/30 transition-colors relative group">
+                                                <div className="absolute top-4 right-4">
+                                                    {state.dinnerSlotAvailable ? (
+                                                        <Badge className="bg-green-500 hover:bg-green-600 border-0">Open</Badge>
+                                                    ) : (
+                                                        <Badge variant="destructive">Closed</Badge>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <Moon className="w-5 h-5 text-indigo-500" />
+                                                    <h3 className="text-lg font-bold text-stone-800 uppercase tracking-wide">Dinner Menu</h3>
+                                                </div>
+
+                                                <div className="min-h-[120px]">
+                                                    <h4 className="text-xl font-black text-indigo-800 mb-3 leading-tight">
+                                                        {state.dinnerSabji || "Evening Special"}
+                                                    </h4>
+                                                    <ul className="space-y-2">
+                                                        {state.dinnerItems.map((item, idx) => (
+                                                            <li key={idx} className="flex items-start gap-2 text-sm font-medium text-stone-600">
+                                                                <CheckCircle2 className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+                                                                <span>{item}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+
+                                                <div className="mt-6 pt-4 border-t border-dashed border-stone-200 flex items-end justify-between">
+                                                    <div>
+                                                        <p className="text-xs text-stone-400 font-bold uppercase">Price</p>
+                                                        <p className="text-2xl font-bold text-stone-800">
+                                                            {/* Sunday Dinner might describe a special price logic differently if needed, but Context handles single price mostly. 
+                                                                Actually for Hybrid Sunday, price might differ. 
+                                                                We'll use state.price for simplicity unless we specifically stored dinnerPrice separate in Context. 
+                                                                Ideally Context should store lunchPrice and dinnerPrice. 
+                                                                For now showing base price.
+                                                            */}
+                                                            ₹{state.isSunday ? (120) : state.price}
+                                                        </p>
+                                                    </div>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => setSelectedSlot("Dinner")}
+                                                        variant={selectedSlot === "Dinner" ? "default" : "outline"}
+                                                        className={`rounded-xl ${selectedSlot === "Dinner" ? "bg-indigo-600 hover:bg-indigo-700" : "border-indigo-200 text-indigo-700 hover:bg-indigo-50"}`}
+                                                        disabled={!state.dinnerSlotAvailable}
+                                                    >
+                                                        {selectedSlot === "Dinner" ? "Selected" : "Select Dinner"}
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <CardContent className="pt-6 space-y-6">
-                                            {/* Dynamic Sabji & Roti Display */}
-                                            <div className="space-y-4">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-sm font-bold text-orange-600 uppercase tracking-wider">
-                                                        {state.isSunday ? "Sunday Special" : `${selectedSlot} Special`}
-                                                    </label>
-                                                    <Badge variant="outline" className="border-orange-200 text-orange-700 bg-orange-50">
-                                                        {state.isSunday ? "Special" : selectedSlot}
-                                                    </Badge>
-                                                </div>
+                                        {/* Ordering Footer (Sticky Context) */}
+                                        <div className="bg-stone-50 p-6 border-t border-stone-200">
+                                            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
 
-                                                <div>
-                                                    <div className="text-3xl font-extrabold text-stone-800 leading-tight mb-2">
-                                                        {state.isSunday
-                                                            ? (state.sundayItem || "Loading...")
-                                                            : (selectedSlot === 'Lunch' ? (state.lunchSabji || "Loading...") : (state.dinnerSabji || "Loading..."))
-                                                        }
+                                                {/* Left: Quantity & Extras */}
+                                                <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-4 md:gap-8">
+
+                                                    {/* Qty */}
+                                                    <div>
+                                                        <label className="text-xs font-bold text-stone-400 uppercase block mb-1">Quantity</label>
+                                                        <div className="flex items-center gap-3 bg-white rounded-lg p-1 border border-stone-200 shadow-sm">
+                                                            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Minus className="w-4 h-4 text-stone-600" /></button>
+                                                            <span className="font-bold text-stone-800 w-6 text-center">{quantity}</span>
+                                                            <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Plus className="w-4 h-4 text-stone-600" /></button>
+                                                        </div>
                                                     </div>
 
-                                                    {/* Roti Display (Weekday Only generally) */}
-                                                    {!state.isSunday && state.items?.find(i => i.toLowerCase().includes('roti')) && (
-                                                        <div className="flex items-center gap-2 text-stone-600 font-medium text-lg">
-                                                            <span className="text-orange-500 font-bold">+</span>
-                                                            {state.items.find(i => i.toLowerCase().includes('roti'))}
+                                                    {/* Extra Roti */}
+                                                    {(!state.isSunday || selectedSlot === 'Lunch') && (
+                                                        <div>
+                                                            <label className="text-xs font-bold text-stone-400 uppercase block mb-1">Extra Roti (+₹10)</label>
+                                                            <div className="flex items-center gap-3 bg-white rounded-lg p-1 border border-stone-200 shadow-sm">
+                                                                <button onClick={() => setExtraRotiCount(Math.max(0, extraRotiCount - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Minus className="w-4 h-4 text-stone-600" /></button>
+                                                                <span className="font-bold text-stone-800 w-6 text-center">{extraRotiCount}</span>
+                                                                <button onClick={() => setExtraRotiCount(extraRotiCount + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Plus className="w-4 h-4 text-stone-600" /></button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
+
+                                                {/* Right: Checkout Button */}
+                                                <Button
+                                                    onClick={() => handleOrderClick()}
+                                                    disabled={selectedSlot === 'Lunch' ? !state.lunchSlotAvailable : !state.dinnerSlotAvailable}
+                                                    className="w-full md:w-auto px-8 py-6 text-lg font-bold bg-stone-900 hover:bg-black text-white rounded-2xl shadow-lg transition-all"
+                                                >
+                                                    Order {selectedSlot} • ₹{totalPrice}
+                                                </Button>
                                             </div>
+                                        </div>
 
-                                            {/* Extra Roti Selector */}
-                                            {!state.isSunday && (
-                                                <div className="bg-orange-50 rounded-xl p-3 border border-orange-100 flex items-center justify-between">
-                                                    <div>
-                                                        <span className="text-sm font-bold text-orange-800 block">Extra Roti?</span>
-                                                        <span className="text-xs text-orange-600">₹{state.extraRotiPrice || 10} / pc</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-3 bg-white rounded-lg p-1 border border-orange-200">
-                                                        <button
-                                                            onClick={() => setExtraRotiCount(Math.max(0, extraRotiCount - 1))}
-                                                            className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${extraRotiCount > 0 ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'text-gray-300'}`}
-                                                            disabled={extraRotiCount === 0}
-                                                        >
-                                                            <Minus className="w-4 h-4" />
-                                                        </button>
-                                                        <span className="font-bold text-stone-800 w-4 text-center text-sm">{extraRotiCount}</span>
-                                                        <button
-                                                            onClick={() => setExtraRotiCount(extraRotiCount + 1)}
-                                                            className="w-7 h-7 flex items-center justify-center bg-orange-100 text-orange-700 rounded-md hover:bg-orange-200 transition-colors"
-                                                        >
-                                                            <Plus className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
+                                    </div>
 
-                                            {/* Side Dishes (Everything except Roti) */}
-                                            <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
-                                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-3">Accompaniments</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {state.items && state.items.length > 0 ? (
-                                                        state.items
-                                                            .filter(i => state.isSunday || !i.toLowerCase().includes('roti')) // Filter roti only on weekdays
-                                                            .map((item, i) => (
-                                                                <div key={i} className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-stone-200 shadow-sm text-stone-600 text-sm font-medium">
-                                                                    <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                                                                    {item}
-                                                                </div>
-                                                            ))
-                                                    ) : (
-                                                        <span className="text-stone-400 text-sm italic">Comes with Salad & Sides</span>
-                                                    )}
-                                                </div>
+                                    {/* Trust Badges */}
+                                    <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto mt-8 opacity-80">
+                                        {[
+                                            { icon: Flame, label: "Freshly Made", text: "Every Meal" },
+                                            { icon: ShieldCheck, label: "Top Hygiene", text: "Guaranteed" },
+                                            { icon: Leaf, label: "Pure Veg", text: "Home Kitchen" },
+                                        ].map((item, idx) => (
+                                            <div key={idx} className="flex flex-col items-center text-center p-3">
+                                                <item.icon className="w-6 h-6 text-stone-400 mb-1" />
+                                                <span className="text-xs font-bold text-stone-600 uppercase tracking-wide">{item.label}</span>
                                             </div>
-
-                                            <div className="flex justify-between items-center pt-2 border-t border-stone-100">
-                                                <div>
-                                                    <span className="text-xs text-stone-500 uppercase font-bold">Price per Plate</span>
-                                                    <div className="text-3xl font-bold text-stone-800">₹{state.price}</div>
-                                                </div>
-
-                                                {/* Quantity Selector */}
-                                                <div className="flex items-center gap-3 bg-stone-100 rounded-xl p-1.5 border border-stone-200">
-                                                    <button
-                                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                                        className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm text-stone-600 hover:text-orange-600 transition-colors"
-                                                    >
-                                                        <Minus className="w-5 h-5" />
-                                                    </button>
-                                                    <span className="font-bold text-stone-800 w-6 text-center text-lg">{quantity}</span>
-                                                    <button
-                                                        onClick={() => setQuantity(quantity + 1)}
-                                                        className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm text-stone-600 hover:text-orange-600 transition-colors"
-                                                    >
-                                                        <Plus className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-
-                                        <CardFooter className="p-6 pt-0 bg-stone-50/50">
-                                            <Button
-                                                onClick={() => handleOrderClick()}
-                                                disabled={!state.isAvailable}
-                                                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-7 text-lg rounded-xl shadow-lg shadow-orange-200 mt-4"
-                                            >
-                                                {state.isAvailable ? `Pre-Order Now • ₹${totalPrice}` : "Currently Unavailable"}
-                                            </Button>
-                                        </CardFooter>
-                                    </Card>
+                                        ))}
+                                    </div>
                                 </motion.div>
                             </TabsContent>
 
@@ -263,6 +321,7 @@ export default function HomemadePage() {
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ duration: 0.2 }}
                                 >
+                                    {/* Reuse existing subscription layout but improved */}
                                     <div className="text-center mb-10">
                                         <h2 className="text-2xl font-bold text-stone-800 mb-2">Subscribe & Save</h2>
                                         <p className="text-stone-600">Get healthy homemade meals delivered daily. Skip or pause anytime.</p>
@@ -284,41 +343,32 @@ export default function HomemadePage() {
                                                 const isLunch = plan.planType === 'lunch';
                                                 const isDinner = plan.planType === 'dinner';
                                                 const isBoth = plan.planType === 'both';
-
-                                                // Dynamic Theme Colors
-                                                // Dynamic Theme Colors (Strictly Brand Aligned: Orange/Stone/Amber)
                                                 let theme = {
-                                                    // Lunch: Fresh Orange
                                                     bg: "from-white to-orange-50",
                                                     border: "border-orange-100",
                                                     text: "text-stone-800",
                                                     badge: "bg-orange-100 text-orange-800",
                                                     btn: "bg-orange-600 hover:bg-orange-700",
-                                                    icon: "text-orange-500 bg-orange-50",
-                                                    accent: "bg-orange-500"
+                                                    icon: "text-orange-500 bg-orange-50"
                                                 };
 
                                                 if (isDinner) {
                                                     theme = {
-                                                        // Dinner: Warm Stone/Evening
                                                         bg: "from-white to-stone-100",
                                                         border: "border-stone-200",
                                                         text: "text-stone-800",
                                                         badge: "bg-stone-100 text-stone-700",
                                                         btn: "bg-stone-800 hover:bg-stone-900",
-                                                        icon: "text-stone-600 bg-stone-100",
-                                                        accent: "bg-stone-600"
+                                                        icon: "text-stone-600 bg-stone-100"
                                                     };
                                                 } else if (isBoth) {
                                                     theme = {
-                                                        // Both: Premium Amber/Gold
                                                         bg: "from-amber-50 to-orange-50",
                                                         border: "border-amber-200",
                                                         text: "text-amber-950",
                                                         badge: "bg-amber-100 text-amber-800",
                                                         btn: "bg-gradient-to-r from-orange-600 to-amber-600 hover:to-amber-700 hover:from-orange-700",
-                                                        icon: "text-amber-600 bg-amber-50",
-                                                        accent: "bg-amber-500"
+                                                        icon: "text-amber-600 bg-amber-50"
                                                     };
                                                 }
 
@@ -328,34 +378,27 @@ export default function HomemadePage() {
                                                         whileHover={{ y: -8 }}
                                                         className={`relative rounded-3xl p-1 bg-gradient-to-br ${theme.border} shadow-sm hover:shadow-xl transition-all duration-300`}
                                                     >
-                                                        <div className={`h-full bg-gradient-to-br ${theme.bg} rounded-[22px] p-6 lg:p-8 flex flex-col relative overflow-hidden`}>
-
-                                                            {/* Background Pattern Decoration */}
-                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/40 rounded-full blur-3xl -mr-10 -mt-10" />
-                                                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/40 rounded-full blur-2xl -ml-5 -mb-5" />
-
-                                                            {/* Discount Badge */}
-                                                            {plan.discount > 0 && (
-                                                                <div className="absolute top-4 right-4 animate-pulse">
+                                                        <div className={`h-full bg-gradient-to-br ${theme.bg} rounded-[22px] p-6 flex flex-col relative overflow-hidden`}>
+                                                            <div className="absolute top-4 right-4 animate-pulse">
+                                                                {plan.discount > 0 && (
                                                                     <Badge className="bg-red-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg">
                                                                         {plan.discount}% SAVE
                                                                     </Badge>
-                                                                </div>
-                                                            )}
+                                                                )}
+                                                            </div>
 
                                                             <div className="relative z-10 mb-6">
                                                                 <Badge variant="outline" className={`mb-3 border-0 px-3 py-1 capitalize font-bold tracking-wide ${theme.badge}`}>
                                                                     {plan.planType} Plan
                                                                 </Badge>
-                                                                <h3 className={`text-2xl font-black ${theme.text} mb-2 leading-tight`}>{plan.title}</h3>
+                                                                <h3 className={`text-xl font-black ${theme.text} mb-2 leading-tight`}>{plan.title}</h3>
                                                                 <div className="flex items-baseline gap-1">
-                                                                    <span className="text-4xl font-extrabold text-stone-900">₹{plan.price}</span>
+                                                                    <span className="text-3xl font-extrabold text-stone-900">₹{plan.price}</span>
                                                                     <span className="text-stone-500 font-medium text-sm">/ month</span>
                                                                 </div>
                                                             </div>
 
                                                             <div className="relative z-10 space-y-4 mb-8 flex-grow">
-                                                                <div className="h-px w-full bg-black/5 mb-4" />
                                                                 {plan.features?.map((feature: string, idx: number) => (
                                                                     <div key={idx} className="flex items-start gap-3">
                                                                         <div className={`mt-0.5 w-5 h-5 rounded-full bg-white/80 flex items-center justify-center shadow-sm ${theme.icon}`}>
@@ -370,7 +413,7 @@ export default function HomemadePage() {
                                                                 onClick={() => handleOrderClick(plan)}
                                                                 className={`w-full py-6 text-base font-bold text-white shadow-lg shadow-black/5 rounded-xl transition-all ${theme.btn}`}
                                                             >
-                                                                Choose {plan.planType === 'both' ? 'Combine' : 'Plan'}
+                                                                Choose Plan
                                                             </Button>
                                                         </div>
                                                     </motion.div>
@@ -382,20 +425,6 @@ export default function HomemadePage() {
                             </TabsContent>
                         </AnimatePresence>
                     </Tabs>
-
-                    {/* Trust Elements */}
-                    <div className="grid grid-cols-3 gap-4 mt-8">
-                        {[
-                            { icon: Flame, label: "Freshly Prepared", color: "text-orange-500" },
-                            { icon: ShieldCheck, label: "100% Hygienic", color: "text-green-500" },
-                            { icon: Leaf, label: "Pure Homemade", color: "text-green-600" },
-                        ].map((item, idx) => (
-                            <div key={idx} className="flex flex-col items-center text-center p-3 bg-white rounded-xl border border-stone-100 shadow-sm">
-                                <item.icon className={`w-6 h-6 mb-2 ${item.color}`} />
-                                <span className="text-xs font-semibold text-stone-600 leading-tight">{item.label}</span>
-                            </div>
-                        ))}
-                    </div>
 
                 </div>
             </main>
@@ -410,8 +439,9 @@ export default function HomemadePage() {
                     quantity: quantity,
                     totalPrice: activeTab === 'one-time' ? totalPrice : (selectedPlan?.price || 0),
                     items: activeTab === 'one-time' ? [
-                        state.isSunday ? state.sundayItem : (selectedSlot === 'Lunch' ? state.lunchSabji : state.dinnerSabji),
-                        "Roti, Salad, Chhach",
+                        selectedSlot === 'Lunch' ? state.lunchSabji : state.dinnerSabji,
+                        // Add items to the list for receipt
+                        ...(selectedSlot === 'Lunch' ? state.lunchItems : state.dinnerItems),
                         extraRotiCount > 0 ? `Extra Roti x${extraRotiCount}` : null
                     ].filter(Boolean) as string[] : [selectedPlan?.title],
                     isSubscription: activeTab === 'subscription',
