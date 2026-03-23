@@ -115,7 +115,7 @@ export const ordersApi = {
 
   // List all orders (admin)
   getAllOrders: async (params?: OrdersQueryParams): Promise<OrdersResponse> => {
-    const response = await apiClient.get<OrdersResponse>('/orders/admin', { params });
+    const response = await apiClient.get<OrdersResponse>('/admin/homemade-food/orders', { params });
     return response.data;
   },
 

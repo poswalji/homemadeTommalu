@@ -11,7 +11,8 @@ import {
   Heart,
   LogOut,
   Star,
-  AlertCircle
+  AlertCircle,
+  CalendarDays
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -20,11 +21,9 @@ import { useLogout } from '@/hooks/api';
 import { useEffect } from 'react';
 
 const customerNavItems = [
-  { name: 'Dashboard', href: '/customer', icon: Home },
-  { name: 'Orders', href: '/customer/orders', icon: ShoppingBag },
+  { name: 'Home', href: '/customer', icon: Home },
+  { name: 'Orders History', href: '/customer/orders', icon: ShoppingBag },
   { name: 'Addresses', href: '/customer/addresses', icon: MapPin },
-  { name: 'Reviews', href: '/customer/reviews', icon: Star },
-  { name: 'Disputes', href: '/customer/disputes', icon: AlertCircle },
   { name: 'Profile', href: '/customer/profile', icon: User },
 ];
 

@@ -18,7 +18,9 @@ import { useState } from 'react';
 
 export default function AdminUsersPage() {
    const [searchTerm, setSearchTerm] = useState('');
-   const { data, isLoading, error } = useUsers({ limit: 10 });
+   const [page, setPage] = useState(1);
+   const limit = 10;
+   const { data, isLoading, error } = useUsers({ page, limit });
    const suspendUser = useSuspendUser();
    const reactivateUser = useReactivateUser();
 
@@ -61,7 +63,10 @@ export default function AdminUsersPage() {
                <Input
                   placeholder='Search users by name or email...'
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                     setSearchTerm(e.target.value);
+                     setPage(1);
+                  }}
                   className='w-full max-w-md'
                />
             </div>
@@ -162,6 +167,46 @@ export default function AdminUsersPage() {
                   </Table>
                </div>
             </div>
+
+            {data?.pagination && (data.pagination.totalPages || data.pagination.pages || 1) > 1 && (
+               <div className='flex flex-col sm:flex-row items-center justify-between mt-4 pt-4 border-t gap-4'>
+                  <p className='text-sm text-gray-600'>
+                     Showing <span className='font-medium'>{(page - 1) * limit + 1}</span> to{' '}
+                     <span className='font-medium'>
+                        {Math.min(page * limit, data.total ?? 0)}
+                     </span>{' '}
+                     of <span className='font-medium'>{data.total ?? 0}</span> users
+                  </p>
+                  <div className='flex items-center space-x-2'>
+                     <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page <= 1}>
+                        Previous
+                     </Button>
+                     <span className='text-sm font-medium text-gray-700'>
+                        Page {page} of {data.pagination.totalPages || data.pagination.pages || 1}
+                     </span>
+                     <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() =>
+                           setPage((p) =>
+                              Math.min(
+                                 data.pagination?.totalPages || data.pagination?.pages || 1,
+                                 p + 1
+                              )
+                           )
+                        }
+                        disabled={
+                           page >= (data.pagination.totalPages || data.pagination.pages || 1)
+                        }>
+                        Next
+                     </Button>
+                  </div>
+               </div>
+            )}
          </Card>
       </div>
    );

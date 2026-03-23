@@ -2,6 +2,8 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ordersKeys } from "@/config/query.config";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,8 +38,47 @@ export function ConfirmOrderDialog({ isOpen, onClose, orderDetails }: ConfirmOrd
     const { data: authData } = useAuthMe();
     const user = authData?.user;
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [step, setStep] = useState(1); // Keep step for potential future expansion
+    const queryClient = useQueryClient();
+
+    const placeOrderMutation = useMutation({
+        mutationFn: placeHomemadeOrder,
+        onSuccess: (res: any) => {
+            if (res?.success) {
+                toast.success("Order placed successfully!");
+                queryClient.invalidateQueries({ queryKey: ordersKeys.my() });
+                onClose();
+                router.push("/customer/orders");
+            } else {
+                toast.error(res?.message || "Failed to place order");
+            }
+        },
+        onError: (error: any) => {
+            console.error("Order failed", error);
+            const msg = error.response?.data?.message || "Failed to place order";
+            toast.error(msg);
+        }
+    });
+
+    const submitSubscriptionMutation = useMutation({
+        mutationFn: submitSubscription,
+        onSuccess: (res: any) => {
+            if (res?.success) {
+                toast.success("Subscription request sent successfully!");
+                queryClient.invalidateQueries({ queryKey: ['homemade-food', 'subscriptions', 'my'] });
+                onClose();
+                router.push("/customer/orders");
+            } else {
+                toast.error(res?.message || "Failed to submit subscription");
+            }
+        },
+        onError: (error: any) => {
+            console.error("Subscription failed", error);
+            const msg = error.response?.data?.message || "Failed to place order";
+            toast.error(msg);
+        }
+    });
+
+    const isSubmitting = placeOrderMutation.isPending || submitSubscriptionMutation.isPending;
     const [name, setName] = useState(user?.name || "");
     const [address, setAddress] = useState(user?.addresses?.[0]?.street || "");
     const [phone, setPhone] = useState(user?.phone || "");
@@ -49,50 +90,32 @@ export function ConfirmOrderDialog({ isOpen, onClose, orderDetails }: ConfirmOrd
             return;
         }
 
-        try {
-            setIsSubmitting(true);
-
-            let res;
-            if (orderDetails.isSubscription) {
-                const payload = {
-                    planId: orderDetails.planId,
-                    customerName: name,
-                    mobileNumber: phone,
-                    deliveryAddress: {
-                        street: address,
-                        city: 'Jaipur',
-                        pincode: '302001'
-                    },
-                    startDate: new Date().toISOString(), // Default to today/tomorrow
-                    quantity: orderDetails.quantity,
-                };
-                res = await submitSubscription(payload);
-            } else {
-                const payload = {
-                    customerName: name,
-                    mobileNumber: phone,
-                    area: area,
-                    customAddress: address,
-                    quantity: orderDetails.quantity,
-                    slot: orderDetails.slot, // "Lunch" or "Dinner"
-                    items: orderDetails.items, // Array of strings e.g. ["Dal Bati", "Extra Roti x2"]
-                    totalPrice: orderDetails.totalPrice // Full calculated price including extras
-                };
-                res = await placeHomemadeOrder(payload);
-            }
-
-            if (res.success) {
-                toast.success(orderDetails.isSubscription ? "Subscription request sent successfully!" : "Order placed successfully!");
-                onClose();
-                // Redirect user to their orders page to check details as requested
-                router.push("/customer/orders");
-            }
-        } catch (error: any) {
-            console.error("Order failed", error);
-            const msg = error.response?.data?.message || "Failed to place order";
-            toast.error(msg);
-        } finally {
-            setIsSubmitting(false);
+        if (orderDetails.isSubscription) {
+            const payload = {
+                planId: orderDetails.planId,
+                customerName: name,
+                mobileNumber: phone,
+                deliveryAddress: {
+                    street: address,
+                    city: 'Jaipur',
+                    pincode: '302001'
+                },
+                startDate: new Date().toISOString(), // Default to today/tomorrow
+                quantity: orderDetails.quantity,
+            };
+            submitSubscriptionMutation.mutate(payload);
+        } else {
+            const payload = {
+                customerName: name,
+                mobileNumber: phone,
+                area: area,
+                customAddress: address,
+                quantity: orderDetails.quantity,
+                slot: orderDetails.slot, // "Lunch" or "Dinner"
+                items: orderDetails.items, // Array of strings e.g. ["Dal Bati", "Extra Roti x2"]
+                totalPrice: orderDetails.totalPrice // Full calculated price including extras
+            };
+            placeOrderMutation.mutate(payload);
         }
     };
 

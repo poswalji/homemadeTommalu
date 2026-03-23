@@ -5,6 +5,7 @@ import { StoreCategoriesSection } from "@/components/sections/store-categories-s
 import { StatsSection } from "@/components/sections/stats-section";
 import { HowItWorksSection } from "@/components/sections/how-it-works-section";
 import { HeroSection } from "@/components/sections/hero-section";
+import { HomemadeSection } from "@/components/sections/homemade-section";
 
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 
@@ -14,6 +15,9 @@ export default function Home() {
       <Header />
       <main className=" ">
         <HeroSection />
+        <section id="homemadefood" className="py-20 bg-stone-50">
+          <HomemadeSection />
+        </section>
         <StatsSection />
         <HowItWorksSection />
         <WhatsAppButton />

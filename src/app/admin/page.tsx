@@ -59,18 +59,9 @@ export default function AdminDashboard() {
       link: '/admin/analytics',
     },
     {
-      title: 'Active Stores',
-      value: activeStores,
-      subtitle: `${pendingStores} pending approval`,
-      icon: Store,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-100',
-      link: '/admin/stores',
-    },
-    {
       title: 'Total Users',
       value: totalUsers,
-      subtitle: `${totalCustomers} customers, ${totalStoreOwners} store owners`,
+      subtitle: `${totalCustomers} customers`,
       icon: Users,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
@@ -96,12 +87,6 @@ export default function AdminDashboard() {
       value: `₹${avgOrderValue.toFixed(2)}`,
       icon: Activity,
       color: 'text-blue-600',
-    },
-    {
-      title: 'Commission',
-      value: `₹${totalCommission.toLocaleString('en-IN')}`,
-      icon: CreditCard,
-      color: 'text-purple-600',
     },
   ];
 
@@ -230,25 +215,25 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 {recentOrders.slice(0, 5).map((order: any) => (
                   <div
-                    key={order.id}
+                    key={order._id}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-medium text-sm sm:text-base truncate">
-                          {order.customer || 'Customer'}
+                          {order.customerName || order.customer || 'Customer'}
                         </p>
-                        <Badge variant={order.status === 'Delivered' ? 'default' : 'secondary'} className="text-xs">
+                        <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'} className="text-xs">
                           {order.status}
                         </Badge>
                       </div>
                       <p className="text-xs text-gray-500 truncate">
-                        {order.store || 'Store'}
+                        {order.foodName || order.store || 'Homemade Food'}
                       </p>
                     </div>
                     <div className="text-right ml-4">
                       <p className="font-bold text-sm sm:text-base">
-                        ₹{order.amount?.toLocaleString('en-IN') || '0'}
+                        ₹{(order.finalAmount || order.amount)?.toLocaleString('en-IN') || '0'}
                       </p>
                       <p className="text-xs text-gray-500">
                         {new Date(order.createdAt).toLocaleDateString()}
@@ -274,12 +259,12 @@ export default function AdminDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Link href="/admin/stores/pending">
+            <Link href="/admin/homemade-food">
               <Button variant="outline" className="w-full justify-start h-auto py-3">
-                <Store className="w-4 h-4 mr-2" />
+                <ShoppingBag className="w-4 h-4 mr-2" />
                 <div className="text-left">
-                  <div className="font-medium">Pending Stores</div>
-                  <div className="text-xs text-gray-500">{pendingStores} waiting</div>
+                  <div className="font-medium">Homemade Food</div>
+                  <div className="text-xs text-gray-500">Manage Menu</div>
                 </div>
               </Button>
             </Link>
@@ -289,15 +274,6 @@ export default function AdminDashboard() {
                 <div className="text-left">
                   <div className="font-medium">Disputes</div>
                   <div className="text-xs text-gray-500">Manage issues</div>
-                </div>
-              </Button>
-            </Link>
-            <Link href="/admin/payouts">
-              <Button variant="outline" className="w-full justify-start h-auto py-3">
-                <CreditCard className="w-4 h-4 mr-2" />
-                <div className="text-left">
-                  <div className="font-medium">Payouts</div>
-                  <div className="text-xs text-gray-500">Manage payments</div>
                 </div>
               </Button>
             </Link>

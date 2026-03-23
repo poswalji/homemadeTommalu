@@ -285,7 +285,7 @@ export default function CustomerOrdersPage() {
                         }}>
                           <DialogTrigger asChild>
                             <Button
-                              variant="outline"
+                              variant="destructive"
                               className="flex-1 text-xs sm:text-sm"
                               onClick={() => openCancelDialog(order.id)}
                             >

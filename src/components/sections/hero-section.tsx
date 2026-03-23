@@ -51,18 +51,11 @@ export function HeroSection() {
                      <Button
                         size="lg"
                         className="bg-orange-600 hover:bg-orange-700 text-white h-14 px-8 text-lg font-semibold shadow-lg hover:shadow-orange-500/20 transition-all rounded-xl"
-                        onClick={() => router.push('/homemade')}
+                        onClick={() => document.getElementById('homemadefood')?.scrollIntoView({ behavior: 'smooth' })}
                      >
                         Order Homemade Food
                      </Button>
-                     <Button
-                        size="lg"
-                        variant="outline"
-                        className="border-2 border-white/20 bg-white/5 backdrop-blur-sm text-white h-14 px-8 text-lg font-medium  hover:border-white/30 rounded-xl"
-                        onClick={() => router.push('/browse')}
-                     >
-                        Browse All Categories
-                     </Button>
+                     
                   </div>
 
                   {/* Trust Indicators */}
@@ -96,37 +89,7 @@ export function HeroSection() {
                      </div>
                   </div>
 
-                  {/* Secondary Categories Strip */}
-                  <div className="w-full mt-12 md:mt-10">
-                     <p className="text-base md:text-sm font-bold md:font-semibold text-white mb-6 uppercase tracking-wider flex items-center gap-3">
-                        <span className="w-12 h-[2px] bg-orange-500"></span>
-                        Also Delivering From
-                     </p>
-
-                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                        {[
-                           { label: 'Grocery', icon: ShoppingBasket, color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/20' },
-                           { label: 'Restaurants', icon: Utensils, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20' },
-                           { label: 'Bakery', icon: Croissant, color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-                           { label: 'Local Shops', icon: Store, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-                        ].map((cat, idx) => (
-                           <button
-                              key={idx}
-                              onClick={() => router.push(
-                                 cat.label === 'Local Shops'
-                                    ? '/browse'
-                                    : `/category/${cat.label === 'Grocery' ? 'Grocery Store' : cat.label === 'Restaurants' ? 'Restaurant' : cat.label}`
-                              )}
-                              className={`flex items-center gap-3 px-4 py-3 rounded-xl backdrop-blur-md border ${cat.bg} ${cat.border} hover:bg-white/10 transition-all group text-left`}
-                           >
-                              <div className={`p-2 rounded-full bg-black/20 ${cat.color} group-hover:scale-110 transition-transform`}>
-                                 <cat.icon className="w-5 h-5" />
-                              </div>
-                              <span className="text-sm font-semibold text-white tracking-wide">{cat.label}</span>
-                           </button>
-                        ))}
-                     </div>
-                  </div>
+               
 
                </motion.div>
             </div>

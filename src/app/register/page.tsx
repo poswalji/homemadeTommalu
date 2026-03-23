@@ -125,7 +125,7 @@ export default function RegisterPage() {
                 <ShoppingBag className='w-8 h-8' />
               </div>
               <h1 className='text-3xl font-bold text-gray-900'>
-                Start Your Journey with Tommalu
+                Sign Up
               </h1>
               <p className='mt-2 text-gray-600'>
                 Sign up to enjoy amazing food and grocery experiences with Tommalu
@@ -229,7 +229,7 @@ export default function RegisterPage() {
 
               <div className='space-y-2'>
                 <Label htmlFor='phone'>
-                  Phone Number (Optional)
+                  Phone Number
                 </Label>
                 <div className='relative'>
                   <Phone className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5' />
@@ -239,8 +239,8 @@ export default function RegisterPage() {
                     type='tel'
                     placeholder='Enter your phone number'
                     value={formData.phone}
-                    onChange={handleChange}
-                    required={false}
+                    onChange={handleChange} 
+                    required
                     className='pl-10'
                     disabled={register.isPending}
                   />

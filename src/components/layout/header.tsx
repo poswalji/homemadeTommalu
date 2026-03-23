@@ -19,10 +19,8 @@ import Image from 'next/image';
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
-import { useCart } from '@/hooks/api/use-cart';
 import { getGuestCart } from '@/lib/cart-storage';
 import { useLogout } from '@/hooks/api/use-auth';
-import { NotificationBell } from '@/components/notifications/notification-bell';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -39,7 +37,6 @@ export function Header() {
    const router = useRouter();
    const pathname = usePathname();
    const { isAuthenticated, user } = useAuth();
-   const { data: cartData } = useCart();
    const logout = useLogout();
 
    // Check if we're on a customer page
@@ -58,17 +55,12 @@ export function Header() {
       }
    }, []);
 
-   const cartCount = useMemo(() => {
-      if (isAuthenticated) {
-         return cartData?.data?.totalItems || 0;
-      }
-      return guestCount;
-   }, [isAuthenticated, cartData, guestCount]);
+   
 
    return (
       <>
          <header className='sticky top-0 z-50 w-full border-b bg-white/85 backdrop-blur'>
-            <div className='container flex h-16 items-center justify-between px-4 mx-auto'>
+            <div className=' flex h-16 items-center justify-between px-4 mx-auto'>
                <Link
                   href='/'
                   className='flex items-center space-x-2'
@@ -92,28 +84,10 @@ export function Header() {
                            Home
                         </Link>
                         <Link
-                           href='/category/Restaurant'
+                           href='/homemade'
                            className='text-base font-medium text-gray-900'>
-                           Restaurant
+                           Place Order
                         </Link>
-                        <Link
-                           href='/category/Bakery'
-                           className='text-base font-medium text-gray-900'>
-                           Bakery
-                        </Link>
-                        <Link
-                           href='/category/Grocery%20Store'
-                           className='text-base font-medium text-gray-900'>
-                           Grocery
-                        </Link>
-
-                        {!isAuthenticated && (
-                           <Link
-                              href='/partner'
-                              className='text-base font-medium text-gray-900'>
-                              Partner with Tommalu
-                           </Link>
-                        )}
                         {user?.role === 'admin' && (
                            <Link
                               href='/admin'
@@ -121,13 +95,7 @@ export function Header() {
                               Dashboard
                            </Link>
                         )}
-                        {user?.role === 'storeOwner' && (
-                           <Link
-                              href='/store-owner/stores'
-                              className='text-base font-medium text-gray-900'>
-                              My Stores
-                           </Link>
-                        )}
+                       
                         {user?.role === 'customer' && (
                            <Link
                               href='/customer'
@@ -140,27 +108,14 @@ export function Header() {
                </nav>
 
                <div className='flex items-center space-x-4'>
-                  {isAuthenticated && <NotificationBell />}
-                  <Link href='/cart'>
-                     <Button
-                        variant='ghost'
-                        size='icon'
-                        className='relative'>
-                        <ShoppingCart className='h-5 w-5' />
-                        {cartCount > 0 && (
-                           <span className='absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[lab(66%_50.34_52.19)] text-xs text-white'>
-                              {cartCount}
-                           </span>
-                        )}
-                     </Button>
-                  </Link>
+                 
                   {!isAuthenticated ? (
                      <>
                         <Button
                            onClick={() => router.push('/register')}
                            variant='default'
                            className='hidden md:inline-flex'>
-                           Sign Up
+                           Get Started
                         </Button>
                      </>
                   ) : (
@@ -201,25 +156,11 @@ export function Header() {
                         Home
                      </Link>
                      <Link
-                        href='/category/Restaurant'
+                        href='/homemade'
                         className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
                         onClick={() => setMobileMenuOpen(false)}>
                         <div className='w-5 h-5 flex items-center justify-center text-xl'>🍽️</div>
-                        Restaurant
-                     </Link>
-                     <Link
-                        href='/category/Bakery'
-                        className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
-                        onClick={() => setMobileMenuOpen(false)}>
-                        <div className='w-5 h-5 flex items-center justify-center text-xl'>🥐</div>
-                        Bakery
-                     </Link>
-                     <Link
-                        href='/category/Grocery%20Store'
-                        className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
-                        onClick={() => setMobileMenuOpen(false)}>
-                        <div className='w-5 h-5 flex items-center justify-center text-xl'>🛒</div>
-                        Grocery
+                        Place Order
                      </Link>
 
                      <div className='pt-4 border-t space-y-2'>
@@ -234,21 +175,13 @@ export function Header() {
                                  className='w-full'>
                                  Sign Up
                               </Button>
-                              <Button
-                                 onClick={() => {
-                                    router.push('/partner');
-                                    setMobileMenuOpen(false);
-                                 }}
-                                 variant='outline'
-                                 className='w-full'>
-                                 Partner with Tommalu
-                              </Button>
+                             
                            </>
                         ) : (
                            <div className='flex justify-between space-x-2'>
                               <Button
                                  onClick={() => {
-                                    const targetPath = user?.role === 'admin' ? '/admin' : (user?.role === 'storeOwner' ? '/store-owner/stores' : '/customer');
+                                    const targetPath = user?.role === 'admin' ? '/admin' : '/customer';
                                     router.push(targetPath);
                                     setMobileMenuOpen(false);
                                  }}
@@ -277,9 +210,7 @@ export function Header() {
          {
             isCustomerPage && (
                <aside className='hidden md:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 flex-col z-30'>
-                  <div className='p-6 border-b border-gray-200'>
-                     <h2 className='text-xl font-bold text-gray-900'>Tommalu</h2>
-                  </div>
+                  
 
                   <nav className='flex-1 p-4 space-y-2 overflow-y-auto'>
                      {customerNavItems.map((item) => {
