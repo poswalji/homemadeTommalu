@@ -60,14 +60,15 @@ export function Header() {
    return (
       <>
          <header className='sticky top-0 z-50 w-full border-b bg-white/85 backdrop-blur'>
-            <div className=' flex h-16 items-center justify-between px-4 mx-auto'>
+            <div className='container flex h-16 items-center justify-between px-4 mx-auto'>
                <Link
                   href='/'
-                  className='flex items-center space-x-2'
-                  aria-label='TomMalu Home'>
+                  className='flex items-center  space-x-2'
+                  aria-label='Tommalu Home'>
                   <Image
                      src='/logo.png'
-                     alt='TomMalu'
+                     alt='Tommalu'
+                     className='object-contain pt-3'
                      width={120}
                      height={32}
                      priority
