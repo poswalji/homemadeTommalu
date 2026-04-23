@@ -10,6 +10,7 @@ import {
    Ticket,
    ChartBar,
    ChefHat,
+   Bike,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ const adminNavItems = [
    { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
    { name: 'Analytics', href: '/admin/analytics', icon: ChartBar },
    { name: 'Users', href: '/admin/users', icon: Users },
+   { name: 'Delivery Boys', href: '/admin/delivery-boys', icon: Bike },
    { name: 'Disputes', href: '/admin/disputes', icon: Ticket },
 ];
 

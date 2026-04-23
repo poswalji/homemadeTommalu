@@ -104,6 +104,12 @@ export function Header() {
                               Dashboard
                            </Link>
                         )}
+                        
+                        <Link
+                           href='/delivery/login'
+                           className='text-sm font-medium text-gray-500 hover:text-gray-900 ml-4'>
+                           Delivery Login
+                        </Link>
                      </>
                   ) : null}
                </nav>
@@ -162,6 +168,13 @@ export function Header() {
                         onClick={() => setMobileMenuOpen(false)}>
                         <div className='w-5 h-5 flex items-center justify-center text-xl'>🍽️</div>
                         Place Order
+                     </Link>
+                     <Link
+                        href='/delivery/login'
+                        className='flex items-center gap-3 px-3 py-3 text-sm font-medium text-gray-500 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
+                        onClick={() => setMobileMenuOpen(false)}>
+                        <div className='w-5 h-5 flex items-center justify-center text-lg'>🚚</div>
+                        Delivery Login
                      </Link>
 
                      <div className='pt-4 border-t space-y-2'>

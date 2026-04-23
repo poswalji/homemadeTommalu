@@ -11,6 +11,7 @@ import { GoogleAuthProvider } from '@/providers/google-auth-provider';
 import { SocketProvider } from '@/context/socket-context';
 import { HomemadeProvider } from '@/context/homemade-context';
 import { Suspense } from 'react';
+import { DeliveryFloatingButton } from '@/components/layout/delivery-floating-button';
 
 const figtree = Figtree({
    subsets: ['latin'],
@@ -79,10 +80,11 @@ export default function RootLayout({
 }>) {
    return (
       <html lang='en' suppressHydrationWarning>
-         <head>
+         <head suppressHydrationWarning>
             {/* Organization JSON-LD */}
             <script
                type='application/ld+json'
+               suppressHydrationWarning
                dangerouslySetInnerHTML={{
                   __html: JSON.stringify({
                      '@context': 'https://schema.org',
@@ -108,6 +110,7 @@ export default function RootLayout({
             {/* WebSite JSON-LD */}
             <script
                type='application/ld+json'
+               suppressHydrationWarning
                dangerouslySetInnerHTML={{
                   __html: JSON.stringify({
                      '@context': 'https://schema.org',
@@ -152,6 +155,7 @@ export default function RootLayout({
                         <HomemadeProvider>
                            <SocketProvider>
                               <Suspense>{children}</Suspense>
+                              <DeliveryFloatingButton />
                            </SocketProvider>
                         </HomemadeProvider>
                      </GoogleAuthProvider>
