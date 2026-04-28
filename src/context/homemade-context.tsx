@@ -11,6 +11,7 @@ interface HomemadeState {
     dinnerSlotAvailable: boolean;
     menuDate?: string;
     isSunday?: boolean;
+    isServiceOff?: boolean;
     sundayItem?: string;
     items: string[]; // Legacy/General items
     lunchItems: string[]; // Explicit Lunch Items
@@ -41,7 +42,8 @@ const defaultState: HomemadeState = {
     lunchSabji: "",
     dinnerSabji: "",
     availableRotis: [],
-    extraRotiPrice: 10
+    extraRotiPrice: 10,
+    isServiceOff: false
 };
 
 export function HomemadeProvider({ children }: { children: ReactNode }) {
@@ -109,7 +111,8 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                     lunchSabji,
                     dinnerSabji,
                     availableRotis: data.weekdayMenu?.availableRotis || [],
-                    extraRotiPrice: data.product.extraRotiPrice || 10
+                    extraRotiPrice: data.product.extraRotiPrice || 10,
+                    isServiceOff: data.isServiceOff || false
                 });
             }
         } catch (error) {

@@ -23,6 +23,7 @@ export const homemadeFoodKeys = {
         subscriptions: (params?: any) => [...homemadeFoodKeys.admin.all(), 'subscriptions', params || ''] as const,
         plans: () => [...homemadeFoodKeys.admin.all(), 'plans'] as const,
         plan: (id: string) => [...homemadeFoodKeys.admin.all(), 'plan', id] as const,
+        dashboard: () => [...homemadeFoodKeys.admin.all(), 'dashboard'] as const,
     },
     plans: {
         active: () => [...homemadeFoodKeys.all, 'plans', 'active'] as const,
@@ -202,6 +203,15 @@ export const useHomemadeFoodAnalytics = (params?: { startDate?: string; endDate?
         queryKey: homemadeFoodKeys.admin.analytics(params),
         queryFn: () => homemadeFoodAdminApi.getAnalytics(params),
         staleTime: 1000 * 60 * 5,
+    });
+};
+
+// Get dashboard stats
+export const useHomemadeFoodDashboard = () => {
+    return useQuery({
+        queryKey: homemadeFoodKeys.admin.dashboard(),
+        queryFn: () => homemadeFoodAdminApi.getDashboardStats(),
+        staleTime: 1000 * 60 * 1, // 1 minute
     });
 };
 

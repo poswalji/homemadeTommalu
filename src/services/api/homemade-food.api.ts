@@ -274,6 +274,30 @@ export const homemadeFoodAdminApi = {
         return response.data;
     },
 
+    // Get all subscription requests (admin)
+    getSubscriptionRequests: async (params?: any): Promise<ApiResponse<any>> => {
+        const response = await apiClient.get<ApiResponse<any>>('/admin/subscription-requests', { params });
+        return response.data;
+    },
+
+    // Approve a subscription request
+    approveSubscriptionRequest: async (id: string): Promise<ApiResponse<any>> => {
+        const response = await apiClient.patch<ApiResponse<any>>(`/admin/subscription-requests/${id}/approve`);
+        return response.data;
+    },
+
+    // Reject a subscription request
+    rejectSubscriptionRequest: async (id: string, data: { reason?: string }): Promise<ApiResponse<any>> => {
+        const response = await apiClient.patch<ApiResponse<any>>(`/admin/subscription-requests/${id}/reject`, data);
+        return response.data;
+    },
+
+    // Activate a subscription (after approval)
+    activateSubscription: async (id: string): Promise<ApiResponse<any>> => {
+        const response = await apiClient.patch<ApiResponse<any>>(`/admin/subscription-requests/${id}/activate`);
+        return response.data;
+    },
+
     // Update daily menu
     updateDailyMenu: async (data: any): Promise<ApiResponse<any>> => {
         const response = await apiClient.patch<ApiResponse<any>>('/admin/homemade-food/update', data);

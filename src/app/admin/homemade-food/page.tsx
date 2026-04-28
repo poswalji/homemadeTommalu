@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AnalyticsDashboard } from '@/components/admin/homemade/AnalyticsDashboard';
 import { DailyMenuEditor } from '@/components/admin/homemade/DailyMenuEditor';
 import { SubscriptionManager } from '@/components/admin/homemade/SubscriptionManager';
 import { SubscriberRequests } from '@/components/admin/homemade/SubscriberRequests';
@@ -27,7 +26,6 @@ import {
 } from 'lucide-react';
 import {
     useAdminHomemadeFoodOrders,
-    useHomemadeFoodAnalytics,
     useCreateHomemadeFood,
     useUpdateHomemadeFood,
     useUpdateHomemadeFoodOrderStatus
@@ -41,16 +39,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from '@/components/ui/dialog';
 
 export default function HomemadeFoodAdminPage() {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState('menu');
     const [orderFilters, setOrderFilters] = useState({
         status: 'all',
         search: '',
         page: 1,
         limit: 20,
     });
-
-    // Fetch Analytics
-    const { data: analyticsData, isLoading: analyticsLoading, refetch: refetchAnalytics } = useHomemadeFoodAnalytics();
 
     // Fetch Orders
     const { data: ordersData, isLoading: ordersLoading, refetch: refetchOrders } = useAdminHomemadeFoodOrders({
@@ -63,7 +58,6 @@ export default function HomemadeFoodAdminPage() {
     const orders = ordersData?.data || [];
 
     const handleRefresh = () => {
-        refetchAnalytics();
         refetchOrders();
     };
 
@@ -160,11 +154,8 @@ export default function HomemadeFoodAdminPage() {
 
             {/* Main Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4 max-w-3xl bg-gray-100/50 p-1">
-                    <TabsTrigger value="dashboard" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        <Activity className="w-4 h-4 mr-2" />
-                        Dashboard
-                    </TabsTrigger>
+
+                <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-gray-100/50 p-1">
                     <TabsTrigger value="menu" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
                         <Utensils className="w-4 h-4 mr-2" />
                         Daily Menu
@@ -180,17 +171,7 @@ export default function HomemadeFoodAdminPage() {
 
                 </TabsList>
 
-                {/* Dashboard Tab */}
-                <TabsContent value="dashboard" className="space-y-4">
-                    <AnalyticsDashboard
-                        data={analyticsData?.data || {}}
-                        isLoading={analyticsLoading}
-                        onPendingOrdersClick={() => {
-                            setActiveTab('orders');
-                            setOrderFilters(prev => ({ ...prev, status: 'pending' }));
-                        }}
-                    />
-                </TabsContent>
+
 
                 {/* Daily Menu Tab */}
                 <TabsContent value="menu" className="space-y-4">

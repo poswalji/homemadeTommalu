@@ -20,15 +20,16 @@ export function DailyMenuEditor() {
     const [menuForm, setMenuForm] = useState({
         lunchSabji: "",
         dinnerSabji: "",
-        weekdayPrice: 89,
-        rotiName: "Chulhe ki Roti",
-        rotiQty: 4,
+        weekdayPrice: 99,
+        rotiName: "Ghee Roti",
+        rotiQty: 5,
         extraRotiPrice: 10,
-        lunchItemsList: "Salad, Lahsun Chutney, Desi Chhach", // Editable string
-        dinnerItemsList: "Salad, Lahsun Chutney, Sweet", // Editable string
+        lunchItemsList: "Salad, Dal OR Lahsun Chutney, Desi Chhach", // Editable string
+        dinnerItemsList: "Salad, Dal OR Lahsun Chutney, Desi Chhach", // Editable string
         sundayItemName: "",
         sundayPrice: 120,
-        sundayDinnerOpen: false
+        sundayDinnerOpen: false,
+        isServiceOff: false
     });
 
     const [dayType, setDayType] = useState<string>('Weekday');
@@ -40,8 +41,8 @@ export function DailyMenuEditor() {
             setDayType(isSunday ? 'Sunday' : 'Weekday');
 
             // Parse Roti
-            let loadedRotiName = "Chulhe ki Roti";
-            let loadedRotiQty = 4;
+            let loadedRotiName = "Ghee Roti";
+            let loadedRotiQty = 5;
 
             // Helper to get items excluding basic roti (logic can be improved)
             const parseItems = (items: string[]) => {
@@ -71,7 +72,7 @@ export function DailyMenuEditor() {
             setMenuForm({
                 lunchSabji: m.weekdayMenu?.lunchSabji || m.product?.lunchSabji || "",
                 dinnerSabji: m.weekdayMenu?.dinnerSabji || m.product?.dinnerSabji || "",
-                weekdayPrice: m.weekdayMenu?.fixedPrice || m.product?.price || 89,
+                weekdayPrice: m.weekdayMenu?.fixedPrice || m.product?.price || 99,
                 rotiName: loadedRotiName,
                 rotiQty: loadedRotiQty,
                 extraRotiPrice: m.weekdayMenu?.extraRotiPrice || m.product?.extraRotiPrice || 10,
@@ -80,7 +81,8 @@ export function DailyMenuEditor() {
                 dinnerItemsList: parseItems(dinnerItems),
                 sundayItemName: m.sundayMenu?.specialItemName || m.product?.itemName || "",
                 sundayPrice: m.sundayMenu?.price || m.product?.price || 120,
-                sundayDinnerOpen: m.sundayMenu?.isDinnerSlotOpen || false
+                sundayDinnerOpen: m.sundayMenu?.isDinnerSlotOpen || false,
+                isServiceOff: m.isServiceOff || false
             });
         }
     }, [menuData, date]);
@@ -101,6 +103,7 @@ export function DailyMenuEditor() {
                 payload.lunchSabji = menuForm.lunchSabji;
                 payload.weekdayPrice = Number(menuForm.weekdayPrice);
                 payload.extraRotiPrice = Number(menuForm.extraRotiPrice);
+                payload.isServiceOff = menuForm.isServiceOff;
                 const rotiStr = `${menuForm.rotiQty} ${menuForm.rotiName}`;
 
                 const lunchArr = menuForm.lunchItemsList.split(',').map(s => s.trim()).filter(s => s);
@@ -112,6 +115,7 @@ export function DailyMenuEditor() {
                 payload.dinnerSabji = menuForm.dinnerSabji;
                 payload.weekdayPrice = Number(menuForm.weekdayPrice);
                 payload.extraRotiPrice = Number(menuForm.extraRotiPrice);
+                payload.isServiceOff = menuForm.isServiceOff;
 
                 // Construct Items Arrays
                 const rotiStr = `${menuForm.rotiQty} ${menuForm.rotiName}`;
@@ -194,8 +198,17 @@ export function DailyMenuEditor() {
                     </div>
                 ) : (
                     <form onSubmit={handleSave} className="space-y-6">
-                        <div className="p-3 bg-gray-50 rounded-lg text-sm text-center text-gray-600 font-medium">
-                            Editing Menu for {format(date, 'EEEE, MMMM do')} ({dayType})
+                        <div className="p-3 bg-gray-50 rounded-lg flex items-center justify-between text-sm text-gray-600 font-medium">
+                            <span>Editing Menu for {format(date, 'EEEE, MMMM do')} ({dayType})</span>
+                            <div className="flex items-center space-x-2">
+                                <span className="font-bold text-red-600">Service Off:</span>
+                                <input
+                                    type="checkbox"
+                                    className="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                    checked={menuForm.isServiceOff}
+                                    onChange={(e) => setMenuForm({ ...menuForm, isServiceOff: e.target.checked })}
+                                />
+                            </div>
                         </div>
 
                         {dayType === 'Sunday' ? (
