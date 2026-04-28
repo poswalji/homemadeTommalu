@@ -265,6 +265,11 @@ export const homemadeFoodPublicApi = {
 // ============================================
 
 export const homemadeFoodAdminApi = {
+    // Get dashboard stats
+    getDashboardStats: async (): Promise<ApiResponse<any>> => {
+        const response = await apiClient.get<ApiResponse<any>>('/admin/dashboard');
+        return response.data;
+    },
     // ... (keep existing methods)
 
     // Get daily menu for a specific date
