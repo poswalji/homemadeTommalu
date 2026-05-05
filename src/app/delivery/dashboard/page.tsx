@@ -32,6 +32,7 @@ type Order = {
     city: string;
     pincode: string;
     label?: string;
+    locationLink?: string;
   };
   items: OrderItem[];
   timeSlot: string;
@@ -147,6 +148,7 @@ export default function DeliveryDashboard() {
   const totalDelivered = allOrders.filter(o => o.status === "Delivered").length;
 
   const getGoogleMapsUrl = (address: any) => {
+    if (address.locationLink) return address.locationLink;
     const query = `${address.street}, ${address.city}, ${address.pincode}`;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   };
@@ -280,10 +282,11 @@ export default function DeliveryDashboard() {
             
             // Apply slot and status filters to the area's orders
             const filteredAreaOrders = areaOrders.filter(order => {
+              const statusStr = order.status ? order.status.toLowerCase() : "";
               const matchesStatus = statusFilter === "Pending" 
-                ? ["Pending", "Confirmed", "OutForDelivery"].includes(order.status)
-                : order.status === "Delivered";
-              const matchesSlot = slotFilter === "All" || order.timeSlot === slotFilter;
+                ? ["pending", "confirmed", "outfordelivery", "out_for_delivery", "preparing", "ready"].includes(statusStr)
+                : statusStr === "delivered";
+              const matchesSlot = slotFilter === "All" || (order.timeSlot && order.timeSlot.toLowerCase() === slotFilter.toLowerCase());
               return matchesStatus && matchesSlot;
             });
 

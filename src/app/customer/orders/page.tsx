@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useMyOrders, useCancelOrder, useMyReviews } from '@/hooks/api';
+import { useMyOrders, useCancelOrder } from '@/hooks/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -18,33 +18,17 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Eye, Package, Calendar, MapPin, Search, XCircle, Star } from 'lucide-react';
+import { Eye, Package, Calendar, MapPin, Search, XCircle, Clock, Utensils } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { OrderReviewModal } from '@/components/reviews/order-review-modal';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ReviewList } from '@/components/reviews/review-list';
 
 export default function CustomerOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState('');
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
-  const [reviewStoreId, setReviewStoreId] = useState<string | null>(null);
-  const [reviewStoreName, setReviewStoreName] = useState<string | undefined>(undefined);
-  const [reviewItems, setReviewItems] = useState<Array<{ id: string; name: string }>>([]);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-
   const { data, isLoading, error } = useMyOrders();
-  const { data: reviewsData } = useMyReviews();
   const cancelOrder = useCancelOrder();
-
-  // Create a map of reviewed order IDs
-  const reviewedOrderIds = useMemo(() => {
-    const reviews = reviewsData?.data || [];
-    return new Set(reviews.map((review: any) => review.orderId));
-  }, [reviewsData]);
 
   const handleCancelOrder = async () => {
     if (!selectedOrder) return;
@@ -69,18 +53,7 @@ export default function CustomerOrdersPage() {
     setIsCancelDialogOpen(true);
   };
 
-  const openReviewModal = (order: any) => {
-    setReviewOrderId(order.id);
-    setReviewStoreId(order.storeId || order.store?.id || '');
-    setReviewStoreName(order.storeName || order.store?.name);
-    setReviewItems(
-      (order.items || []).map((item: any) => ({
-        id: item.menuItemId || item.id || '',
-        name: item.itemName || item.name || 'Item',
-      }))
-    );
-    setIsReviewModalOpen(true);
-  };
+
 
   if (isLoading) {
     return (
@@ -136,14 +109,7 @@ export default function CustomerOrdersPage() {
         <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">View and track your orders</p>
       </div>
 
-      <Tabs defaultValue="orders" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="orders">My Orders</TabsTrigger>
-          <TabsTrigger value="reviews">My Reviews</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="orders">
-          <Card className="p-4 sm:p-6">
+      <Card className="p-4 sm:p-6">
             <div className="mb-4 sm:mb-6">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
@@ -167,8 +133,11 @@ export default function CustomerOrdersPage() {
               </div>
             ) : (
               <div className="space-y-3 sm:space-y-4">
-                {filteredOrders.reverse().map((order) => (
-                  <Card key={order.id} className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+                {filteredOrders.reverse().map((order) => {
+                  const isHomemade = order.metadata?.isHomemade === true;
+                  
+                  return (
+                  <Card key={order.id} className={`p-4 sm:p-6 hover:shadow-lg transition-shadow ${isHomemade ? 'border-orange-200 bg-orange-50/20' : ''}`}>
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
@@ -178,8 +147,16 @@ export default function CustomerOrdersPage() {
                           <Badge className={getStatusColor(order.status)}>
                             {order.status}
                           </Badge>
+                          {isHomemade && (
+                            <Badge variant="outline" className="border-orange-500 text-orange-600 bg-orange-50 gap-1 px-2 py-0.5">
+                              <Utensils className="w-3 h-3" />
+                              Homemade Thali
+                            </Badge>
+                          )}
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-600 truncate">{order.storeName}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 truncate">
+                          {isHomemade ? `Homemade Food - ${order.metadata?.mealType || 'Meal'}` : order.storeName}
+                        </p>
                       </div>
                       <div className="text-left sm:text-right">
                         <p className="text-xl sm:text-2xl font-bold">₹{order.finalPrice}</p>
@@ -205,6 +182,22 @@ export default function CustomerOrdersPage() {
                           </p>
                         </div>
                       </div>
+                      
+                      {isHomemade && order.metadata?.mealType && (
+                        <div className="flex items-start gap-2">
+                          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mt-0.5 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm font-medium text-orange-900">Meal Slot</p>
+                            <p className="text-xs sm:text-sm text-orange-700 font-semibold break-words">
+                              {order.metadata.mealType}
+                              <span className="font-normal text-orange-600/80 ml-1">
+                                ({order.metadata.mealType === 'Lunch' ? '12:30-2:00 PM' : '8:00-9:00 PM'})
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      
                       {order.deliveryAddress && (
                         <div className="flex items-start gap-2">
                           <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mt-0.5 flex-shrink-0" />
@@ -222,23 +215,45 @@ export default function CustomerOrdersPage() {
                     {order.items && order.items.length > 0 && (
                       <div className="mb-4">
                         <p className="text-sm font-medium mb-2">Items:</p>
-                        <div className="space-y-1">
-                          {order.items.slice(0, 3).map((item: any, idx: number) => (
-                            <div key={idx} className="flex justify-between text-sm">
-                              <span className="text-gray-600">
-                                {item.itemName || item.name} x {item.quantity}
+                        
+                        {isHomemade && order.metadata?.orderedItems ? (
+                          <div className="bg-white p-3 sm:p-4 rounded-lg border border-orange-100 text-sm shadow-sm">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="font-semibold text-orange-900">
+                                {order.items[0]?.itemName || "Homemade Thali"} x {order.items[0]?.quantity || 1}
                               </span>
-                              <span className="font-medium">
-                                ₹{((item.itemPrice || item.price) * item.quantity).toFixed(2)}
-                              </span>
+                              <span className="font-semibold text-orange-900">₹{order.finalPrice}</span>
                             </div>
-                          ))}
-                          {order.items.length > 3 && (
-                            <p className="text-sm text-gray-500">
-                              +{order.items.length - 3} more items
-                            </p>
-                          )}
-                        </div>
+                            <div className="mt-2 pt-2 border-t border-orange-50">
+                              <p className="text-xs font-medium text-orange-800/60 uppercase tracking-wider mb-1.5">What's Inside:</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {order.metadata.orderedItems.split(',').map((item: string, idx: number) => (
+                                  <span key={idx} className="inline-flex items-center px-2 py-1 rounded-md bg-orange-50 text-orange-700 text-xs font-medium border border-orange-100/50">
+                                    {item.trim()}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {order.items.slice(0, 3).map((item: any, idx: number) => (
+                              <div key={idx} className="flex justify-between text-sm">
+                                <span className="text-gray-600">
+                                  {item.itemName || item.name} x {item.quantity}
+                                </span>
+                                <span className="font-medium">
+                                  ₹{((item.itemPrice || item.price) * item.quantity).toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                            {order.items.length > 3 && (
+                              <p className="text-sm text-gray-500">
+                                +{order.items.length - 3} more items
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -264,17 +279,7 @@ export default function CustomerOrdersPage() {
                           <span className="sm:hidden">Details</span>
                         </Button>
                       </Link>
-                      {order.status === 'Delivered' && !reviewedOrderIds.has(order.id) && (
-                        <Button
-                          variant="default"
-                          className="flex-1 text-xs sm:text-sm bg-yellow-500 hover:bg-yellow-600"
-                          onClick={() => openReviewModal(order)}
-                        >
-                          <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                          <span className="hidden sm:inline">Review Order</span>
-                          <span className="sm:hidden">Review</span>
-                        </Button>
-                      )}
+
                       {order.status === 'Pending' && (
                         <Dialog open={isCancelDialogOpen && selectedOrder === order.id} onOpenChange={(open) => {
                           setIsCancelDialogOpen(open);
@@ -343,34 +348,10 @@ export default function CustomerOrdersPage() {
 
                     </div>
                   </Card>
-                ))}
+                )})}
               </div>
             )}
           </Card>
-        </TabsContent>
-
-        <TabsContent value="reviews">
-          <ReviewList reviews={reviewsData?.data || []} />
-        </TabsContent>
-      </Tabs>
-
-      {/* Review Modal */}
-      {reviewOrderId && reviewStoreId && (
-        <OrderReviewModal
-          open={isReviewModalOpen}
-          onOpenChange={setIsReviewModalOpen}
-          orderId={reviewOrderId}
-          storeId={reviewStoreId}
-          storeName={reviewStoreName}
-          items={reviewItems}
-          onReviewSubmitted={() => {
-            setReviewOrderId(null);
-            setReviewStoreId(null);
-            setReviewStoreName(undefined);
-            setReviewItems([]);
-          }}
-        />
-      )}
     </div>
   );
 }

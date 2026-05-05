@@ -237,6 +237,28 @@ export const useUpdateSubscriptionStatus = () => {
     });
 };
 
+export const useApprovePauseRequest = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, requestId }: { id: string; requestId: string }) =>
+            homemadeFoodAdminApi.approvePauseRequest(id, requestId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: homemadeFoodKeys.admin.subscriptions() });
+        },
+    });
+};
+
+export const useRejectPauseRequest = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, requestId, reason }: { id: string; requestId: string; reason?: string }) =>
+            homemadeFoodAdminApi.rejectPauseRequest(id, requestId, { reason }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: homemadeFoodKeys.admin.subscriptions() });
+        },
+    });
+};
+
 // ============================================
 // SUBSCRIPTION PLANS HOOKS
 // ============================================
@@ -256,6 +278,18 @@ export const useMySubscriptions = () => {
         queryKey: ['homemade-food', 'subscriptions', 'my'],
         queryFn: () => homemadeFoodPublicApi.getMySubscriptions(),
         staleTime: 1000 * 60 * 5,
+    });
+};
+
+// Submit Pause Request
+export const useSubmitPauseRequest = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, date, reason }: { id: string; date: string; reason?: string }) =>
+            homemadeFoodPublicApi.submitPauseRequest(id, date, reason),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['homemade-food', 'subscriptions', 'my'] });
+        },
     });
 };
 

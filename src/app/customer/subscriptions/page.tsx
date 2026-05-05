@@ -1,18 +1,49 @@
 "use client";
 
-import React from 'react';
-import { useMySubscriptions } from '@/hooks/api/use-homemade-food';
+import React, { useState } from 'react';
+import { useMySubscriptions, useSubmitPauseRequest } from '@/hooks/api/use-homemade-food';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Utensils, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { CalendarDays, Utensils, Clock, CheckCircle2, AlertCircle, PauseCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 export default function MySubscriptionsPage() {
     const { data: subscriptionsData, isLoading } = useMySubscriptions();
+    const submitPauseMutation = useSubmitPauseRequest();
     const router = useRouter();
     const subscriptions = subscriptionsData?.data || [];
+
+    const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
+    const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
+    const [pauseDate, setPauseDate] = useState('');
+    const [pauseReason, setPauseReason] = useState('');
+
+    const handleOpenPauseModal = (subId: string) => {
+        setSelectedSubId(subId);
+        setPauseDate('');
+        setPauseReason('');
+        setIsPauseModalOpen(true);
+    };
+
+    const handleSubmitPause = async () => {
+        if (!selectedSubId || !pauseDate) {
+            toast.error('Please select a date.');
+            return;
+        }
+        try {
+            await submitPauseMutation.mutateAsync({ id: selectedSubId, date: pauseDate, reason: pauseReason });
+            toast.success('Pause request submitted successfully.');
+            setIsPauseModalOpen(false);
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Failed to submit pause request.');
+        }
+    };
 
     if (isLoading) {
         return (
@@ -72,9 +103,16 @@ export default function MySubscriptionsPage() {
                                         </div>
                                         <p className="text-gray-500 text-sm">ID: {sub._id.slice(-8).toUpperCase()}</p>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-2xl font-bold text-orange-600">₹{sub.price}</p>
-                                        <p className="text-sm text-gray-500">for {sub.duration} days</p>
+                                    <div className="text-right flex flex-col items-end justify-between">
+                                        <div>
+                                            <p className="text-2xl font-bold text-orange-600">₹{sub.price}</p>
+                                            <p className="text-sm text-gray-500">for {sub.duration} days</p>
+                                        </div>
+                                        {sub.status === 'active' && (
+                                            <Button size="sm" variant="outline" onClick={() => handleOpenPauseModal(sub._id)} className="mt-4 border-orange-200 text-orange-700 hover:bg-orange-50 w-full">
+                                                <PauseCircle className="w-4 h-4 mr-2" /> Request Off
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -117,11 +155,64 @@ export default function MySubscriptionsPage() {
                                             : "Your subscription request is currently pending approval from the kitchen."}
                                     </p>
                                 </div>
+
+                                {sub.pauseRequests && sub.pauseRequests.length > 0 && (
+                                    <div className="mt-4 pt-4 border-t border-gray-100">
+                                        <p className="text-sm font-semibold text-gray-700 mb-2">Off Days Requested ({sub.pausedDaysUsed || 0}/2 used)</p>
+                                        <div className="space-y-2">
+                                            {sub.pauseRequests.map((pr: any, idx: number) => (
+                                                <div key={idx} className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded">
+                                                    <span className="text-gray-600">{format(new Date(pr.date), 'dd MMM yyyy')}</span>
+                                                    <Badge variant={pr.status === 'approved' ? 'default' : pr.status === 'rejected' ? 'destructive' : 'secondary'} className={`text-xs ${pr.status === 'approved' ? 'bg-green-100 text-green-700 hover:bg-green-100' : ''}`}>
+                                                        {pr.status}
+                                                    </Badge>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     ))}
                 </div>
             )}
+
+            {/* Pause Request Modal */}
+            <Dialog open={isPauseModalOpen} onOpenChange={setIsPauseModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Request a Day Off</DialogTitle>
+                        <DialogDescription>
+                            You can request up to 2 days off during your subscription. If approved, your plan will be extended automatically.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Date</Label>
+                            <Input 
+                                type="date" 
+                                value={pauseDate} 
+                                onChange={(e) => setPauseDate(e.target.value)} 
+                                min={new Date(Date.now() + 86400000).toISOString().split('T')[0]} 
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Reason (Optional)</Label>
+                            <Input 
+                                placeholder="E.g. Going out of town" 
+                                value={pauseReason} 
+                                onChange={(e) => setPauseReason(e.target.value)} 
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsPauseModalOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSubmitPause} disabled={!pauseDate || submitPauseMutation.isPending} className="bg-orange-600 hover:bg-orange-700 text-white">
+                            {submitPauseMutation.isPending ? 'Submitting...' : 'Submit Request'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

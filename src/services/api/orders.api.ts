@@ -18,14 +18,17 @@ export interface DeliveryAddress {
   state?: string;
   pincode: string;
   country?: string;
+  locationLink?: string;
 }
 
 export interface OrderItem {
   menuItemId?: string;
   menuId?: string;
   itemName?: string;
+  name?: string;
   quantity?: number;
   itemPrice?: number;
+  price?: number;
 }
 
 export interface CreateOrderData {

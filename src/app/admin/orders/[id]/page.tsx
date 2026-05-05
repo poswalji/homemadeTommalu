@@ -32,7 +32,8 @@ import {
   Truck,
   ArrowLeft,
   User,
-  Store
+  Store,
+  ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -224,6 +225,19 @@ export default function AdminOrderDetailPage() {
                     {order.deliveryAddress.pincode}
                     {order.deliveryAddress.country && `, ${order.deliveryAddress.country}`}
                   </p>
+                  {order.deliveryAddress.locationLink && (
+                    <div className="mt-3">
+                      <a 
+                        href={order.deliveryAddress.locationLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-md transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-1.5" />
+                        View Customer Location on Map
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>

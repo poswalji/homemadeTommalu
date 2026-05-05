@@ -293,6 +293,8 @@ export const adminApi = {
       completed: number;
       pending: number;
       averageOrderValue: number;
+      lunchCount?: number;
+      dinnerCount?: number;
     };
     revenue: {
       total: number;
@@ -315,6 +317,8 @@ export const adminApi = {
         completed: number;
         pending: number;
         averageOrderValue: number;
+        lunchCount?: number;
+        dinnerCount?: number;
       };
       revenue: {
         total: number;

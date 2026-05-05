@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useOrder, useCancelOrder, useMyReviews } from '@/hooks/api';
+import { useOrder, useCancelOrder } from '@/hooks/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -25,29 +25,20 @@ import {
   CheckCircle,
   Truck,
   ArrowLeft,
-  Star
+  Clock,
+  Utensils
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
-import { OrderReviewModal } from '@/components/reviews/order-review-modal';
 
 export default function CustomerOrderDetailPage() {
   const params = useParams();
   const orderId = (params?.id as string) || '';
   const [cancellationReason, setCancellationReason] = useState('');
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-
   const { data, isLoading, error } = useOrder(orderId);
-  const { data: reviewsData } = useMyReviews();
   const cancelOrder = useCancelOrder();
-
-  // Check if this order has been reviewed
-  const hasBeenReviewed = useMemo(() => {
-    const reviews = reviewsData?.data || [];
-    return reviews.some((review: any) => review.orderId === orderId);
-  }, [reviewsData, orderId]);
 
   const handleCancelOrder = async () => {
     try {
@@ -133,6 +124,8 @@ export default function CustomerOrderDetailPage() {
     }
   };
 
+  const isHomemade = order.metadata?.isHomemade === true;
+
   return (
     <div className="space-y-6">
       <Link href="/customer/orders">
@@ -143,50 +136,89 @@ export default function CustomerOrderDetailPage() {
       </Link>
 
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Order #{order.id?.slice(0, 8)}
-          </h1>
-          <Badge className={getStatusColor(order.status)}>
-            <span className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-4">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              Order #{order.id?.slice(0, 8)}
+            </h1>
+            {isHomemade && (
+              <Badge variant="outline" className="border-orange-500 text-orange-600 bg-orange-50 gap-1 px-2 py-0.5">
+                <Utensils className="w-4 h-4" />
+                Homemade Thali
+              </Badge>
+            )}
+          </div>
+          <Badge className={getStatusColor(order.status) + " self-start sm:self-auto"}>
+            <span className="flex items-center gap-2 text-sm">
               {getStatusIcon(order.status)}
               {order.status}
             </span>
           </Badge>
         </div>
-        <p className="text-gray-600">Order details and tracking</p>
+        <p className="text-gray-600">
+          {isHomemade ? `Homemade Food - ${order.metadata?.mealType || 'Meal'}` : 'Order details and tracking'}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card className="p-6">
+          <Card className={`p-6 ${isHomemade ? 'border-orange-200 shadow-orange-100/50' : ''}`}>
             <h2 className="text-xl font-semibold mb-4">Order Items</h2>
-            <div className="space-y-4">
-              {order.items?.map((item: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between pb-4 border-b last:border-0">
+            
+            {isHomemade && order.metadata?.orderedItems ? (
+              <div className="bg-orange-50/50 p-4 rounded-lg border border-orange-100 mb-4">
+                <div className="flex items-start justify-between pb-4 border-b border-orange-100">
                   <div>
-                    <p className="font-medium">{item.itemName || item.name}</p>
-                    {/* Show special items/instructions like Extra Roti */}
-                    {order.metadata?.orderedItems && (
-                      <p className="text-sm font-medium text-orange-600 mt-0.5">
-                        {order.metadata.orderedItems}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-600">
-                      Quantity: {item.quantity || 1}
+                    <p className="font-semibold text-orange-900 text-lg">
+                      {order.items[0]?.itemName || "Homemade Thali"}
+                    </p>
+                    <p className="text-sm text-orange-700 mt-1">
+                      Quantity: {order.items[0]?.quantity || 1}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">
-                      ₹{((item.itemPrice || item.price) * (item.quantity || 1)).toFixed(2)}
+                    <p className="font-semibold text-lg text-orange-900">
+                      ₹{((order.items[0]?.itemPrice || order.items[0]?.price || 0) * (order.items[0]?.quantity || 1)).toFixed(2)}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      ₹{(item.itemPrice || item.price).toFixed(2)} each
+                    <p className="text-sm text-orange-700">
+                      ₹{(order.items[0]?.itemPrice || order.items[0]?.price || 0).toFixed(2)} each
                     </p>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="pt-4">
+                  <p className="text-sm font-semibold text-orange-800/80 uppercase tracking-wider mb-2">Included in Thali:</p>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {order.metadata.orderedItems.split(',').map((item: string, idx: number) => (
+                      <li key={idx} className="flex items-center gap-2 text-orange-900">
+                        <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                        <span className="font-medium text-[15px]">{item.trim()}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {order.items?.map((item: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between pb-4 border-b last:border-0">
+                    <div>
+                      <p className="font-medium">{item.itemName || item.name}</p>
+                      <p className="text-sm text-gray-600">
+                        Quantity: {item.quantity || 1}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">
+                        ₹{((item.itemPrice || item.price) * (item.quantity || 1)).toFixed(2)}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        ₹{(item.itemPrice || item.price).toFixed(2)} each
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           {order.deliveryAddress && (
@@ -271,6 +303,22 @@ export default function CustomerOrderDetailPage() {
                   </p>
                 </div>
               </div>
+              
+              {isHomemade && order.metadata?.mealType && (
+                <div className="flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-orange-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-orange-900">Meal Slot</p>
+                    <p className="text-sm text-orange-700 font-semibold">
+                      {order.metadata.mealType}
+                      <span className="font-normal text-orange-600/80 ml-1">
+                        ({order.metadata.mealType === 'Lunch' ? '12:30-2:00 PM' : '8:00-9:00 PM'})
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               {order.updatedAt && (
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -290,47 +338,6 @@ export default function CustomerOrderDetailPage() {
               )}
             </div>
           </Card>
-
-          {order.status === 'Delivered' && !hasBeenReviewed && (
-            <Card className="p-6 bg-yellow-50 border-yellow-200">
-              <div className="text-center space-y-4">
-                <div className="flex justify-center">
-                  <Star className="w-12 h-12 text-yellow-500" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    How was your order?
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Share your experience and help others make better choices
-                  </p>
-                </div>
-                <Button
-                  onClick={() => setIsReviewModalOpen(true)}
-                  className="w-full bg-yellow-500 hover:bg-yellow-600"
-                >
-                  <Star className="w-4 h-4 mr-2" />
-                  Write a Review
-                </Button>
-              </div>
-            </Card>
-          )}
-
-          {order.status === 'Delivered' && hasBeenReviewed && (
-            <Card className="p-6 bg-green-50 border-green-200">
-              <div className="text-center space-y-2">
-                <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
-                <p className="text-sm font-medium text-green-800">
-                  Thank you for your review!
-                </p>
-                <Link href="/customer/reviews">
-                  <Button variant="outline" size="sm" className="mt-2">
-                    View Your Reviews
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          )}
 
           {['Pending', 'Confirmed'].includes(order.status) && (
             <Card className="p-6">
@@ -388,23 +395,6 @@ export default function CustomerOrderDetailPage() {
         </div>
       </div>
 
-      {/* Review Modal */}
-      {order && order.status === 'Delivered' && !hasBeenReviewed && (
-        <OrderReviewModal
-          open={isReviewModalOpen}
-          onOpenChange={setIsReviewModalOpen}
-          orderId={order.id}
-          storeId={typeof order.storeId === 'string' ? order.storeId : (order.storeId?._id || '')}
-          storeName={order.storeName}
-          items={(order.items || []).map((item: any) => ({
-            id: item.menuItemId || item.id || '',
-            name: item.itemName || item.name || 'Item',
-          }))}
-          onReviewSubmitted={() => {
-            setIsReviewModalOpen(false);
-          }}
-        />
-      )}
     </div>
   );
 }

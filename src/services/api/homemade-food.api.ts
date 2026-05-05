@@ -257,6 +257,12 @@ export const homemadeFoodPublicApi = {
     getMySubscriptions: async (): Promise<ApiResponse<Subscription[]> & { count: number }> => {
         const response = await apiClient.get<ApiResponse<Subscription[]> & { count: number }>('/subscriptions/my-subscriptions');
         return response.data;
+    },
+
+    // Request Pause (Off)
+    submitPauseRequest: async (id: string, date: string, reason?: string): Promise<ApiResponse<any>> => {
+        const response = await apiClient.post<ApiResponse<any>>(`/subscriptions/${id}/pause-request`, { date, reason });
+        return response.data;
     }
 };
 
@@ -400,6 +406,16 @@ export const homemadeFoodAdminApi = {
 
     updateSubscriptionStatus: async (id: string, data: { status: string; adminNotes?: string }): Promise<ApiResponse<Subscription>> => {
         const response = await apiClient.patch<ApiResponse<Subscription>>(`/subscriptions/${id}/status`, data);
+        return response.data;
+    },
+
+    approvePauseRequest: async (id: string, requestId: string): Promise<ApiResponse<any>> => {
+        const response = await apiClient.post<ApiResponse<any>>(`/subscriptions/${id}/pause-request/${requestId}/approve`);
+        return response.data;
+    },
+
+    rejectPauseRequest: async (id: string, requestId: string, data: { reason?: string }): Promise<ApiResponse<any>> => {
+        const response = await apiClient.post<ApiResponse<any>>(`/subscriptions/${id}/pause-request/${requestId}/reject`, data);
         return response.data;
     },
 
