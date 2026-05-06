@@ -11,7 +11,7 @@ import { Alert } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AddressManager } from '@/components/customer/address-manager';
 import { DisputeManager } from '@/components/customer/dispute-manager';
-import { User, Mail, Phone, Save, Lock } from 'lucide-react';
+import { User, Mail, Phone, Save, Lock, Coins } from 'lucide-react';
 
 export default function CustomerProfilePage() {
   const { data: authData, isLoading } = useAuthMe();
@@ -101,9 +101,26 @@ export default function CustomerProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-        <p className="text-gray-600 mt-2">Manage your account settings</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+          <p className="text-gray-600 mt-2">Manage your account settings</p>
+        </div>
+        
+        {/* Tokens Card */}
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center gap-4 shadow-sm shrink-0">
+          <div className="bg-orange-100 p-3 rounded-full text-orange-600">
+            <Coins className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-orange-900 uppercase tracking-wide">Tommalu Tokens</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-orange-700">{user?.tokens ?? 200}</span>
+              <span className="text-sm font-medium text-orange-600/80">(₹{((user?.tokens ?? 200) / 10).toFixed(2)})</span>
+            </div>
+            <p className="text-xs text-orange-600 mt-0.5 font-medium">10 Tokens = ₹1. Use on your next order!</p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="details" className="w-full">

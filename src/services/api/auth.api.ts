@@ -56,6 +56,13 @@ export interface User {
   emailVerified?: boolean;
   avatar?: string; // Backend may return avatar for Google users
   status?: 'active' | 'suspended'; // Backend has status field
+  notificationSettings?: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+  };
+  tokens?: number;
+  unseenTokenRewards?: number;
 }
 
 export interface AuthResponse {

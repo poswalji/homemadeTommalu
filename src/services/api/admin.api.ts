@@ -25,6 +25,7 @@ export interface User {
     isDefault?: boolean;
   }>;
   emailVerified?: boolean;
+  tokens?: number;
 }
 
 export interface Store {

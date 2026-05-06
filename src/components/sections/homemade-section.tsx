@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { useHomemade } from "@/context/homemade-context";
 import { useAuthMe } from "@/hooks/api";
 import { useRouter } from "next/navigation";
-import { ConfirmOrderDialog } from "@/components/modals/confirm-order-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useSubscriptionPlans } from "@/hooks/api/use-homemade-food";
@@ -33,17 +32,33 @@ export function HomemadeSection() {
     // State for selected subscription plan
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
-    const handleOrderClick = (plan?: any) => {
+    const handleOrderClick = (plan?: any, slotOverride?: "Lunch" | "Dinner") => {
         if (!authData?.user) {
             router.push(`/login?redirect=/homemade`);
             return;
         }
-        if (plan) {
-            setSelectedPlan(plan);
-        } else {
-            setSelectedPlan(null);
-        }
-        setIsDialogOpen(true);
+
+        const finalSlot = slotOverride || selectedSlot;
+        const currentPrice = state.isSunday ? (finalSlot === 'Lunch' ? 99 : 120) : state.price;
+        const finalTotalPrice = (currentPrice * quantity) + ((state.extraRotiPrice || 10) * extraRotiCount);
+
+        const orderDetails = {
+            date: new Date().toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }),
+            slot: finalSlot,
+            quantity: quantity,
+            totalPrice: activeTab === 'one-time' ? finalTotalPrice : (plan?.price || 0),
+            items: activeTab === 'one-time' ? [
+                finalSlot === 'Lunch' ? state.lunchSabji : state.dinnerSabji,
+                ...(finalSlot === 'Lunch' ? state.lunchItems : state.dinnerItems),
+                extraRotiCount > 0 ? `Extra Roti x${extraRotiCount}` : null
+            ].filter(Boolean) as string[] : [plan?.title],
+            isSubscription: activeTab === 'subscription',
+            planName: activeTab === 'subscription' ? plan?.title : undefined,
+            planId: activeTab === 'subscription' ? plan?._id : undefined
+        };
+
+        sessionStorage.setItem("checkoutOrderDetails", JSON.stringify(orderDetails));
+        router.push("/checkout");
     };
 
     const currentPrice = state.isSunday ? (selectedSlot === 'Lunch' ? 99 : 120) : state.price;
@@ -184,12 +199,11 @@ export function HomemadeSection() {
                                                     </div>
                                                     <Button
                                                         size="sm"
-                                                        onClick={() => setSelectedSlot("Lunch")}
-                                                        variant={selectedSlot === "Lunch" ? "default" : "outline"}
-                                                        className={`rounded-xl ${selectedSlot === "Lunch" ? "bg-orange-600 hover:bg-orange-700" : "border-orange-200 text-orange-700 hover:bg-orange-50"}`}
+                                                        onClick={() => handleOrderClick(undefined, 'Lunch')}
+                                                        className="rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold px-6"
                                                         disabled={!state.lunchSlotAvailable}
                                                     >
-                                                        {selectedSlot === "Lunch" ? "Selected" : "Select Lunch"}
+                                                        Order Lunch
                                                     </Button>
                                                 </div>
                                             </div>
@@ -232,12 +246,11 @@ export function HomemadeSection() {
                                                     </div>
                                                     <Button
                                                         size="sm"
-                                                        onClick={() => setSelectedSlot("Dinner")}
-                                                        variant={selectedSlot === "Dinner" ? "default" : "outline"}
-                                                        className={`rounded-xl ${selectedSlot === "Dinner" ? "bg-indigo-600 hover:bg-indigo-700" : "border-indigo-200 text-indigo-700 hover:bg-indigo-50"}`}
+                                                        onClick={() => handleOrderClick(undefined, 'Dinner')}
+                                                        className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
                                                         disabled={!state.dinnerSlotAvailable}
                                                     >
-                                                        {selectedSlot === "Dinner" ? "Selected" : "Select Dinner"}
+                                                        Order Dinner
                                                     </Button>
                                                 </div>
                                             </div>
@@ -422,25 +435,6 @@ export function HomemadeSection() {
                     </AnimatePresence>
                 </Tabs>
             </div>
-
-            <ConfirmOrderDialog
-                isOpen={isDialogOpen}
-                onClose={() => setIsDialogOpen(false)}
-                orderDetails={{
-                    date: new Date().toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }),
-                    slot: selectedSlot,
-                    quantity: quantity,
-                    totalPrice: activeTab === 'one-time' ? totalPrice : (selectedPlan?.price || 0),
-                    items: activeTab === 'one-time' ? [
-                        selectedSlot === 'Lunch' ? state.lunchSabji : state.dinnerSabji,
-                        ...(selectedSlot === 'Lunch' ? state.lunchItems : state.dinnerItems),
-                        extraRotiCount > 0 ? `Extra Roti x${extraRotiCount}` : null
-                    ].filter(Boolean) as string[] : [selectedPlan?.title],
-                    isSubscription: activeTab === 'subscription',
-                    planName: activeTab === 'subscription' ? selectedPlan?.title : undefined,
-                    planId: activeTab === 'subscription' ? selectedPlan?._id : undefined
-                }}
-            />
         </>
     );
 }

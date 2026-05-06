@@ -12,6 +12,7 @@ import { SocketProvider } from '@/context/socket-context';
 import { HomemadeProvider } from '@/context/homemade-context';
 import { Suspense } from 'react';
 import { DeliveryFloatingButton } from '@/components/layout/delivery-floating-button';
+import { TokenRewardAnimation } from '@/components/global/token-reward-animation';
 
 const figtree = Figtree({
    subsets: ['latin'],
@@ -156,6 +157,7 @@ export default function RootLayout({
                            <SocketProvider>
                               <Suspense>{children}</Suspense>
                               <DeliveryFloatingButton />
+                               <TokenRewardAnimation />
                            </SocketProvider>
                         </HomemadeProvider>
                      </GoogleAuthProvider>
@@ -170,3 +172,4 @@ export default function RootLayout({
       </html>
    );
 }
+
