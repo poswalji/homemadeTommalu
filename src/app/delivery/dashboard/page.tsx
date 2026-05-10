@@ -41,6 +41,10 @@ type Order = {
   area?: string;
   createdAt: string;
   specialInstructions?: string;
+  source?: string;
+  isSubscription?: boolean;
+  collectionAmount?: number;
+  finalPrice?: number;
 };
 
 // Helper function
@@ -377,11 +381,28 @@ export default function DeliveryDashboard() {
                           </div>
                         )}
 
-                        <div className="flex items-center text-sm text-gray-600 bg-gray-50 p-2.5 rounded-lg w-full">
-                          <IndianRupee className="h-4 w-4 mr-3 text-green-600 flex-shrink-0" />
-                          <span className="font-medium uppercase">
-                            {order.paymentMethod ? order.paymentMethod.replace(/_/g, ' ') : "COD"}
-                          </span>
+                        {order.isSubscription && (
+                          <div className="flex items-center text-sm font-bold text-green-600 bg-green-50 p-2.5 rounded-lg w-full border border-green-100">
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            TIFFIN ✅ - NO CHARGE
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 p-2.5 rounded-lg w-full">
+                          <div className="flex items-center">
+                            <IndianRupee className="h-4 w-4 mr-3 text-green-600 flex-shrink-0" />
+                            <span className="font-bold text-gray-800">
+                              {order.isSubscription ? "PAID" : `COLLECT: ₹${order.collectionAmount ?? order.finalPrice ?? 0}`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                             {order.source === 'whatsapp_manual' && (
+                               <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[9px] font-bold rounded uppercase tracking-tighter">WhatsApp</span>
+                             )}
+                             <span className="font-medium uppercase text-[10px] text-gray-400">
+                               {order.paymentMethod ? order.paymentMethod.replace(/_/g, ' ') : "COD"}
+                             </span>
+                          </div>
                         </div>
                       </div>
 

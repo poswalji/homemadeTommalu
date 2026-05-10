@@ -140,175 +140,175 @@ export function HomemadeSection() {
                                 {/* MENU CARD DESIGN */}
                                 <div className="bg-white rounded-3xl shadow-xl shadow-stone-200/50 overflow-hidden border border-stone-100 max-w-3xl mx-auto relative">
 
-                                        {/* Decorative Header Bar */}
-                                        <div className="h-3 bg-gradient-to-r from-orange-400 via-red-500 to-orange-400" />
+                                    {/* Decorative Header Bar */}
+                                    <div className="h-3 bg-gradient-to-r from-orange-400 via-red-500 to-orange-400" />
 
-                                        {/* Menu Header */}
-                                        <div className="p-6 md:p-8 border-b border-stone-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-stone-50/30">
-                                            <div className="flex items-center gap-3">
-                                                <div className="bg-orange-100 p-2.5 rounded-xl text-orange-600">
-                                                    <Calendar className="w-6 h-6" />
-                                                </div>
-                                                <div className="text-left">
-                                                    <h2 className="text-xl font-bold text-stone-800 leading-none">{formattedDate}</h2>
-                                                    <p className="text-stone-500 text-sm mt-1">Freshly prepared for you</p>
-                                                </div>
+                                    {/* Menu Header */}
+                                    <div className="p-6 md:p-8 border-b border-stone-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-stone-50/30">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-orange-100 p-2.5 rounded-xl text-orange-600">
+                                                <Calendar className="w-6 h-6" />
                                             </div>
-                                            <div className="flex gap-2">
-                                                <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-0">Pure Veg</Badge>
-                                                <Badge variant="secondary" className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-0">Desi Ghee</Badge>
+                                            <div className="text-left">
+                                                <h2 className="text-xl font-bold text-stone-800 leading-none">{formattedDate}</h2>
+                                                <p className="text-stone-500 text-sm mt-1">Freshly prepared for you</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-0">Pure Veg</Badge>
+                                            <Badge variant="secondary" className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-0">Desi Ghee</Badge>
+                                        </div>
+                                    </div>
+
+                                    {/* Menu Content - Split View */}
+                                    <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-stone-100">
+
+                                        {/* LUNCH SECTION */}
+                                        <div className="p-6 md:p-8 bg-orange-50/10 hover:bg-orange-50/30 transition-colors relative group">
+                                            <div className="absolute top-4 right-4">
+                                                {state.lunchSlotAvailable ? (
+                                                    <Badge className="bg-green-500 hover:bg-green-600 border-0">Open</Badge>
+                                                ) : (
+                                                    <Badge variant="destructive">Closed</Badge>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <Sun className="w-5 h-5 text-orange-500" />
+                                                <h3 className="text-lg font-bold text-stone-800 uppercase tracking-wide">Lunch Menu</h3>
+                                            </div>
+
+                                            <div className="min-h-[120px]">
+                                                <h4 className="text-xl font-black text-orange-700 mb-3 leading-tight">
+                                                    {state.lunchSabji || "Today's Special Sabji"}
+                                                </h4>
+                                                <ul className="space-y-2">
+                                                    {state.lunchItems.map((item, idx) => (
+                                                        <li key={idx} className="flex items-start gap-2 text-sm font-medium text-stone-600">
+                                                            <CheckCircle2 className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+
+                                            <div className="mt-6 pt-4 border-t border-dashed border-stone-200 flex items-end justify-between">
+                                                <div>
+                                                    <p className="text-xs text-stone-400 font-bold uppercase">Price</p>
+                                                    <p className="text-2xl font-bold text-stone-800">₹{state.isSunday ? 99 : state.price}</p>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleOrderClick(undefined, 'Lunch')}
+                                                    className="rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold px-6"
+                                                    disabled={!state.lunchSlotAvailable}
+                                                >
+                                                    Order Lunch
+                                                </Button>
                                             </div>
                                         </div>
 
-                                        {/* Menu Content - Split View */}
-                                        <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-stone-100">
-
-                                            {/* LUNCH SECTION */}
-                                            <div className="p-6 md:p-8 bg-orange-50/10 hover:bg-orange-50/30 transition-colors relative group">
-                                                <div className="absolute top-4 right-4">
-                                                    {state.lunchSlotAvailable ? (
-                                                        <Badge className="bg-green-500 hover:bg-green-600 border-0">Open</Badge>
-                                                    ) : (
-                                                        <Badge variant="destructive">Closed</Badge>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex items-center gap-2 mb-4">
-                                                    <Sun className="w-5 h-5 text-orange-500" />
-                                                    <h3 className="text-lg font-bold text-stone-800 uppercase tracking-wide">Lunch Menu</h3>
-                                                </div>
-
-                                                <div className="min-h-[120px]">
-                                                    <h4 className="text-xl font-black text-orange-700 mb-3 leading-tight">
-                                                        {state.lunchSabji || "Today's Special Sabji"}
-                                                    </h4>
-                                                    <ul className="space-y-2">
-                                                        {state.lunchItems.map((item, idx) => (
-                                                            <li key={idx} className="flex items-start gap-2 text-sm font-medium text-stone-600">
-                                                                <CheckCircle2 className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
-                                                                <span>{item}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-
-                                                <div className="mt-6 pt-4 border-t border-dashed border-stone-200 flex items-end justify-between">
-                                                    <div>
-                                                        <p className="text-xs text-stone-400 font-bold uppercase">Price</p>
-                                                        <p className="text-2xl font-bold text-stone-800">₹{state.isSunday ? 99 : state.price}</p>
-                                                    </div>
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleOrderClick(undefined, 'Lunch')}
-                                                        className="rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold px-6"
-                                                        disabled={!state.lunchSlotAvailable}
-                                                    >
-                                                        Order Lunch
-                                                    </Button>
-                                                </div>
+                                        {/* DINNER SECTION */}
+                                        <div className="p-6 md:p-8 bg-indigo-50/10 hover:bg-indigo-50/30 transition-colors relative group">
+                                            <div className="absolute top-4 right-4">
+                                                {state.dinnerSlotAvailable ? (
+                                                    <Badge className="bg-green-500 hover:bg-green-600 border-0">Open</Badge>
+                                                ) : (
+                                                    <Badge variant="destructive">Closed</Badge>
+                                                )}
                                             </div>
 
-                                            {/* DINNER SECTION */}
-                                            <div className="p-6 md:p-8 bg-indigo-50/10 hover:bg-indigo-50/30 transition-colors relative group">
-                                                <div className="absolute top-4 right-4">
-                                                    {state.dinnerSlotAvailable ? (
-                                                        <Badge className="bg-green-500 hover:bg-green-600 border-0">Open</Badge>
-                                                    ) : (
-                                                        <Badge variant="destructive">Closed</Badge>
-                                                    )}
-                                                </div>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <Moon className="w-5 h-5 text-indigo-500" />
+                                                <h3 className="text-lg font-bold text-stone-800 uppercase tracking-wide">Dinner Menu</h3>
+                                            </div>
 
-                                                <div className="flex items-center gap-2 mb-4">
-                                                    <Moon className="w-5 h-5 text-indigo-500" />
-                                                    <h3 className="text-lg font-bold text-stone-800 uppercase tracking-wide">Dinner Menu</h3>
-                                                </div>
+                                            <div className="min-h-[120px]">
+                                                <h4 className="text-xl font-black text-indigo-800 mb-3 leading-tight">
+                                                    {state.dinnerSabji || "Evening Special"}
+                                                </h4>
+                                                <ul className="space-y-2">
+                                                    {state.dinnerItems.map((item, idx) => (
+                                                        <li key={idx} className="flex items-start gap-2 text-sm font-medium text-stone-600">
+                                                            <CheckCircle2 className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
 
-                                                <div className="min-h-[120px]">
-                                                    <h4 className="text-xl font-black text-indigo-800 mb-3 leading-tight">
-                                                        {state.dinnerSabji || "Evening Special"}
-                                                    </h4>
-                                                    <ul className="space-y-2">
-                                                        {state.dinnerItems.map((item, idx) => (
-                                                            <li key={idx} className="flex items-start gap-2 text-sm font-medium text-stone-600">
-                                                                <CheckCircle2 className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
-                                                                <span>{item}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                                            <div className="mt-6 pt-4 border-t border-dashed border-stone-200 flex items-end justify-between">
+                                                <div>
+                                                    <p className="text-xs text-stone-400 font-bold uppercase">Price</p>
+                                                    <p className="text-2xl font-bold text-stone-800">
+                                                        ₹{state.isSunday ? 120 : state.price}
+                                                    </p>
                                                 </div>
-
-                                                <div className="mt-6 pt-4 border-t border-dashed border-stone-200 flex items-end justify-between">
-                                                    <div>
-                                                        <p className="text-xs text-stone-400 font-bold uppercase">Price</p>
-                                                        <p className="text-2xl font-bold text-stone-800">
-                                                            ₹{state.isSunday ? 120 : state.price}
-                                                        </p>
-                                                    </div>
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleOrderClick(undefined, 'Dinner')}
-                                                        className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
-                                                        disabled={!state.dinnerSlotAvailable}
-                                                    >
-                                                        Order Dinner
-                                                    </Button>
-                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleOrderClick(undefined, 'Dinner')}
+                                                    className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
+                                                    disabled={!state.dinnerSlotAvailable}
+                                                >
+                                                    Order Dinner
+                                                </Button>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        {/* Ordering Footer (Sticky Context) */}
-                                        {state.isServiceOff ? (
-                                            <div className="bg-orange-50 p-6 sm:p-8 border-t border-orange-200 text-center">
-                                                <div className="inline-flex bg-white p-3 rounded-full mb-4 shadow-sm border border-orange-100">
-                                                    <Utensils className="w-6 h-6 text-orange-600" />
-                                                </div>
-                                                <h2 className="text-xl md:text-2xl font-black text-stone-800 mb-2">Hum abhi next batch prepare kar rahe hain</h2>
-                                                <p className="text-stone-600 font-medium">
-                                                    Best quality maintain karne ke liye thoda break lete hain 🙏
-                                                </p>
+                                    {/* Ordering Footer (Sticky Context) */}
+                                    {state.isServiceOff ? (
+                                        <div className="bg-orange-50 p-6 sm:p-8 border-t border-orange-200 text-center">
+                                            <div className="inline-flex bg-white p-3 rounded-full mb-4 shadow-sm border border-orange-100">
+                                                <Utensils className="w-6 h-6 text-orange-600" />
                                             </div>
-                                        ) : (
-                                            <div className="bg-stone-50 p-6 border-t border-stone-200">
-                                                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                            <h2 className="text-xl md:text-2xl font-black text-stone-800 mb-2">Hum abhi next batch prepare kar rahe hain</h2>
+                                            <p className="text-stone-600 font-medium">
+                                                Best quality maintain karne ke liye thoda break lete hain 🙏
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="bg-stone-50 p-6 border-t border-stone-200">
+                                            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
 
-                                                    {/* Left: Quantity & Extras */}
-                                                    <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-4 md:gap-8">
+                                                {/* Left: Quantity & Extras */}
+                                                <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-4 md:gap-8">
 
-                                                        {/* Qty */}
+                                                    {/* Qty */}
+                                                    <div>
+                                                        <label className="text-xs font-bold text-stone-400 uppercase block mb-1">Quantity</label>
+                                                        <div className="flex items-center gap-3 bg-white rounded-lg p-1 border border-stone-200 shadow-sm">
+                                                            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Minus className="w-4 h-4 text-stone-600" /></button>
+                                                            <span className="font-bold text-stone-800 w-6 text-center">{quantity}</span>
+                                                            <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Plus className="w-4 h-4 text-stone-600" /></button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Extra Roti */}
+                                                    {(!state.isSunday || selectedSlot === 'Lunch') && (
                                                         <div>
-                                                            <label className="text-xs font-bold text-stone-400 uppercase block mb-1">Quantity</label>
+                                                            <label className="text-xs font-bold text-stone-400 uppercase block mb-1">Extra Roti (+₹10)</label>
                                                             <div className="flex items-center gap-3 bg-white rounded-lg p-1 border border-stone-200 shadow-sm">
-                                                                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Minus className="w-4 h-4 text-stone-600" /></button>
-                                                                <span className="font-bold text-stone-800 w-6 text-center">{quantity}</span>
-                                                                <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Plus className="w-4 h-4 text-stone-600" /></button>
+                                                                <button onClick={() => setExtraRotiCount(Math.max(0, extraRotiCount - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Minus className="w-4 h-4 text-stone-600" /></button>
+                                                                <span className="font-bold text-stone-800 w-6 text-center">{extraRotiCount}</span>
+                                                                <button onClick={() => setExtraRotiCount(extraRotiCount + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Plus className="w-4 h-4 text-stone-600" /></button>
                                                             </div>
                                                         </div>
-
-                                                        {/* Extra Roti */}
-                                                        {(!state.isSunday || selectedSlot === 'Lunch') && (
-                                                            <div>
-                                                                <label className="text-xs font-bold text-stone-400 uppercase block mb-1">Extra Roti (+₹10)</label>
-                                                                <div className="flex items-center gap-3 bg-white rounded-lg p-1 border border-stone-200 shadow-sm">
-                                                                    <button onClick={() => setExtraRotiCount(Math.max(0, extraRotiCount - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Minus className="w-4 h-4 text-stone-600" /></button>
-                                                                    <span className="font-bold text-stone-800 w-6 text-center">{extraRotiCount}</span>
-                                                                    <button onClick={() => setExtraRotiCount(extraRotiCount + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Plus className="w-4 h-4 text-stone-600" /></button>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Right: Checkout Button */}
-                                                    <Button
-                                                        onClick={() => handleOrderClick()}
-                                                        disabled={selectedSlot === 'Lunch' ? !state.lunchSlotAvailable : !state.dinnerSlotAvailable}
-                                                        className="w-full md:w-auto px-8 py-6 text-lg font-bold bg-stone-900 hover:bg-black text-white rounded-2xl shadow-lg transition-all"
-                                                    >
-                                                        Order {selectedSlot} • ₹{totalPrice}
-                                                    </Button>
+                                                    )}
                                                 </div>
+
+                                                {/* Right: Checkout Button */}
+                                                <Button
+                                                    onClick={() => handleOrderClick()}
+                                                    disabled={selectedSlot === 'Lunch' ? !state.lunchSlotAvailable : !state.dinnerSlotAvailable}
+                                                    className="w-full md:w-auto px-8 py-6 text-lg font-bold bg-stone-900 hover:bg-black text-white rounded-2xl shadow-lg transition-all"
+                                                >
+                                                    Order {selectedSlot} • ₹{totalPrice}
+                                                </Button>
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
+                                </div>
                                 {/* Trust Badges */}
                                 <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto mt-8 opacity-80">
                                     {[

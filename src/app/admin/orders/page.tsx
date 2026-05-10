@@ -4,15 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Package, Truck, Users, Phone, MapPin, Loader2 } from 'lucide-react';
-import { useAdminHomemadeFoodOrders, useUpdateHomemadeFoodOrderStatus } from '@/hooks/api';
+import { Search, Package, Truck, Users, Phone, MapPin, Loader2, Plus } from 'lucide-react';
+import { useAdminHomemadeFoodOrders, useUpdateHomemadeFoodOrderStatus, useAddManualOrder } from '@/hooks/api';
 import { toast } from 'sonner';
+import { handleApiError } from '@/lib/axios';
 import { type HomemadeFoodOrderStatus } from '@/services/api/homemade-food.api';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 
 export default function AdminOrdersPage() {
     const [orderFilters, setOrderFilters] = useState({
@@ -51,6 +52,51 @@ export default function AdminOrdersPage() {
         });
     };
 
+    // Manual WhatsApp Order Logic
+    const [isManualOrderOpen, setIsManualOrderOpen] = useState(false);
+    const [manualOrderData, setManualOrderData] = useState({
+        customerName: '',
+        phone: '',
+        street: '',
+        city: 'Jaipur',
+        pincode: '',
+        area: 'nims',
+        items: '',
+        finalPrice: '',
+        timeSlot: 'lunch',
+        isSubscription: false,
+    });
+
+    const addManualOrder = useAddManualOrder();
+
+    const handleAddManualOrder = (e: React.FormEvent) => {
+        e.preventDefault();
+        addManualOrder.mutate({
+            ...manualOrderData,
+            finalPrice: Number(manualOrderData.finalPrice) || 0,
+        }, {
+            onSuccess: () => {
+                toast.success("WhatsApp Order added successfully");
+                setIsManualOrderOpen(false);
+                setManualOrderData({
+                    customerName: '',
+                    phone: '',
+                    street: '',
+                    city: 'Jaipur',
+                    pincode: '',
+                    area: 'nims',
+                    items: '',
+                    finalPrice: '',
+                    timeSlot: 'lunch',
+                    isSubscription: false,
+                });
+            },
+            onError: (err: any) => {
+                toast.error(handleApiError(err));
+            }
+        });
+    };
+
     return (
         <div className="space-y-6 container mx-auto p-4 sm:p-6 max-w-7xl">
             {/* Header */}
@@ -62,6 +108,102 @@ export default function AdminOrdersPage() {
                     </h1>
                     <p className="text-gray-600 mt-1">Manage homemade food orders and deliveries.</p>
                 </div>
+                
+                <Dialog open={isManualOrderOpen} onOpenChange={setIsManualOrderOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="bg-orange-600 hover:bg-orange-700 shadow-md">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add WhatsApp Order
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                            <DialogTitle>Add Manual WhatsApp Order</DialogTitle>
+                            <DialogDescription>
+                                Enter details for orders received via WhatsApp.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleAddManualOrder} className="space-y-4 py-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Customer Name</Label>
+                                    <Input required value={manualOrderData.customerName} onChange={e => setManualOrderData({...manualOrderData, customerName: e.target.value})} placeholder="John Doe" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Phone Number</Label>
+                                    <Input required value={manualOrderData.phone} onChange={e => setManualOrderData({...manualOrderData, phone: e.target.value})} placeholder="9876543210" />
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <Label>Street Address</Label>
+                                <Input required value={manualOrderData.street} onChange={e => setManualOrderData({...manualOrderData, street: e.target.value})} placeholder="House No, Area" />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Pincode</Label>
+                                    <Input required value={manualOrderData.pincode} onChange={e => setManualOrderData({...manualOrderData, pincode: e.target.value})} placeholder="303101" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Area</Label>
+                                    <Select value={manualOrderData.area} onValueChange={v => setManualOrderData({...manualOrderData, area: v})}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="nims">NIMS</SelectItem>
+                                            <SelectItem value="achrol">Achrol</SelectItem>
+                                            <SelectItem value="chomu">Chomu</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Items (Text)</Label>
+                                <Input required value={manualOrderData.items} onChange={e => setManualOrderData({...manualOrderData, items: e.target.value})} placeholder="e.g. 2x Veg Thali" />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Price (₹)</Label>
+                                    <Input type="number" required value={manualOrderData.finalPrice} onChange={e => setManualOrderData({...manualOrderData, finalPrice: e.target.value})} placeholder="150" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Time Slot</Label>
+                                    <Select value={manualOrderData.timeSlot} onValueChange={v => setManualOrderData({...manualOrderData, timeSlot: v})}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="lunch">Lunch</SelectItem>
+                                            <SelectItem value="dinner">Dinner</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between p-3 border rounded-lg bg-orange-50/50">
+                                <div className="space-y-0.5">
+                                    <Label className="text-orange-900">Subscription (Tiffin)</Label>
+                                    <p className="text-xs text-orange-600">Marks as PAID and ₹0 collection</p>
+                                </div>
+                                <Button 
+                                    type="button"
+                                    variant={manualOrderData.isSubscription ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setManualOrderData(prev => ({ ...prev, isSubscription: !prev.isSubscription }))}
+                                    className={manualOrderData.isSubscription ? "bg-orange-600 hover:bg-orange-700" : ""}
+                                >
+                                    {manualOrderData.isSubscription ? "ON" : "OFF"}
+                                </Button>
+                            </div>
+
+                            <Button type="submit" disabled={addManualOrder.isPending} className="w-full bg-orange-600 hover:bg-orange-700">
+                                {addManualOrder.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                                Add Order
+                            </Button>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             <Card>

@@ -90,6 +90,19 @@ export interface OrdersQueryParams {
   status?: OrderStatus;
 }
 
+export interface ManualOrderData {
+  customerName: string;
+  phone: string;
+  street: string;
+  city: string;
+  pincode: string;
+  area: string;
+  items: string | any[];
+  finalPrice: number;
+  timeSlot?: string;
+  isSubscription?: boolean;
+}
+
 // Orders API Service
 export const ordersApi = {
   // Create an order (customer)
@@ -142,6 +155,12 @@ export const ordersApi = {
     paymentMethod?: string;
   }): Promise<OrderResponse> => {
     const response = await apiClient.post<OrderResponse>('/customer/orders/from-cart', data);
+    return response.data;
+  },
+
+  // Add manual WhatsApp order (admin)
+  addManualWhatsAppOrder: async (data: ManualOrderData): Promise<OrderResponse> => {
+    const response = await apiClient.post<OrderResponse>('/orders/manual-add', data);
     return response.data;
   },
 };

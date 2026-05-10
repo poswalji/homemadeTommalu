@@ -5,8 +5,10 @@ import {
    type UpdateOrderStatusData,
    type OrdersQueryParams,
    type DeliveryAddress,
+   type ManualOrderData,
 } from '@/services/api/orders.api';
 import { ordersKeys, cartKeys, storeOwnerKeys } from '@/config/query.config';
+import { homemadeFoodKeys } from './use-homemade-food';
 
 // Create order (customer)
 export const useCreateOrder = () => {
@@ -115,6 +117,19 @@ export const useOrderPublic = (id: string, enabled = true) => {
       queryFn: () => ordersApi.getOrderPublic(id),
       enabled: enabled && !!id,
       staleTime: 1000 * 60 * 1, // 1 minute,
-      refetchInterval: 1000 * 60 * 1, // 1 minute
-   });
+    });
 };
+
+// Add manual WhatsApp order (admin)
+export const useAddManualOrder = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: ManualOrderData) => ordersApi.addManualWhatsAppOrder(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: homemadeFoodKeys.admin.all() });
+            queryClient.invalidateQueries({ queryKey: ordersKeys.admin() });
+        },
+    });
+};
+
