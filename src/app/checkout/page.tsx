@@ -384,7 +384,7 @@ export default function CheckoutPage() {
                                         placeholder="Coupon Code" 
                                         value={couponCode} 
                                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                        disabled={appliedDiscount > 0}
+                                        disabled={appliedDiscount > 0 || useTokens}
                                         className="uppercase font-semibold tracking-wide"
                                     />
                                     {appliedDiscount > 0 ? (
@@ -402,6 +402,12 @@ export default function CheckoutPage() {
                                         </Button>
                                     )}
                                 </div>
+                            )}
+                            
+                            {!orderDetails.isSubscription && useTokens && (
+                                <p className="text-[10px] text-orange-600 font-medium px-1 mt-1 flex items-center gap-1">
+                                    Coupons cannot be used with tokens.
+                                </p>
                             )}
                             
                             {/* Final Price Breakdown */}
@@ -432,14 +438,20 @@ export default function CheckoutPage() {
                                             )}
                                             <input 
                                                 type="checkbox" 
-                                                className="w-5 h-5 text-orange-600 rounded border-orange-300 focus:ring-orange-500 shadow-sm cursor-pointer" 
+                                                className="w-5 h-5 text-orange-600 rounded border-orange-300 focus:ring-orange-500 shadow-sm cursor-pointer disabled:opacity-50" 
                                                 checked={useTokens} 
                                                 onChange={(e) => setUseTokens(e.target.checked)}
-                                                disabled={availableTokens <= 0}
+                                                disabled={availableTokens <= 0 || appliedDiscount > 0}
                                             />
                                         </div>
                                     </div>
                                 </div>
+                            )}
+                            
+                            {!orderDetails.isSubscription && appliedDiscount > 0 && (
+                                <p className="text-[10px] text-orange-600 font-medium px-1 mt-1 flex items-center gap-1">
+                                    Tokens cannot be used with coupons.
+                                </p>
                             )}
 
                             <div className="border-t border-stone-100 pt-4 mt-2">

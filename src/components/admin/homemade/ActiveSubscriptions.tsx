@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { subscriptionApi } from "@/services/api/subscription.api";
 import { EditSubscriptionPeriodModal } from "@/components/admin/subscription/EditSubscriptionPeriodModal";
 import { EditSubscriptionPriceModal } from "@/components/admin/subscription/EditSubscriptionPriceModal";
+import { AdminPauseModal } from "@/components/admin/subscription/AdminPauseModal";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ export function ActiveSubscriptions() {
     // Modals
     const [isPeriodModalOpen, setIsPeriodModalOpen] = useState(false);
     const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
+    const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
     const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
 
     const fetchSubscriptions = async () => {
@@ -77,6 +79,11 @@ export function ActiveSubscriptions() {
         setIsPriceModalOpen(true);
     };
 
+    const handleAddPause = (sub: Subscription) => {
+        setSelectedSubscription(sub);
+        setIsPauseModalOpen(true);
+    };
+
     const savePeriod = async (startDate: string, endDate: string) => {
         if (!selectedSubscription) return;
         try {
@@ -105,6 +112,22 @@ export function ActiveSubscriptions() {
             console.error("Update Price Error:", err);
             toast.error("Error", {
                 description: err.response?.data?.message || err.message || "Failed to update price"
+            });
+        }
+    };
+
+    const savePause = async (date: string, reason: string) => {
+        if (!selectedSubscription) return;
+        try {
+            await subscriptionApi.adminAddPause(selectedSubscription._id, date, reason);
+            toast.success("Success", {
+                description: "Pause day added and plan extended by 1 day.",
+            });
+            fetchSubscriptions();
+        } catch (err: any) {
+            console.error("Add Pause Error:", err);
+            toast.error("Error", {
+                description: err.response?.data?.message || err.message || "Failed to add pause day"
             });
         }
     };
@@ -278,6 +301,9 @@ export function ActiveSubscriptions() {
                                                     <DropdownMenuContent align="end" className="w-48">
                                                         <DropdownMenuLabel className="text-xs text-gray-500 uppercase">Actions</DropdownMenuLabel>
                                                         <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onClick={() => handleAddPause(sub)} className="cursor-pointer text-gray-700 font-medium">
+                                                            <Calendar className="mr-2 h-4 w-4 text-rose-500" /> Add Pause Day
+                                                        </DropdownMenuItem>
                                                         <DropdownMenuItem onClick={() => handleEditPeriod(sub)} className="cursor-pointer text-gray-700 font-medium">
                                                             <Calendar className="mr-2 h-4 w-4 text-orange-500" /> Extend Plan
                                                         </DropdownMenuItem>
@@ -387,6 +413,9 @@ export function ActiveSubscriptions() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleAddPause(sub)} className="cursor-pointer text-gray-700">
+                                                    <Calendar className="mr-2 h-4 w-4 text-rose-500" /> Add Pause Day
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => handleEditPeriod(sub)} className="cursor-pointer text-gray-700">
                                                     <Calendar className="mr-2 h-4 w-4 text-orange-500" /> Extend Plan
                                                 </DropdownMenuItem>
@@ -475,6 +504,11 @@ export function ActiveSubscriptions() {
                         onClose={() => setIsPriceModalOpen(false)}
                         onSave={savePrice}
                         currentPrice={selectedSubscription.price}
+                    />
+                    <AdminPauseModal
+                        isOpen={isPauseModalOpen}
+                        onClose={() => setIsPauseModalOpen(false)}
+                        onSave={savePause}
                     />
                 </>
             )}

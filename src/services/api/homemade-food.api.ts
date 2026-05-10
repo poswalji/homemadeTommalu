@@ -271,9 +271,8 @@ export const homemadeFoodPublicApi = {
 // ============================================
 
 export const homemadeFoodAdminApi = {
-    // Get dashboard stats
     getDashboardStats: async (): Promise<ApiResponse<any>> => {
-        const response = await apiClient.get<ApiResponse<any>>('/admin/dashboard');
+        const response = await apiClient.get<ApiResponse<any>>('/admin/homemade-food/dashboard');
         return response.data;
     },
     // ... (keep existing methods)

@@ -42,6 +42,10 @@ export const subscriptionApi = {
         const response = await apiClient.patch(`/subscriptions/${id}/price`, { newPrice });
         return response.data;
     },
+    adminAddPause: async (id: string, date: string, reason?: string) => {
+        const response = await apiClient.post(`/subscriptions/${id}/admin-pause`, { date, reason });
+        return response.data;
+    },
     
     // Pause Requests
     approvePauseRequest: async (id: string, requestId: string) => {
