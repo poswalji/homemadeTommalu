@@ -119,6 +119,16 @@ export default function CheckoutPage() {
 
     // Coupon Code State
     const [couponCode, setCouponCode] = useState("");
+    
+    // Auto-fill referral code from local storage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedRefCode = localStorage.getItem('referralCode');
+            if (savedRefCode && orderDetails?.isSubscription) {
+                setCouponCode(savedRefCode);
+            }
+        }
+    }, [orderDetails]);
     const [appliedDiscount, setAppliedDiscount] = useState(0);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 

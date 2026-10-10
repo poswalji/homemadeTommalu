@@ -6,7 +6,7 @@ import { Calendar, ShieldCheck, Leaf, Flame, Minus, Plus, CheckCircle2, Share2, 
 import { Button } from "@/components/ui/button";
 import { useHomemade } from "@/context/homemade-context";
 import { useAuthMe } from "@/hooks/api";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useSubscriptionPlans } from "@/hooks/api/use-homemade-food";
 import { format } from "date-fns";
@@ -25,7 +25,15 @@ export function HomemadeSection() {
     const [selectedSlot, setSelectedSlot] = useState<"Lunch" | "Dinner">("Lunch");
     const [quantity, setQuantity] = useState(1);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("one-time");
+    const searchParams = useSearchParams();
+    const refCode = searchParams ? searchParams.get('ref') : null;
+
+    const [activeTab, setActiveTab] = useState(refCode ? "subscription" : "one-time");
+
+    // Save referral code to local storage if present
+    if (typeof window !== 'undefined' && refCode) {
+        localStorage.setItem('referralCode', refCode);
+    }
     const [extraRotiCount, setExtraRotiCount] = useState(0);
 
     // State for selected subscription plan
