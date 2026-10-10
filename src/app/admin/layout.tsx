@@ -6,6 +6,7 @@ import { useAuthMe } from '@/hooks/api';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { AdminRealtimeListener } from '@/components/admin/admin-realtime-listener';
 
 export default function AdminLayout({
    children,
@@ -86,7 +87,8 @@ export default function AdminLayout({
                isMenuOpen={sidebarOpen}
                onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
             />
-            <main className='flex-1 md:ml-64 p-4 md:p-8 transition-all duration-300'>
+            <main className='flex-1 md:ml-64 p-4 md:p-8 transition-all duration-300 relative'>
+               <AdminRealtimeListener />
                {children}
             </main>
          </div>

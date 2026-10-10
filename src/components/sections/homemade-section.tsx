@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Calendar, ShieldCheck, Leaf, Flame, Minus, Plus, CheckCircle2, Share2, Sun, Moon, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHomemade } from "@/context/homemade-context";
 import { useAuthMe } from "@/hooks/api";
 import { useRouter } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useSubscriptionPlans } from "@/hooks/api/use-homemade-food";
 import { format } from "date-fns";
@@ -118,25 +117,13 @@ export function HomemadeSection() {
                     </div>
                 </div>
 
-                {/* Main Tabs */}
-                <Tabs defaultValue="one-time" className="mb-8" onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-12 p-1 bg-stone-200/50 rounded-full mb-8">
-                        <TabsTrigger value="one-time" className="rounded-full text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm transition-all">
-                            Daily Menu
-                        </TabsTrigger>
-                        <TabsTrigger value="subscription" className="rounded-full text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm transition-all">
-                            Subscription Plans
-                        </TabsTrigger>
-                    </TabsList>
-
-                    <AnimatePresence mode="wait">
-                        <TabsContent value="one-time" key="one-time">
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
-                            >
+                {/* Menu Card Wrapper */}
+                <div className="mt-8">
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4 }}
+                    >
                                 {/* MENU CARD DESIGN */}
                                 <div className="bg-white rounded-3xl shadow-xl shadow-stone-200/50 overflow-hidden border border-stone-100 max-w-3xl mx-auto relative">
 
@@ -323,117 +310,7 @@ export function HomemadeSection() {
                                     ))}
                                 </div>
                             </motion.div>
-                        </TabsContent>
-
-                        <TabsContent value="subscription" key="subscription">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <div className="text-center mb-10">
-                                    <h2 className="text-2xl font-bold text-stone-800 mb-2">Subscribe & Save</h2>
-                                    <p className="text-stone-600">Get healthy homemade meals delivered daily. Skip or pause anytime.</p>
-                                </div>
-
-                                {plansLoading ? (
-                                    <div className="grid md:grid-cols-3 gap-6">
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} className="h-96 bg-stone-100 rounded-3xl animate-pulse" />
-                                        ))}
-                                    </div>
-                                ) : plans.length === 0 ? (
-                                    <div className="text-center py-12 bg-white rounded-3xl border border-stone-200">
-                                        <p className="text-stone-500">No subscription plans available right now.</p>
-                                    </div>
-                                ) : (
-                                    <div className="grid md:grid-cols-3 gap-6">
-                                        {plans.map((plan: any) => {
-                                            const isDinner = plan.planType === 'dinner';
-                                            const isBoth = plan.planType === 'both';
-                                            let theme = {
-                                                bg: "from-white to-orange-50",
-                                                border: "border-orange-100",
-                                                text: "text-stone-800",
-                                                badge: "bg-orange-100 text-orange-800",
-                                                btn: "bg-orange-600 hover:bg-orange-700",
-                                                icon: "text-orange-500 bg-orange-50"
-                                            };
-
-                                            if (isDinner) {
-                                                theme = {
-                                                    bg: "from-white to-stone-100",
-                                                    border: "border-stone-200",
-                                                    text: "text-stone-800",
-                                                    badge: "bg-stone-100 text-stone-700",
-                                                    btn: "bg-stone-800 hover:bg-stone-900",
-                                                    icon: "text-stone-600 bg-stone-100"
-                                                };
-                                            } else if (isBoth) {
-                                                theme = {
-                                                    bg: "from-amber-50 to-orange-50",
-                                                    border: "border-amber-200",
-                                                    text: "text-amber-950",
-                                                    badge: "bg-amber-100 text-amber-800",
-                                                    btn: "bg-gradient-to-r from-orange-600 to-amber-600 hover:to-amber-700 hover:from-orange-700",
-                                                    icon: "text-amber-600 bg-amber-50"
-                                                };
-                                            }
-
-                                            return (
-                                                <motion.div
-                                                    key={plan._id}
-                                                    whileHover={{ y: -8 }}
-                                                    className={`relative rounded-3xl p-1 bg-gradient-to-br ${theme.border} shadow-sm hover:shadow-xl transition-all duration-300`}
-                                                >
-                                                    <div className={`h-full bg-gradient-to-br ${theme.bg} rounded-[22px] p-6 flex flex-col relative overflow-hidden`}>
-                                                        <div className="absolute top-4 right-4 animate-pulse">
-                                                            {plan.discount > 0 && (
-                                                                <Badge className="bg-red-500 text-white border-0 px-3 py-1 text-xs font-bold shadow-lg">
-                                                                    {plan.discount}% SAVE
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="relative z-10 mb-6">
-                                                            <Badge variant="outline" className={`mb-3 border-0 px-3 py-1 capitalize font-bold tracking-wide ${theme.badge}`}>
-                                                                {plan.planType} Plan
-                                                            </Badge>
-                                                            <h3 className={`text-xl font-black ${theme.text} mb-2 leading-tight`}>{plan.title}</h3>
-                                                            <div className="flex items-baseline gap-1">
-                                                                <span className="text-3xl font-extrabold text-stone-900">₹{plan.price}</span>
-                                                                <span className="text-stone-500 font-medium text-sm">/ month</span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="relative z-10 space-y-4 mb-8 flex-grow">
-                                                            {plan.features?.map((feature: string, idx: number) => (
-                                                                <div key={idx} className="flex items-start gap-3">
-                                                                    <div className={`mt-0.5 w-5 h-5 rounded-full bg-white/80 flex items-center justify-center shadow-sm ${theme.icon}`}>
-                                                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                                                    </div>
-                                                                    <span className="text-stone-700 font-medium text-sm leading-relaxed">{feature}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-
-                                                        <Button
-                                                            onClick={() => handleOrderClick(plan)}
-                                                            className={`w-full py-6 text-base font-bold text-white shadow-lg shadow-black/5 rounded-xl transition-all ${theme.btn}`}
-                                                        >
-                                                            Choose Plan
-                                                        </Button>
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </motion.div>
-                        </TabsContent>
-                    </AnimatePresence>
-                </Tabs>
+                </div>
             </div>
         </>
     );

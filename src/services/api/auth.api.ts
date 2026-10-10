@@ -332,5 +332,15 @@ export const authApi = {
       throw error;
     }
   },
+
+  // Save FCM Token for push notifications
+  saveFcmToken: async (token: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await apiClient.post<{ success: boolean; message: string }>('/auth/fcm-token', { token });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 

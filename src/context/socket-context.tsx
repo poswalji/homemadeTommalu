@@ -332,8 +332,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           processNotification(snapshot, userId, userRole);
         },
         (error) => {
-          console.error('Firebase user notification error:', error);
-          setIsConnected(false);
+          if (error.message.includes('permission_denied')) {
+            // Silently ignore permission errors to prevent console spam
+            setIsConnected(false);
+          } else {
+            console.error('Firebase user notification error:', error);
+            setIsConnected(false);
+          }
         }
       );
 
@@ -352,8 +357,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           processNotification(snapshot, userId, userRole);
         },
         (error) => {
-          console.error('Firebase role notification error:', error);
-          setIsConnected(false);
+          if (error.message.includes('permission_denied')) {
+            // Silently ignore permission errors
+            setIsConnected(false);
+          } else {
+            console.error('Firebase role notification error:', error);
+            setIsConnected(false);
+          }
         }
       );
 

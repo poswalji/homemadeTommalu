@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useOrder, useUpdateOrderStatus } from '@/hooks/api';
+import { useAdminHomemadeFoodOrder, useUpdateHomemadeFoodOrderStatus } from '@/hooks/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -10,7 +10,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -23,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Package,
   MapPin,
@@ -32,8 +32,10 @@ import {
   Truck,
   ArrowLeft,
   User,
-  Store,
-  ExternalLink
+  ExternalLink,
+  Phone,
+  Clock,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -43,10 +45,11 @@ export default function AdminOrderDetailPage() {
   const params = useParams();
   const orderId = params?.id as string;
   const [statusUpdate, setStatusUpdate] = useState('');
+  const [adminNotes, setAdminNotes] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data, isLoading, error } = useOrder(orderId);
-  const updateStatus = useUpdateOrderStatus();
+  const { data, isLoading, error, refetch } = useAdminHomemadeFoodOrder(orderId);
+  const updateStatus = useUpdateHomemadeFoodOrderStatus();
 
   const handleStatusUpdate = async () => {
     if (!statusUpdate) {
@@ -59,11 +62,12 @@ export default function AdminOrderDetailPage() {
         id: orderId,
         data: {
           status: statusUpdate as any,
+          adminNotes: adminNotes
         },
       });
-      toast.success(`Order status updated to ${statusUpdate}`);
+      toast.success(`Order status updated successfully`);
       setIsDialogOpen(false);
-      setStatusUpdate('');
+      refetch();
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Failed to update order status');
     }
@@ -71,18 +75,21 @@ export default function AdminOrderDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Spinner size="lg" />
+        <p className="text-gray-500 animate-pulse">Loading order details...</p>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !data?.data) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-600">Error loading order</p>
+      <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-red-100">
+        <XCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+        <p className="text-xl font-medium text-gray-900 mb-2">Order not found</p>
+        <p className="text-gray-500 mb-6">This order might have been deleted or the ID is invalid.</p>
         <Link href="/admin/orders">
-          <Button variant="outline" className="mt-4">
+          <Button variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Orders
           </Button>
@@ -91,308 +98,266 @@ export default function AdminOrderDetailPage() {
     );
   }
 
-  const order = data?.data;
-
-  if (!order) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">Order not found</p>
-        <Link href="/admin/orders">
-          <Button variant="outline" className="mt-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Orders
-          </Button>
-        </Link>
-      </div>
-    );
-  }
+  const order = data.data as any;
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Delivered':
-        return 'bg-green-100 text-green-800';
-      case 'Pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Confirmed':
-        return 'bg-blue-100 text-blue-800';
-      case 'OutForDelivery':
-        return 'bg-purple-100 text-purple-800';
-      case 'Cancelled':
-      case 'Rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+    switch (status?.toUpperCase()) {
+      case 'DELIVERED': return 'bg-green-100 text-green-800';
+      case 'NEW': return 'bg-blue-100 text-blue-800';
+      case 'ACCEPTED': return 'bg-indigo-100 text-indigo-800';
+      case 'PREPARING': return 'bg-yellow-100 text-yellow-800';
+      case 'READY': return 'bg-orange-100 text-orange-800';
+      case 'OUT_FOR_DELIVERY': return 'bg-purple-100 text-purple-800';
+      case 'CANCELLED':
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Delivered':
-        return <CheckCircle className="w-5 h-5" />;
-      case 'OutForDelivery':
-        return <Truck className="w-5 h-5" />;
-      case 'Rejected':
-      case 'Cancelled':
-        return <XCircle className="w-5 h-5" />;
-      default:
-        return <Package className="w-5 h-5" />;
+    switch (status?.toUpperCase()) {
+      case 'DELIVERED': return <CheckCircle className="w-5 h-5" />;
+      case 'OUT_FOR_DELIVERY': return <Truck className="w-5 h-5" />;
+      case 'REJECTED':
+      case 'CANCELLED': return <XCircle className="w-5 h-5" />;
+      default: return <Package className="w-5 h-5" />;
     }
   };
 
   return (
-    <div className="space-y-6">
-      <Link href="/admin/orders">
-        <Button variant="ghost" className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Orders
-        </Button>
-      </Link>
+    <div className="space-y-6 max-w-5xl mx-auto pb-10">
+      <div className="flex items-center justify-between">
+        <Link href="/admin/orders">
+          <Button variant="ghost" className="text-gray-600 hover:text-gray-900 -ml-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Orders
+          </Button>
+        </Link>
+        <Badge className={`${getStatusColor(order.status)} px-3 py-1 text-sm border-0 font-semibold tracking-wider uppercase`}>
+          <span className="flex items-center gap-2">
+            {getStatusIcon(order.status)}
+            {order.status}
+          </span>
+        </Badge>
+      </div>
 
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Order #{order.id?.slice(0, 8)}
-          </h1>
-          <Badge className={getStatusColor(order.status)}>
-            <span className="flex items-center gap-2">
-              {getStatusIcon(order.status)}
-              {order.status}
-            </span>
-          </Badge>
-        </div>
-        <p className="text-gray-600">Order details and management</p>
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+          Order #{order.orderNumber}
+        </h1>
+        <p className="text-gray-500 mt-1 flex items-center gap-2">
+          <Calendar className="w-4 h-4" />
+          Placed on {new Date(order.createdAt).toLocaleString('en-IN', {
+            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+          })}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Order Items</h2>
-            <div className="space-y-4">
-              {order.items?.map((item: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between pb-4 border-b last:border-0">
-                  <div>
-                    <p className="font-medium">{item.itemName || item.name}</p>
-                    <p className="text-sm text-gray-600">
-                      Quantity: {item.quantity || 1}
-                    </p>
+          <Card className="overflow-hidden border-stone-200 shadow-sm">
+            <div className="bg-stone-50 px-6 py-4 border-b border-stone-200">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Package className="w-5 h-5 text-orange-600" />
+                Order Items
+              </h2>
+            </div>
+            <div className="p-0">
+              <div className="divide-y divide-stone-100">
+                {order.items?.map((item: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 font-bold text-lg">
+                        {item.quantity || 1}x
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 text-lg">{item.name}</p>
+                        <p className="text-sm text-gray-500">₹{Number(item.price || 0).toFixed(2)} per item</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-lg text-gray-900">
+                        ₹{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold">
-                      ₹{(Number(item.itemPrice || item.price || 0) * Number(item.quantity || 1)).toFixed(2)}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      ₹{Number(item.itemPrice || item.price || 0).toFixed(2)} each
-                    </p>
+                ))}
+              </div>
+              {order.specialInstructions && (
+                <div className="bg-yellow-50 p-4 border-t border-yellow-100 text-yellow-800">
+                  <strong className="block text-sm uppercase tracking-wider mb-1">Customer Note:</strong>
+                  {order.specialInstructions}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <Card className="p-6 border-stone-200 shadow-sm">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-gray-400" />
+                Customer
+              </h2>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-gray-500">Name</p>
+                  <p className="font-medium text-gray-900">{order.customer?.name || order.customerName || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900">{order.customer?.phone || order.mobileNumber || 'N/A'}</p>
+                    <a href={`tel:${order.customer?.phone || order.mobileNumber}`} className="text-orange-600 hover:text-orange-700 bg-orange-50 p-1.5 rounded-md">
+                      <Phone className="w-3.5 h-3.5" />
+                    </a>
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Customer Information</h2>
-            <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-gray-400 mt-1" />
-              <div>
-                <p className="font-medium">{order.customerName || 'N/A'}</p>
-                <p className="text-sm text-gray-600">{order.customerEmail || 'N/A'}</p>
               </div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Store Information</h2>
-            <div className="flex items-start gap-3">
-              <Store className="w-5 h-5 text-gray-400 mt-1" />
-              <div>
-                <p className="font-medium">{order.storeName || 'N/A'}</p>
-              </div>
-            </div>
-          </Card>
-
-          {order.deliveryAddress && (
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Delivery Address</h2>
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-1" />
+            <Card className="p-6 border-stone-200 shadow-sm">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-gray-400" />
+                Delivery
+              </h2>
+              <div className="space-y-3">
                 <div>
-                  <p className="font-medium">{order.deliveryAddress.label || 'Home'}</p>
-                  <p className="text-gray-600">
-                    {order.deliveryAddress.street}, {order.deliveryAddress.city}
-                    {order.deliveryAddress.state && `, ${order.deliveryAddress.state}`}
+                  <p className="text-sm text-gray-500">Area</p>
+                  <Badge variant="outline" className="uppercase text-[10px] mt-0.5 font-bold tracking-wider">{order.area}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="font-medium text-gray-900 text-sm leading-relaxed mt-0.5">
+                    {order.deliveryAddress?.street || 'No address provided'}
                   </p>
-                  <p className="text-gray-600">
-                    {order.deliveryAddress.pincode}
-                    {order.deliveryAddress.country && `, ${order.deliveryAddress.country}`}
-                  </p>
-                  {order.deliveryAddress.locationLink && (
-                    <div className="mt-3">
-                      <a 
-                        href={order.deliveryAddress.locationLink} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-md transition-colors"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-1.5" />
-                        View Customer Location on Map
-                      </a>
-                    </div>
+                  {order.deliveryAddress?.locationLink && (
+                    <a href={order.deliveryAddress.locationLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1.5 rounded transition-colors">
+                      <ExternalLink className="w-3 h-3 mr-1" /> Open Map
+                    </a>
                   )}
                 </div>
               </div>
             </Card>
-          )}
-
-          {(order.rejectionReason || order.cancellationReason) && (
-            <Card className={`p-6 ${order.rejectionReason ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'
-              }`}>
-              <h2 className={`text-xl font-semibold mb-4 ${order.rejectionReason ? 'text-red-800' : 'text-orange-800'
-                }`}>
-                {order.rejectionReason ? 'Rejection Reason' : 'Cancellation Reason'}
-              </h2>
-              <p className={`${order.rejectionReason ? 'text-red-700' : 'text-orange-700'
-                }`}>
-                {order.rejectionReason || order.cancellationReason}
-              </p>
+          </div>
+          
+          {(order.adminNotes || order.cancellationReason) && (
+            <Card className="p-6 bg-stone-50 border-stone-200 shadow-sm">
+                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 text-stone-800">
+                    <Clock className="w-5 h-5 text-stone-500" />
+                    Admin Notes & History
+                </h2>
+                <div className="space-y-3">
+                    {order.cancellationReason && (
+                        <div className="bg-red-50 p-3 rounded-lg border border-red-100 text-red-800 text-sm">
+                            <strong className="block mb-1">Cancellation Reason:</strong>
+                            {order.cancellationReason}
+                        </div>
+                    )}
+                    {order.adminNotes && (
+                        <div className="bg-white p-3 rounded-lg border border-stone-200 text-stone-700 text-sm whitespace-pre-wrap">
+                            {order.adminNotes}
+                        </div>
+                    )}
+                </div>
             </Card>
           )}
+
         </div>
 
+        {/* Right Column */}
         <div className="space-y-6">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">
-                  ₹{order.items?.reduce((acc: number, item: any) => acc + (Number(item.itemPrice || item.price || 0) * Number(item.quantity || 1)), 0).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Delivery Charge</span>
-                <span className="font-medium text-green-600">
-                  {order.deliveryCharge ? `₹${Number(order.deliveryCharge).toFixed(2)}` : 'Free'}
-                </span>
-              </div>
-              {order.discount && order.discount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>-₹{Number(order.discount || 0).toFixed(2)}</span>
+          <Card className="overflow-hidden border-stone-200 shadow-sm sticky top-6">
+            <div className="bg-stone-50 px-6 py-4 border-b border-stone-200">
+              <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span className="font-medium text-gray-900">₹{order.total || order.finalAmount}</span>
                 </div>
-              )}
-              {order.promoCode && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Promo Code</span>
-                  <span className="font-medium">{order.promoCode}</span>
+                <div className="flex justify-between text-gray-600">
+                  <span>Delivery</span>
+                  <span className="font-medium text-green-600">
+                    {order.deliveryCharge ? `₹${order.deliveryCharge}` : 'Free'}
+                  </span>
                 </div>
-              )}
-              <div className="border-t pt-3 flex justify-between">
-                <span className="font-semibold text-lg">Total</span>
-                <span className="font-bold text-lg">₹{Number(order.finalPrice || 0).toFixed(2)}</span>
+                <div className="flex justify-between text-gray-600">
+                  <span>Payment Method</span>
+                  <span className="font-medium text-gray-900 uppercase">{order.paymentMethod?.replace(/_/g, ' ') || 'COD'}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Meal Type</span>
+                  <span className="font-medium text-gray-900">{order.mealType}</span>
+                </div>
+              </div>
+              <div className="border-t border-stone-100 pt-4 flex justify-between items-center">
+                <span className="font-semibold text-gray-900">Total</span>
+                <span className="text-2xl font-bold text-orange-600">₹{order.total || order.finalAmount}</span>
+              </div>
+
+              <div className="pt-4 border-t border-stone-100">
+                <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                    setIsDialogOpen(open);
+                    if (open) {
+                        setStatusUpdate(order.originalStatus || order.status);
+                        setAdminNotes(order.adminNotes || '');
+                    }
+                }}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full bg-orange-600 hover:bg-orange-700 h-12 text-md">
+                      Update Order Status
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Update Order #{order.orderNumber}</DialogTitle>
+                      <DialogDescription>
+                        Change the current lifecycle status of this order.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Status</Label>
+                        <Select value={statusUpdate} onValueChange={setStatusUpdate}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pending">New / Pending</SelectItem>
+                            <SelectItem value="Confirmed">Accepted</SelectItem>
+                            <SelectItem value="preparing">Preparing</SelectItem>
+                            <SelectItem value="ready">Ready</SelectItem>
+                            <SelectItem value="OutForDelivery">Out for Delivery</SelectItem>
+                            <SelectItem value="Delivered">Delivered</SelectItem>
+                            <SelectItem value="Cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                          <Label>Admin Notes</Label>
+                          <Textarea 
+                              placeholder="Reason for cancellation, delay, or internal notes..."
+                              value={adminNotes}
+                              onChange={(e) => setAdminNotes(e.target.value)}
+                          />
+                      </div>
+                    </div>
+                    <div className="flex gap-3 justify-end mt-4">
+                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                      <Button onClick={handleStatusUpdate} disabled={updateStatus.isPending} className="bg-orange-600">
+                        {updateStatus.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        Save Changes
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
-          </Card>
-
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Order Information</h2>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Order Date</p>
-                  <p className="text-sm text-gray-600">
-                    {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                </div>
-              </div>
-              {order.updatedAt && (
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Last Updated</p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(order.updatedAt).toLocaleDateString('en-IN', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  className="w-full"
-                  onClick={() => setStatusUpdate(order.status)}
-                >
-                  Update Status
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Update Order Status</DialogTitle>
-                  <DialogDescription>
-                    Update the status for Order #{order.id?.slice(0, 8)}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={statusUpdate}
-                      onValueChange={setStatusUpdate}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Confirmed">Confirmed</SelectItem>
-                        <SelectItem value="OutForDelivery">Out for Delivery</SelectItem>
-                        <SelectItem value="Delivered">Delivered</SelectItem>
-                        <SelectItem value="Rejected">Rejected</SelectItem>
-                        <SelectItem value="Cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleStatusUpdate} disabled={updateStatus.isPending}>
-                    {updateStatus.isPending ? (
-                      <>
-                        <Spinner size="sm" className="mr-2" />
-                        Updating...
-                      </>
-                    ) : (
-                      'Update Status'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </Card>
         </div>
       </div>
     </div>
   );
 }
-

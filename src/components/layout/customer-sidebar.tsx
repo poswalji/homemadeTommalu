@@ -12,7 +12,8 @@ import {
   LogOut,
   Star,
   AlertCircle,
-  CalendarDays
+  CalendarDays,
+  Gift
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ const customerNavItems = [
   { name: 'Orders History', href: '/customer/orders', icon: ShoppingBag },
   { name: 'Addresses', href: '/customer/addresses', icon: MapPin },
   { name: 'Profile', href: '/customer/profile', icon: User },
+  { name: 'Refer & Earn', href: '/customer/refer-and-earn', icon: Gift },
 ];
 
 interface CustomerSidebarProps {

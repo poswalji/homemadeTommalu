@@ -1,418 +1,330 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Package, Truck, Users, Phone, MapPin, Loader2, Plus } from 'lucide-react';
-import { useAdminHomemadeFoodOrders, useUpdateHomemadeFoodOrderStatus, useAddManualOrder } from '@/hooks/api';
+import { Search, Package, MapPin, Phone, Loader2, ListFilter, Clock, CheckCircle2, Truck, Check, Users, User } from 'lucide-react';
+import { useAdminHomemadeFoodOrders, useUpdateHomemadeFoodOrderStatus } from '@/hooks/api';
 import { toast } from 'sonner';
-import { handleApiError } from '@/lib/axios';
-import { type HomemadeFoodOrderStatus } from '@/services/api/homemade-food.api';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 export default function AdminOrdersPage() {
-    const [orderFilters, setOrderFilters] = useState({
+    const [filters, setFilters] = useState({
         status: 'all',
+        area: 'all',
+        mealType: 'all',
         search: '',
         page: 1,
         limit: 50,
     });
 
-    const { data: ordersData, isLoading: ordersLoading } = useAdminHomemadeFoodOrders({
-        status: orderFilters.status !== 'all' ? orderFilters.status : undefined,
-        search: orderFilters.search || undefined,
-        page: orderFilters.page,
-        limit: orderFilters.limit,
+    const [searchInput, setSearchInput] = useState('');
+
+    // Debounce search
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
+        }, 500);
+        return () => clearTimeout(timeout);
+    }, [searchInput]);
+
+    const { data: ordersData, isLoading, refetch } = useAdminHomemadeFoodOrders({
+        status: filters.status !== 'all' ? filters.status : undefined,
+        area: filters.area !== 'all' ? filters.area : undefined,
+        mealType: filters.mealType !== 'all' ? filters.mealType : undefined,
+        search: filters.search || undefined,
+        page: filters.page,
+        limit: filters.limit,
     });
 
     const orders = ordersData?.data || [];
-
-    const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState<any>(null);
-    const [adminNotes, setAdminNotes] = useState('');
-    const [newStatus, setNewStatus] = useState<any>('');
-
     const updateOrderStatus = useUpdateHomemadeFoodOrderStatus();
 
-    const handleUpdateOrderStatus = () => {
-        if (!selectedOrder || !newStatus) return;
+    const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [adminNotes, setAdminNotes] = useState('');
+    const [newStatus, setNewStatus] = useState('');
 
-        updateOrderStatus.mutate({ id: selectedOrder._id, data: { status: newStatus, adminNotes } }, {
+    const handleQuickStatusUpdate = (orderId: string, status: any) => {
+        updateOrderStatus.mutate({ id: orderId, data: { status, adminNotes: '' } }, {
             onSuccess: () => {
-                setIsOrderDialogOpen(false);
-                toast.success("Order status updated successfully");
-                setSelectedOrder(null);
+                toast.success(`Order marked as ${status}`);
+                refetch();
             },
             onError: () => toast.error("Failed to update order status")
         });
     };
 
-    // Manual WhatsApp Order Logic
-    const [isManualOrderOpen, setIsManualOrderOpen] = useState(false);
-    const [manualOrderData, setManualOrderData] = useState({
-        customerName: '',
-        phone: '',
-        street: '',
-        city: 'Jaipur',
-        pincode: '',
-        area: 'nims',
-        items: '',
-        finalPrice: '',
-        timeSlot: 'lunch',
-        isSubscription: false,
-    });
-
-    const addManualOrder = useAddManualOrder();
-
-    const handleAddManualOrder = (e: React.FormEvent) => {
-        e.preventDefault();
-        addManualOrder.mutate({
-            ...manualOrderData,
-            finalPrice: Number(manualOrderData.finalPrice) || 0,
-        }, {
+    const handleFullStatusUpdate = () => {
+        if (!selectedOrder || !newStatus) return;
+        updateOrderStatus.mutate({ id: selectedOrder.id || selectedOrder._id, data: { status: newStatus as any, adminNotes } }, {
             onSuccess: () => {
-                toast.success("WhatsApp Order added successfully");
-                setIsManualOrderOpen(false);
-                setManualOrderData({
-                    customerName: '',
-                    phone: '',
-                    street: '',
-                    city: 'Jaipur',
-                    pincode: '',
-                    area: 'nims',
-                    items: '',
-                    finalPrice: '',
-                    timeSlot: 'lunch',
-                    isSubscription: false,
-                });
+                setIsStatusDialogOpen(false);
+                toast.success("Order status updated successfully");
+                setSelectedOrder(null);
+                setAdminNotes('');
+                refetch();
             },
-            onError: (err: any) => {
-                toast.error(handleApiError(err));
-            }
+            onError: () => toast.error("Failed to update order status")
         });
     };
 
+    const getStatusColor = (status: string) => {
+        switch (status?.toUpperCase()) {
+            case 'NEW': return 'bg-blue-100 text-blue-800';
+            case 'ACCEPTED': return 'bg-indigo-100 text-indigo-800';
+            case 'PREPARING': return 'bg-yellow-100 text-yellow-800';
+            case 'READY': return 'bg-orange-100 text-orange-800';
+            case 'OUT_FOR_DELIVERY': return 'bg-purple-100 text-purple-800';
+            case 'DELIVERED': return 'bg-green-100 text-green-800';
+            case 'CANCELLED':
+            case 'REJECTED': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+
     return (
-        <div className="space-y-6 container mx-auto p-4 sm:p-6 max-w-7xl">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="space-y-6 pb-10 max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                        <Package className="w-8 h-8 text-orange-600" />
-                        Orders Management
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                        <Package className="w-6 h-6 text-orange-600" />
+                        Order Management
                     </h1>
-                    <p className="text-gray-600 mt-1">Manage homemade food orders and deliveries.</p>
+                    <p className="text-sm text-gray-500 mt-1">Manage and track all customer orders in real-time.</p>
                 </div>
-                
-                <Dialog open={isManualOrderOpen} onOpenChange={setIsManualOrderOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-orange-600 hover:bg-orange-700 shadow-md">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add WhatsApp Order
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
-                        <DialogHeader>
-                            <DialogTitle>Add Manual WhatsApp Order</DialogTitle>
-                            <DialogDescription>
-                                Enter details for orders received via WhatsApp.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleAddManualOrder} className="space-y-4 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Customer Name</Label>
-                                    <Input required value={manualOrderData.customerName} onChange={e => setManualOrderData({...manualOrderData, customerName: e.target.value})} placeholder="John Doe" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Phone Number</Label>
-                                    <Input required value={manualOrderData.phone} onChange={e => setManualOrderData({...manualOrderData, phone: e.target.value})} placeholder="9876543210" />
-                                </div>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <Label>Street Address</Label>
-                                <Input required value={manualOrderData.street} onChange={e => setManualOrderData({...manualOrderData, street: e.target.value})} placeholder="House No, Area" />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Pincode</Label>
-                                    <Input required value={manualOrderData.pincode} onChange={e => setManualOrderData({...manualOrderData, pincode: e.target.value})} placeholder="303101" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Area</Label>
-                                    <Select value={manualOrderData.area} onValueChange={v => setManualOrderData({...manualOrderData, area: v})}>
-                                        <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="nims">NIMS</SelectItem>
-                                            <SelectItem value="achrol">Achrol</SelectItem>
-                                            <SelectItem value="chomu">Chomu</SelectItem>
-                                            <SelectItem value="other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Items (Text)</Label>
-                                <Input required value={manualOrderData.items} onChange={e => setManualOrderData({...manualOrderData, items: e.target.value})} placeholder="e.g. 2x Veg Thali" />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Price (₹)</Label>
-                                    <Input type="number" required value={manualOrderData.finalPrice} onChange={e => setManualOrderData({...manualOrderData, finalPrice: e.target.value})} placeholder="150" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Time Slot</Label>
-                                    <Select value={manualOrderData.timeSlot} onValueChange={v => setManualOrderData({...manualOrderData, timeSlot: v})}>
-                                        <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="lunch">Lunch</SelectItem>
-                                            <SelectItem value="dinner">Dinner</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between p-3 border rounded-lg bg-orange-50/50">
-                                <div className="space-y-0.5">
-                                    <Label className="text-orange-900">Subscription (Tiffin)</Label>
-                                    <p className="text-xs text-orange-600">Marks as PAID and ₹0 collection</p>
-                                </div>
-                                <Button 
-                                    type="button"
-                                    variant={manualOrderData.isSubscription ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setManualOrderData(prev => ({ ...prev, isSubscription: !prev.isSubscription }))}
-                                    className={manualOrderData.isSubscription ? "bg-orange-600 hover:bg-orange-700" : ""}
-                                >
-                                    {manualOrderData.isSubscription ? "ON" : "OFF"}
-                                </Button>
-                            </div>
-
-                            <Button type="submit" disabled={addManualOrder.isPending} className="w-full bg-orange-600 hover:bg-orange-700">
-                                {addManualOrder.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                                Add Order
-                            </Button>
-                        </form>
-                    </DialogContent>
-                </Dialog>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <CardTitle>Recent Orders</CardTitle>
-                        <div className="flex gap-2">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <Input
-                                    placeholder="Search customer/phone..."
-                                    className="pl-9 w-48 sm:w-64"
-                                    value={orderFilters.search}
-                                    onChange={(e) => setOrderFilters(prev => ({ ...prev, search: e.target.value }))}
-                                />
-                            </div>
-                            <Select
-                                value={orderFilters.status}
-                                onValueChange={(value) => setOrderFilters(prev => ({ ...prev, status: value }))}
-                            >
-                                <SelectTrigger className="w-[140px]">
-                                    <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Status</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                                    <SelectItem value="delivered">Delivered</SelectItem>
-                                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                                </SelectContent>
-                            </Select>
+            {/* Filters Section */}
+            <Card className="border-stone-200 shadow-sm">
+                <CardContent className="p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Input
+                                placeholder="Search Name, Phone or ID..."
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                className="pl-9 bg-gray-50"
+                            />
                         </div>
+                        
+                        <Select value={filters.status} onValueChange={(val) => setFilters(p => ({ ...p, status: val, page: 1 }))}>
+                            <SelectTrigger className="bg-gray-50"><SelectValue placeholder="Status" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value="pending">New</SelectItem>
+                                <SelectItem value="confirmed">Accepted</SelectItem>
+                                <SelectItem value="preparing">Preparing</SelectItem>
+                                <SelectItem value="ready">Ready</SelectItem>
+                                <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                                <SelectItem value="delivered">Delivered</SelectItem>
+                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={filters.mealType} onValueChange={(val) => setFilters(p => ({ ...p, mealType: val, page: 1 }))}>
+                            <SelectTrigger className="bg-gray-50"><SelectValue placeholder="Meal Type" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Meals</SelectItem>
+                                <SelectItem value="lunch">Lunch</SelectItem>
+                                <SelectItem value="dinner">Dinner</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={filters.area} onValueChange={(val) => setFilters(p => ({ ...p, area: val, page: 1 }))}>
+                            <SelectTrigger className="bg-gray-50"><SelectValue placeholder="Area" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Areas</SelectItem>
+                                <SelectItem value="nims">NIMS</SelectItem>
+                                <SelectItem value="achrol">Achrol</SelectItem>
+                                <SelectItem value="chomu">Chomu</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                </CardHeader>
-                <CardContent>
-                    {ordersLoading ? (
-                        <div className="space-y-4">
-                            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full" />)}
-                        </div>
-                    ) : orders.length === 0 ? (
-                        <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
-                            <Package className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                            <p>No orders found matching criteria</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {orders.map((order: any) => (
-                                <div
-                                    key={order._id}
-                                    className="flex flex-col sm:flex-row justify-between p-4 bg-white border rounded-lg hover:shadow-md transition-all gap-4 cursor-pointer"
-                                    onClick={() => {
-                                        setSelectedOrder(order);
-                                        setNewStatus(order.status);
-                                        setAdminNotes(order.adminNotes || '');
-                                        setIsOrderDialogOpen(true);
-                                    }}
-                                >
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-bold text-gray-800">#{order.orderNumber}</span>
-                                            <Badge className="capitalize" variant={order.status === 'delivered' ? 'default' : 'secondary'}>
-                                                {order.status}
-                                            </Badge>
-                                        </div>
-                                        <p className="font-medium text-gray-900">
-                                            {order.foodName || order.items?.[0]?.itemName || 'Ordered Item'} x{order.quantity}
-                                        </p>
-                                        {order.specialInstructions && (
-                                            <p className="text-sm font-semibold text-orange-600">
-                                                {order.specialInstructions}
-                                            </p>
-                                        )}
-                                        <div className="text-sm text-gray-500">
-                                            {order.customerName} • {order.mobileNumber}
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col sm:items-end justify-center gap-1">
-                                        <p className="text-lg font-bold text-orange-600">₹{order.finalAmount}</p>
-                                        <p className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleString()}</p>
-                                        {order.deliveryAddress?.street && (
-                                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                                                <Truck className="w-3 h-3" />
-                                                <span className="max-w-[200px] truncate">{order.deliveryAddress.street}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </CardContent>
             </Card>
 
-            {/* Order Details Dialog */}
-            <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
-                <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Order Details</DialogTitle>
-                        <DialogDescription>
-                            Order #{selectedOrder?.orderNumber}
-                        </DialogDescription>
-                    </DialogHeader>
-                    {selectedOrder && (
-                        <div className="space-y-6 mt-4">
-                            {/* Order Summary */}
-                            <div className="bg-orange-50 rounded-xl p-4">
-                                <div className="flex items-center justify-between mb-3">
-                                    <span className="font-medium">Food Item</span>
-                                    <span>{selectedOrder.foodName || selectedOrder.items?.[0]?.itemName || 'Ordered Item'}</span>
-                                </div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <span className="font-medium">Quantity</span>
-                                    <span>{selectedOrder.quantity} thali(s)</span>
-                                </div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <span className="font-medium">Delivery Charge</span>
-                                    <span>₹{selectedOrder.deliveryCharge}</span>
-                                </div>
-                                <div className="flex items-center justify-between pt-3 border-t border-orange-200">
-                                    <span className="font-bold">Total Amount</span>
-                                    <span className="text-xl font-bold text-orange-600">₹{selectedOrder.finalAmount}</span>
-                                </div>
-                            </div>
+            {/* Orders List */}
+            {isLoading ? (
+                <div className="space-y-4">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
+                </div>
+            ) : orders.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
+                    <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-gray-900">No orders found</h3>
+                    <p className="text-gray-500">Try adjusting your filters</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-4">
+                    {orders.map((order: any) => (
+                        <Card key={order.id || order._id} className="overflow-hidden border-stone-200 hover:shadow-md transition-shadow">
+                            <CardContent className="p-0">
+                                <div className="flex flex-col md:flex-row">
+                                    {/* Left: Info */}
+                                    <div className="flex-1 p-5 border-b md:border-b-0 md:border-r border-stone-100">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="font-mono text-sm font-bold text-gray-900">
+                                                        #{order.orderNumber}
+                                                    </span>
+                                                    <Badge className={`${getStatusColor(order.status)} border-0 font-semibold uppercase text-[10px] tracking-wider`}>
+                                                        {order.status}
+                                                    </Badge>
+                                                    {order.mealType && (
+                                                        <Badge variant="outline" className="text-stone-500 border-stone-200 text-[10px]">
+                                                            {order.mealType}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {new Date(order.createdAt).toLocaleString('en-IN', {
+                                                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                                    })}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-lg font-bold text-orange-600">₹{order.total || order.finalAmount}</div>
+                                                <div className="text-xs font-medium text-stone-500 uppercase">{order.paymentMethod?.replace(/_/g, ' ') || 'COD'}</div>
+                                            </div>
+                                        </div>
 
-                            {/* Customer Details */}
-                            <div className="space-y-3">
-                                <h4 className="font-semibold">Customer Details</h4>
-                                <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                                    <p className="flex items-center gap-2">
-                                        <Users className="w-4 h-4 text-gray-500" />
-                                        <span>{selectedOrder.customerName}</span>
-                                    </p>
-                                    <p className="flex items-center gap-2">
-                                        <Phone className="w-4 h-4 text-gray-500" />
-                                        <a href={`tel:${selectedOrder.mobileNumber}`} className="text-blue-600">
-                                            {selectedOrder.mobileNumber}
-                                        </a>
-                                    </p>
-                                    <p className="flex items-start gap-2">
-                                        <MapPin className="w-4 h-4 text-gray-500 mt-1" />
-                                        <span>
-                                            {selectedOrder.deliveryAddress.street}
-                                            {selectedOrder.deliveryAddress.landmark && `, ${selectedOrder.deliveryAddress.landmark}`}
-                                            <br />
-                                            {selectedOrder.deliveryAddress.city} - {selectedOrder.deliveryAddress.pincode}
-                                        </span>
-                                    </p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <Users className="w-4 h-4 text-stone-400" />
+                                                    <span className="font-medium text-stone-700">{order.customer?.name || order.customerName}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <Phone className="w-4 h-4 text-stone-400" />
+                                                    <span className="text-stone-600">{order.customer?.phone || order.mobileNumber}</span>
+                                                </div>
+                                                <div className="flex items-start gap-2 text-sm">
+                                                    <MapPin className="w-4 h-4 text-stone-400 mt-0.5" />
+                                                    <span className="text-stone-600 line-clamp-2">{order.deliveryAddress?.street || 'No address'}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-orange-50/50 p-3 rounded-lg border border-orange-100/50">
+                                                <h4 className="text-xs font-semibold text-orange-800 mb-2 uppercase tracking-wide">Order Items</h4>
+                                                <ul className="text-sm space-y-1">
+                                                    {order.items?.map((item: any, idx: number) => (
+                                                        <li key={idx} className="flex justify-between text-stone-700">
+                                                            <span>{item.quantity} × {item.name}</span>
+                                                        </li>
+                                                    )) || (
+                                                        <li className="flex justify-between text-stone-700">
+                                                            <span>{order.quantity} × {order.foodName}</span>
+                                                        </li>
+                                                    )}
+                                                </ul>
+                                                {order.specialInstructions && (
+                                                    <div className="mt-2 text-xs text-red-600 font-medium bg-red-50 p-1.5 rounded">
+                                                        Note: {order.specialInstructions}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Actions */}
+                                    <div className="w-full md:w-56 bg-stone-50 p-4 flex flex-col justify-center gap-2">
+                                        <Link href={`/admin/orders/${order.id || order._id}`} className="w-full">
+                                            <Button variant="outline" className="w-full bg-white">View Details</Button>
+                                        </Link>
+
+                                        {order.status?.toUpperCase() === 'NEW' && (
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'Confirmed')} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                                                <CheckCircle2 className="w-4 h-4 mr-2" /> Accept Order
+                                            </Button>
+                                        )}
+                                        {order.status?.toUpperCase() === 'ACCEPTED' && (
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'preparing')} className="w-full bg-yellow-600 hover:bg-yellow-700">
+                                                Start Preparing
+                                            </Button>
+                                        )}
+                                        {order.status?.toUpperCase() === 'PREPARING' && (
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'ready')} className="w-full bg-orange-600 hover:bg-orange-700">
+                                                Mark Ready
+                                            </Button>
+                                        )}
+                                        {order.status?.toUpperCase() === 'READY' && (
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'OutForDelivery')} className="w-full bg-purple-600 hover:bg-purple-700">
+                                                <Truck className="w-4 h-4 mr-2" /> Out for Delivery
+                                            </Button>
+                                        )}
+                                        {order.status?.toUpperCase() === 'OUT_FOR_DELIVERY' && (
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'Delivered')} className="w-full bg-green-600 hover:bg-green-700">
+                                                <Check className="w-4 h-4 mr-2" /> Mark Delivered
+                                            </Button>
+                                        )}
+
+                                        <Dialog open={isStatusDialogOpen && selectedOrder?.id === (order.id || order._id)} onOpenChange={(open) => {
+                                            setIsStatusDialogOpen(open);
+                                            if (open) {
+                                                setSelectedOrder(order);
+                                                setNewStatus(order.originalStatus || order.status);
+                                                setAdminNotes(order.adminNotes || '');
+                                            }
+                                        }}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" className="w-full text-xs text-stone-500 hover:text-stone-900">
+                                                    Update Status manually
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Update Order #{order.orderNumber}</DialogTitle>
+                                                </DialogHeader>
+                                                <div className="space-y-4 py-4">
+                                                    <div className="space-y-2">
+                                                        <Label>Status</Label>
+                                                        <Select value={newStatus} onValueChange={setNewStatus}>
+                                                            <SelectTrigger>
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="Pending">New / Pending</SelectItem>
+                                                                <SelectItem value="Confirmed">Accepted</SelectItem>
+                                                                <SelectItem value="preparing">Preparing</SelectItem>
+                                                                <SelectItem value="ready">Ready</SelectItem>
+                                                                <SelectItem value="OutForDelivery">Out for Delivery</SelectItem>
+                                                                <SelectItem value="Delivered">Delivered</SelectItem>
+                                                                <SelectItem value="Cancelled">Cancelled</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>Admin Notes (Reason for cancel, delay, etc.)</Label>
+                                                        <Textarea 
+                                                            placeholder="Optional internal notes..."
+                                                            value={adminNotes}
+                                                            onChange={(e) => setAdminNotes(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <Button onClick={handleFullStatusUpdate} className="w-full bg-orange-600" disabled={updateOrderStatus.isPending}>
+                                                        {updateOrderStatus.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                                        Save Changes
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
                                 </div>
-                            </div>
-
-                            {/* Special Instructions */}
-                            {selectedOrder.specialInstructions && (
-                                <div className="space-y-2">
-                                    <h4 className="font-semibold">Special Instructions</h4>
-                                    <p className="bg-yellow-50 rounded-xl p-4 text-sm italic">
-                                        "{selectedOrder.specialInstructions}"
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Status Update */}
-                            <div className="space-y-3">
-                                <h4 className="font-semibold">Update Status</h4>
-                                <Select value={newStatus} onValueChange={(v) => setNewStatus(v as HomemadeFoodOrderStatus)}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="confirmed">Confirmed</SelectItem>
-                                        <SelectItem value="preparing">Preparing</SelectItem>
-                                        <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
-                                        <SelectItem value="delivered">Delivered</SelectItem>
-                                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* Admin Notes */}
-                            <div className="space-y-2">
-                                <Label htmlFor="adminNotes">Admin Notes</Label>
-                                <Textarea
-                                    id="adminNotes"
-                                    value={adminNotes}
-                                    onChange={(e) => setAdminNotes(e.target.value)}
-                                    placeholder="Add internal notes..."
-                                    rows={2}
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-4">
-                                <Button variant="outline" onClick={() => setIsOrderDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={handleUpdateOrderStatus}
-                                    disabled={updateOrderStatus.isPending}
-                                    className="bg-orange-500 hover:bg-orange-600"
-                                >
-                                    {updateOrderStatus.isPending && (
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    )}
-                                    Update Status
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

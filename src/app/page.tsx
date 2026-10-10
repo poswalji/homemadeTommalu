@@ -6,6 +6,7 @@ import { StatsSection } from "@/components/sections/stats-section";
 import { HowItWorksSection } from "@/components/sections/how-it-works-section";
 import { HeroSection } from "@/components/sections/hero-section";
 import { HomemadeSection } from "@/components/sections/homemade-section";
+import { SubscriptionPlansSection } from "@/components/sections/subscription-plans-section";
 
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 
@@ -18,6 +19,7 @@ export default function Home() {
         <section id="homemadefood" className="py-20 bg-stone-50">
           <HomemadeSection />
         </section>
+        <SubscriptionPlansSection />
         <StatsSection />
         <HowItWorksSection />
         <WhatsAppButton />

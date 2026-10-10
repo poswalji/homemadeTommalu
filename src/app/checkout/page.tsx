@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ordersKeys } from "@/config/query.config";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { useAuthMe } from "@/hooks/api";
 import { toast } from "sonner";
 import { Calendar, Clock, MapPin, Phone, Loader2, User, Navigation, CheckCircle2, Coins, ArrowLeft } from "lucide-react";
 import { placeHomemadeOrder, submitSubscription } from "@/services/homemadeService";
+import { referralApi } from "@/services/api/referral.api";
 import { promotionsApi } from "@/services/api/promotions.api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -21,6 +22,11 @@ const AREAS = ["Nims", "Achrol", "Talamod"];
 
 export default function CheckoutPage() {
     const router = useRouter();
+    const idempotencyKeyRef = useRef<string>("");
+
+    useEffect(() => {
+        idempotencyKeyRef.current = `order-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    }, []);
     const { data: authData } = useAuthMe();
     const user = authData?.user;
 
@@ -148,6 +154,27 @@ export default function CheckoutPage() {
         }
     };
 
+    const handleValidateReferral = async () => {
+        if (!couponCode) return;
+        setIsApplyingCoupon(true);
+        try {
+            const res = await referralApi.validateCode(couponCode);
+            if (res.success && res.data) {
+                setAppliedDiscount(res.data.discountAmount);
+                toast.success(`Referral applied! ₹${res.data.discountAmount} off.`);
+            } else {
+                setAppliedDiscount(0);
+                toast.error(res.message || "Invalid referral code");
+            }
+        } catch (err: any) {
+            setAppliedDiscount(0);
+            const errorMsg = err.response?.data?.message || err.response?.data?.error?.message || "Failed to validate referral code";
+            toast.error(errorMsg);
+        } finally {
+            setIsApplyingCoupon(false);
+        }
+    };
+
     const handleDetectLocation = () => {
         if (!navigator.geolocation) {
             toast.error("Geolocation is not supported by your browser");
@@ -190,6 +217,8 @@ export default function CheckoutPage() {
                 },
                 startDate: new Date().toISOString(), // Default to today/tomorrow
                 quantity: orderDetails.quantity,
+                referralCode: appliedDiscount > 0 ? couponCode : undefined,
+                redeemTokens: useTokens,
             };
             submitSubscriptionMutation.mutate(payload);
         } else {
@@ -204,7 +233,8 @@ export default function CheckoutPage() {
                 totalPrice: orderDetails.totalPrice, // Full calculated price including extras
                 locationLink: locationLink,
                 promoCode: appliedDiscount > 0 ? couponCode : undefined,
-                useTokens: useTokens
+                useTokens: useTokens,
+                idempotencyKey: idempotencyKeyRef.current
             };
             
             placeOrderMutation.mutate(payload);
@@ -378,7 +408,7 @@ export default function CheckoutPage() {
                             </div>
 
                             {/* Coupon Code Section */}
-                            {!orderDetails.isSubscription && (
+                            {!orderDetails.isSubscription ? (
                                 <div className="flex gap-2 pt-2">
                                     <Input 
                                         placeholder="Coupon Code" 
@@ -402,25 +432,53 @@ export default function CheckoutPage() {
                                         </Button>
                                     )}
                                 </div>
+                            ) : (
+                                <div className="flex flex-col gap-2 pt-2">
+                                    <div className="flex gap-2">
+                                        <Input 
+                                            placeholder="Referral Code" 
+                                            value={couponCode} 
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                            disabled={appliedDiscount > 0}
+                                            className="uppercase font-semibold tracking-wide"
+                                        />
+                                        {appliedDiscount > 0 ? (
+                                            <Button variant="destructive" onClick={() => { setCouponCode(""); setAppliedDiscount(0); }}>
+                                                Remove
+                                            </Button>
+                                        ) : (
+                                            <Button 
+                                                variant="outline" 
+                                                className="border-orange-200 text-orange-700 hover:bg-orange-50 shrink-0"
+                                                onClick={handleValidateReferral}
+                                                disabled={!couponCode || isApplyingCoupon}
+                                            >
+                                                {isApplyingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 pl-1">New customers only. Get an instant discount!</p>
+                                </div>
                             )}
                             
-                            {!orderDetails.isSubscription && useTokens && (
+                            {useTokens && (
                                 <p className="text-[10px] text-orange-600 font-medium px-1 mt-1 flex items-center gap-1">
-                                    Coupons cannot be used with tokens.
+                                    Offers cannot be used with tokens.
                                 </p>
                             )}
                             
                             {/* Final Price Breakdown */}
-                            {!orderDetails.isSubscription && (
-                                <div className="space-y-3 pt-2">
-                                    {appliedDiscount > 0 && (
-                                        <div className="bg-green-50/50 p-3 rounded-lg border border-green-100 flex justify-between items-center text-sm">
-                                            <span className="font-medium text-green-800">Coupon Discount</span>
-                                            <span className="font-bold text-green-600">-₹{appliedDiscount}</span>
-                                        </div>
-                                    )}
+                            <div className="space-y-3 pt-2">
+                                {appliedDiscount > 0 && (
+                                    <div className="bg-green-50/50 p-3 rounded-lg border border-green-100 flex justify-between items-center text-sm">
+                                        <span className="font-medium text-green-800">
+                                            {orderDetails.isSubscription ? "Referral Discount" : "Coupon Discount"}
+                                        </span>
+                                        <span className="font-bold text-green-600">-₹{appliedDiscount}</span>
+                                    </div>
+                                )}
 
-                                    <div className="bg-orange-50 p-3 rounded-lg border border-orange-200 flex items-center justify-between text-sm shadow-sm transition-all hover:shadow-md">
+                                <div className="bg-orange-50 p-3 rounded-lg border border-orange-200 flex items-center justify-between text-sm shadow-sm transition-all hover:shadow-md">
                                         <div className="flex items-center gap-3">
                                             <div className="bg-white p-1.5 rounded-full shadow-sm text-orange-500">
                                                 <Coins className="w-5 h-5" />
@@ -446,7 +504,6 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
                                 </div>
-                            )}
                             
                             {!orderDetails.isSubscription && appliedDiscount > 0 && (
                                 <p className="text-[10px] text-orange-600 font-medium px-1 mt-1 flex items-center gap-1">

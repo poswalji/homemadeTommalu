@@ -28,6 +28,7 @@ const adminNavItems = [
    { name: 'Analytics', href: '/admin/analytics', icon: ChartBar },
    { name: 'Users', href: '/admin/users', icon: Users },
    { name: 'Delivery Boys', href: '/admin/delivery-boys', icon: Bike },
+   { name: 'Referrals & Rewards', href: '/admin/referrals', icon: Tag },
    { name: 'Offers & Coupons', href: '/admin/promotions', icon: Tag },
    { name: 'Disputes', href: '/admin/disputes', icon: Ticket },
 ];

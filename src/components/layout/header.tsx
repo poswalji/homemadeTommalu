@@ -14,6 +14,7 @@ import {
    Star,
    AlertCircle,
    CalendarDays,
+   Bell,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo, useState, useEffect } from 'react';
@@ -89,6 +90,11 @@ export function Header() {
                            className='text-base font-medium text-gray-900'>
                            Place Order
                         </Link>
+                        <Link
+                           href='/#subscription-plans'
+                           className='text-base font-medium text-gray-900'>
+                           Subscription Plans
+                        </Link>
                         {user?.role === 'admin' && (
                            <Link
                               href='/admin'
@@ -127,6 +133,35 @@ export function Header() {
                      </>
                   ) : (
                      <>
+                        <Button
+                           onClick={() => {
+                              import('@/hooks/use-push-notifications').then(({ usePushNotifications }) => {
+                                 // Simple workaround to trigger the permission on click
+                                 // Actually better to just request it directly here since it's a client component
+                                 import('firebase/messaging').then(({ getToken }) => {
+                                    import('@/config/firebase.config').then(({ messaging }) => {
+                                       import('@/services/api/auth.api').then(({ authApi }) => {
+                                          if (messaging) {
+                                            Notification.requestPermission().then((permissionResult) => {
+                                              if (permissionResult === 'granted') {
+                                                const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+                                                getToken(messaging, { vapidKey }).then(token => {
+                                                   if (token) authApi.saveFcmToken(token);
+                                                   alert('Notifications enabled!');
+                                                });
+                                              }
+                                            });
+                                          }
+                                       })
+                                    })
+                                 })
+                              });
+                           }}
+                           variant='outline'
+                           className='hidden md:inline-flex'
+                           title="Enable Push Notifications">
+                           <Bell className='h-4 w-4 mr-2' /> Enable Alerts
+                        </Button>
                         <Button
                            onClick={() => logout.mutate()}
                            variant='ghost'
@@ -175,6 +210,13 @@ export function Header() {
                         onClick={() => setMobileMenuOpen(false)}>
                         <div className='w-5 h-5 flex items-center justify-center text-lg'>🚚</div>
                         Delivery Login
+                     </Link>
+                     <Link
+                        href='/#subscription-plans'
+                        className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
+                        onClick={() => setMobileMenuOpen(false)}>
+                        <CalendarDays className='w-5 h-5 text-gray-500' />
+                        Subscription Plans
                      </Link>
 
                      <div className='pt-4 border-t space-y-2'>

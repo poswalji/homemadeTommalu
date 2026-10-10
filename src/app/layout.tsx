@@ -74,6 +74,8 @@ export const viewport: Viewport = {
    themeColor: '#FF6B6B',
 };
 
+import { PushNotificationManager } from '@/components/global/push-notification-manager';
+
 export default function RootLayout({
    children,
 }: Readonly<{
@@ -157,7 +159,8 @@ export default function RootLayout({
                            <SocketProvider>
                               <Suspense>{children}</Suspense>
                               <DeliveryFloatingButton />
-                               <TokenRewardAnimation />
+                              <TokenRewardAnimation />
+                              <PushNotificationManager />
                            </SocketProvider>
                         </HomemadeProvider>
                      </GoogleAuthProvider>
@@ -172,4 +175,3 @@ export default function RootLayout({
       </html>
    );
 }
-

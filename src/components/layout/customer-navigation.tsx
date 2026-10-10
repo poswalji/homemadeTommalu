@@ -11,7 +11,8 @@ import {
   AlertCircle,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Gift
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ const customerNavItems = [
   { name: 'Reviews', href: '/customer/reviews', icon: Star },
   { name: 'Disputes', href: '/customer/disputes', icon: AlertCircle },
   { name: 'Profile', href: '/customer/profile', icon: User },
+  { name: 'Refer & Earn', href: '/customer/refer-and-earn', icon: Gift },
 ];
 
 interface CustomerNavigationProps {

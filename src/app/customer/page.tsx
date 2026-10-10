@@ -3,7 +3,7 @@
 import { useAuth } from "@/providers/auth-provider";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-import { ShoppingBag, Package } from "lucide-react";
+import { ShoppingBag, Package, Gift } from "lucide-react";
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -18,7 +18,7 @@ export default function CustomerDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link href="/homemade" className="block group">
           <Card className="hover:border-[lab(66%_50.34_52.19)] hover:ring-1 hover:ring-[lab(66%_50.34_52.19)] transition-all cursor-pointer h-full border-2">
             <CardContent className="p-8 flex flex-col items-center justify-center text-center space-y-4">
@@ -42,9 +42,25 @@ export default function CustomerDashboard() {
                 <Package className="h-10 w-10 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">Track Orders & History</h3>
+                <h3 className="text-2xl font-bold text-gray-900">Track Orders</h3>
                 <p className="text-gray-500 mt-2">
-                  View your past orders, check order status, and track current deliveries.
+                  View your past orders, check order status, and track deliveries.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/customer/refer-and-earn" className="block group">
+          <Card className="hover:border-green-500 hover:ring-1 hover:ring-green-500 transition-all cursor-pointer h-full border-2">
+            <CardContent className="p-8 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="h-20 w-20 bg-green-100 group-hover:bg-green-200 rounded-full flex items-center justify-center transition-colors">
+                <Gift className="h-10 w-10 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Refer & Earn</h3>
+                <p className="text-gray-500 mt-2">
+                  Invite friends to earn wallet balance for your subscriptions!
                 </p>
               </div>
             </CardContent>

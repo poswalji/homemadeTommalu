@@ -151,6 +151,8 @@ export const useAdminHomemadeFoodOrders = (params?: {
     endDate?: string;
     search?: string;
     type?: string;
+    area?: string;
+    mealType?: string;
 }) => {
     return useQuery({
         queryKey: homemadeFoodKeys.admin.orders(params),

@@ -299,43 +299,31 @@ export const adminApi = {
     };
     revenue: {
       total: number;
-      commission: number;
+      collected: number;
+      pending: number;
       netRevenue: number;
+    };
+    expenses: {
+      total: number;
+    };
+    profit: {
+      netProfit: number;
+    };
+    subscriptions: {
+      active: number;
+      upcomingRenewals: number;
     };
     users: {
       customers: number;
-      storeOwners: number;
+      storeOwners?: number;
       total: number;
     };
-    stores: {
+    stores?: {
       active: number;
     };
     recentOrders: any[];
   }>> => {
-    const response = await apiClient.get<AdminResponse<{
-      orders: {
-        total: number;
-        completed: number;
-        pending: number;
-        averageOrderValue: number;
-        lunchCount?: number;
-        dinnerCount?: number;
-      };
-      revenue: {
-        total: number;
-        commission: number;
-        netRevenue: number;
-      };
-      users: {
-        customers: number;
-        storeOwners: number;
-        total: number;
-      };
-      stores: {
-        active: number;
-      };
-      recentOrders: any[];
-    }>>('/admin/analytics/dashboard', { params });
+    const response = await apiClient.get<AdminResponse<any>>('/admin/analytics/dashboard', { params });
     return response.data;
   },
 
