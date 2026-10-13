@@ -103,11 +103,14 @@ export default function AdminOrderDetailPage() {
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
       case 'DELIVERED': return 'bg-green-100 text-green-800';
-      case 'NEW': return 'bg-blue-100 text-blue-800';
-      case 'ACCEPTED': return 'bg-indigo-100 text-indigo-800';
+      case 'NEW':
+      case 'PENDING': return 'bg-blue-100 text-blue-800';
+      case 'ACCEPTED':
+      case 'CONFIRMED': return 'bg-indigo-100 text-indigo-800';
       case 'PREPARING': return 'bg-yellow-100 text-yellow-800';
       case 'READY': return 'bg-orange-100 text-orange-800';
-      case 'OUT_FOR_DELIVERY': return 'bg-purple-100 text-purple-800';
+      case 'OUT_FOR_DELIVERY':
+      case 'OUTFORDELIVERY': return 'bg-purple-100 text-purple-800';
       case 'CANCELLED':
       case 'REJECTED': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -117,7 +120,8 @@ export default function AdminOrderDetailPage() {
   const getStatusIcon = (status: string) => {
     switch (status?.toUpperCase()) {
       case 'DELIVERED': return <CheckCircle className="w-5 h-5" />;
-      case 'OUT_FOR_DELIVERY': return <Truck className="w-5 h-5" />;
+      case 'OUT_FOR_DELIVERY':
+      case 'OUTFORDELIVERY': return <Truck className="w-5 h-5" />;
       case 'REJECTED':
       case 'CANCELLED': return <XCircle className="w-5 h-5" />;
       default: return <Package className="w-5 h-5" />;

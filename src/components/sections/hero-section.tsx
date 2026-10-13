@@ -86,7 +86,7 @@ export function HeroSection() {
                   {/* Pre-order Alert */}
                   <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 bg-amber-500 text-black font-bold text-sm md:text-base rounded-lg shadow-lg animate-pulse">
                      <Clock className="w-5 h-5" />
-                     <span>Homemade meals are prepared fresh daily. Pre-order by 11AM for Lunch / 7PM for Dinner.</span>
+                     <span>Homemade meals: Pre-order before 1:00 PM (Lunch) / 9:00 PM (Dinner) for Free Delivery (₹30 delivery fee after).</span>
                   </div>
                   <br />
 

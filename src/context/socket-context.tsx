@@ -6,6 +6,7 @@ import { ref, onValue, off, query, orderByChild, limitToLast, Query } from 'fire
 import { db } from '@/config/firebase.config';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/config/query.config';
+import { toast } from 'sonner';
 
 interface Notification {
   id: string;
@@ -240,8 +241,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       if (notification.relatedId) {
         const orderId = String(notification.relatedId);
 
-        // Play notification sound for store owners on new order notifications
-        if (userRole === 'storeOwner' && notification.type === 'order_created') {
+        // Play notification sound for store owners and admin on new order notifications
+        if ((userRole === 'storeOwner' || userRole === 'admin') && (notification.type === 'order_created' || notification.type === 'new_order' || notification.type === 'delivery_assigned')) {
           playNotificationSound(orderId);
         }
 
@@ -270,15 +271,23 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.orders() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
         } else if (notification.type === 'order_status_updated') {
+          // Real-time toast on customer screen
+          toast.success(notification.title || 'Order Confirmed! 🎉', {
+            description: notification.message || 'Your order status has been updated.',
+            duration: 6000,
+          });
+
           // Order status update notifications for all users
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.my() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.public(orderId) });
           QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+          QueryClient.invalidateQueries({ queryKey: ['orders'] });
+          QueryClient.invalidateQueries({ queryKey: ['homemade-food'] });
 
-          // Stop notification sound for store owners on any status update
-          if (userRole === 'storeOwner') {
+          // Stop notification sound for store owners and admin on any status update
+          if (userRole === 'storeOwner' || userRole === 'admin') {
             stopNotificationSound(orderId);
           }
 

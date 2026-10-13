@@ -80,17 +80,24 @@ export default function PublicOrderTrackingPage() {
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Delivered':
+    const s = (status || '').toLowerCase().replace(/[\s_-]+/g, '');
+    switch (s) {
+      case 'delivered':
         return 'bg-green-100 text-green-800';
-      case 'Pending':
+      case 'pending':
+      case 'new':
         return 'bg-yellow-100 text-yellow-800';
-      case 'Confirmed':
+      case 'confirmed':
+      case 'accepted':
         return 'bg-blue-100 text-blue-800';
-      case 'OutForDelivery':
+      case 'preparing':
+        return 'bg-amber-100 text-amber-800';
+      case 'ready':
+        return 'bg-orange-100 text-orange-800';
+      case 'outfordelivery':
         return 'bg-purple-100 text-purple-800';
-      case 'Cancelled':
-      case 'Rejected':
+      case 'cancelled':
+      case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -98,22 +105,30 @@ export default function PublicOrderTrackingPage() {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Delivered':
+    const s = (status || '').toLowerCase().replace(/[\s_-]+/g, '');
+    switch (s) {
+      case 'delivered':
         return <CheckCircle className="w-6 h-6" />;
-      case 'OutForDelivery':
+      case 'outfordelivery':
         return <Truck className="w-6 h-6" />;
-      case 'Rejected':
-      case 'Cancelled':
+      case 'cancelled':
+      case 'rejected':
         return <XCircle className="w-6 h-6" />;
-      case 'Pending':
+      case 'pending':
+      case 'new':
         return <Clock className="w-6 h-6" />;
       default:
         return <Package className="w-6 h-6" />;
     }
   };
 
-  const getStatusSteps = (status: string) => {
+  const getStatusSteps = (rawStatus: string) => {
+    const s = (rawStatus || '').toLowerCase().replace(/[\s_-]+/g, '');
+    let mappedCurrent = 'Pending';
+    if (s === 'confirmed' || s === 'accepted' || s === 'preparing' || s === 'ready') mappedCurrent = 'Confirmed';
+    else if (s === 'outfordelivery') mappedCurrent = 'OutForDelivery';
+    else if (s === 'delivered') mappedCurrent = 'Delivered';
+
     const steps = [
       { id: 1, name: 'Order Placed', status: 'Pending' },
       { id: 2, name: 'Confirmed', status: 'Confirmed' },
@@ -121,18 +136,13 @@ export default function PublicOrderTrackingPage() {
       { id: 4, name: 'Delivered', status: 'Delivered' },
     ];
 
-    return steps.map((step) => {
-      const currentStepIndex = steps.findIndex((s) => s.status === status);
-      const stepIndex = steps.findIndex((s) => s.status === step.status);
-      const isCompleted = stepIndex <= currentStepIndex;
-      const isCurrent = step.status === status;
+    const currentStepIndex = steps.findIndex((step) => step.status === mappedCurrent);
 
-      return {
-        ...step,
-        isCompleted,
-        isCurrent,
-      };
-    });
+    return steps.map((step, stepIndex) => ({
+      ...step,
+      isCompleted: currentStepIndex >= 0 && stepIndex <= currentStepIndex,
+      isCurrent: step.status === mappedCurrent,
+    }));
   };
 
   const statusSteps = getStatusSteps(order.status);

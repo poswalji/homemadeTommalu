@@ -263,7 +263,13 @@ export default function CustomerOrderDetailPage() {
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
                 <span className="font-medium">
-                  ₹{(order.finalPrice + (order.discount || 0)).toFixed(2)}
+                  ₹{Math.max(0, (order.finalPrice + (order.discount || 0) - (order.deliveryCharge || 0))).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600">Delivery Charge</span>
+                <span className={`font-semibold ${(order.deliveryCharge && order.deliveryCharge > 0) ? 'text-orange-600' : 'text-green-600'}`}>
+                  {(order.deliveryCharge && order.deliveryCharge > 0) ? `₹${Number(order.deliveryCharge).toFixed(2)}` : 'FREE'}
                 </span>
               </div>
               {order.discount && order.discount > 0 && (

@@ -1,5 +1,31 @@
 @import 'tailwindcss';
 
+:root {
+   color-scheme: only light;
+   forced-color-adjust: none;
+}
+
+html {
+   color-scheme: only light !important;
+   background-color: #ffffff !important;
+}
+
+body {
+   color-scheme: only light !important;
+   background-color: #ffffff !important;
+   color: #1c1917 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+   :root,
+   html,
+   body {
+      color-scheme: only light !important;
+      background-color: #ffffff !important;
+      color: #1c1917 !important;
+   }
+}
+
 /* .gradient-bg {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }

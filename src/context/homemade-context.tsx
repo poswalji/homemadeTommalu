@@ -9,6 +9,8 @@ interface HomemadeState {
     isAvailable: boolean;
     lunchSlotAvailable: boolean;
     dinnerSlotAvailable: boolean;
+    lunchDeliveryCharge?: number;
+    dinnerDeliveryCharge?: number;
     menuDate?: string;
     isSunday?: boolean;
     isServiceOff?: boolean;
@@ -36,6 +38,8 @@ const defaultState: HomemadeState = {
     isAvailable: false,
     lunchSlotAvailable: false,
     dinnerSlotAvailable: false,
+    lunchDeliveryCharge: 0,
+    dinnerDeliveryCharge: 0,
     items: [],
     lunchItems: [],
     dinnerItems: [],
@@ -102,6 +106,8 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                     isAvailable: true, // If API returns, store is open
                     lunchSlotAvailable: data.slots.lunch.isOpen,
                     dinnerSlotAvailable: data.slots.dinner.isOpen,
+                    lunchDeliveryCharge: data.slots?.lunch?.deliveryCharge ?? 0,
+                    dinnerDeliveryCharge: data.slots?.dinner?.deliveryCharge ?? 0,
                     menuDate: data.date,
                     isSunday: isSunday,
                     sundayItem: isSunday ? data.product.itemName : undefined,

@@ -61,8 +61,43 @@ export interface PaginatedResponse<T> {
   };
 }
 
+export interface RazorpayOrderResponse {
+  success: boolean;
+  order_id: string;
+  id?: string;
+  amount: number;
+  currency: string;
+  key_id?: string;
+  message?: string;
+}
+
+export interface VerifyPaymentData {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+  orderId?: string;
+}
+
+export interface VerifyPaymentResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
 // Payment API Service
 export const paymentApi = {
+  // Razorpay Standard Checkout: Create Order (Step 1)
+  createRazorpayOrder: async (data: { amount: number; currency?: string; receipt?: string; notes?: any }): Promise<RazorpayOrderResponse> => {
+    const response = await apiClient.post<RazorpayOrderResponse>('/create-order', data);
+    return response.data;
+  },
+
+  // Razorpay Standard Checkout: Verify Payment (Step 3)
+  verifyRazorpayPayment: async (data: VerifyPaymentData): Promise<VerifyPaymentResponse> => {
+    const response = await apiClient.post<VerifyPaymentResponse>('/verify-payment', data);
+    return response.data;
+  },
+
   // Create payment record
   createPayment: async (data: CreatePaymentData): Promise<PaymentResponse<Payment>> => {
     const response = await apiClient.post<PaymentResponse<Payment>>('/payments', data);

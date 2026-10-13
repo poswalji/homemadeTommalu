@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, ShieldCheck, Leaf, Flame, Minus, Plus, CheckCircle2, Share2, Sun, Moon, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,35 @@ export function HomemadeSection() {
     const { data: plansData, isLoading: plansLoading } = useSubscriptionPlans();
     const plans = plansData?.data || [];
 
-    const [selectedSlot, setSelectedSlot] = useState<"Lunch" | "Dinner">("Lunch");
+    // Time & Delivery Fee status in IST
+    const istDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const totalMinutes = istDate.getHours() * 60 + istDate.getMinutes();
+    const isLunchLate = totalMinutes >= 13 * 60; // After 1:00 PM
+    const isDinnerLate = totalMinutes >= 21 * 60; // After 9:00 PM
+    const lunchDeliveryFee = isLunchLate ? 30 : 0;
+    const dinnerDeliveryFee = isDinnerLate ? 30 : 0;
+
+    // Auto-detect initial slot: After 3:00 PM (15:00) default to Dinner
+    const [selectedSlot, setSelectedSlot] = useState<"Lunch" | "Dinner">(() => {
+        if (typeof window !== 'undefined') {
+            const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+            const mins = now.getHours() * 60 + now.getMinutes();
+            if (mins >= 15 * 60) return "Dinner";
+        }
+        return "Lunch";
+    });
+
+    // Auto-sync slot when availability or time updates
+    useEffect(() => {
+        if (!state.lunchSlotAvailable && state.dinnerSlotAvailable) {
+            setSelectedSlot("Dinner");
+        } else if (state.lunchSlotAvailable && !state.dinnerSlotAvailable) {
+            setSelectedSlot("Lunch");
+        } else if (totalMinutes >= 15 * 60) {
+            setSelectedSlot("Dinner");
+        }
+    }, [state.lunchSlotAvailable, state.dinnerSlotAvailable, totalMinutes]);
+
     const [quantity, setQuantity] = useState(1);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const searchParams = useSearchParams();
@@ -39,6 +67,8 @@ export function HomemadeSection() {
     // State for selected subscription plan
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
+    const selectedSlotDeliveryFee = selectedSlot === 'Lunch' ? lunchDeliveryFee : dinnerDeliveryFee;
+
     const handleOrderClick = (plan?: any, slotOverride?: "Lunch" | "Dinner") => {
         if (!authData?.user) {
             router.push(`/login?redirect=/homemade`);
@@ -46,18 +76,26 @@ export function HomemadeSection() {
         }
 
         const finalSlot = slotOverride || selectedSlot;
+        const finalExtraRoti = (state.isSunday && finalSlot === 'Dinner') ? 0 : extraRotiCount;
         const currentPrice = state.isSunday ? (finalSlot === 'Lunch' ? 99 : 120) : state.price;
-        const finalTotalPrice = (currentPrice * quantity) + ((state.extraRotiPrice || 10) * extraRotiCount);
+        const itemsTotal = (currentPrice * quantity) + ((state.extraRotiPrice || 10) * finalExtraRoti);
+        
+        // Delivery charge logic: Lunch after 1:00 PM -> ₹30, Dinner after 9:00 PM -> ₹30
+        const slotDeliveryFee = finalSlot === 'Lunch' ? lunchDeliveryFee : dinnerDeliveryFee;
+        const deliveryCharge = activeTab === 'one-time' ? slotDeliveryFee : 0;
+        const finalTotalPrice = activeTab === 'one-time' ? (itemsTotal + deliveryCharge) : (plan?.price || 0);
 
         const orderDetails = {
             date: new Date().toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }),
             slot: finalSlot,
             quantity: quantity,
-            totalPrice: activeTab === 'one-time' ? finalTotalPrice : (plan?.price || 0),
+            itemsTotal: activeTab === 'one-time' ? itemsTotal : (plan?.price || 0),
+            deliveryCharge: deliveryCharge,
+            totalPrice: finalTotalPrice,
             items: activeTab === 'one-time' ? [
                 finalSlot === 'Lunch' ? state.lunchSabji : state.dinnerSabji,
                 ...(finalSlot === 'Lunch' ? state.lunchItems : state.dinnerItems),
-                extraRotiCount > 0 ? `Extra Roti x${extraRotiCount}` : null
+                finalExtraRoti > 0 ? `Extra Roti x${finalExtraRoti}` : null
             ].filter(Boolean) as string[] : [plan?.title],
             isSubscription: activeTab === 'subscription',
             planName: activeTab === 'subscription' ? plan?.title : undefined,
@@ -68,8 +106,9 @@ export function HomemadeSection() {
         router.push("/checkout");
     };
 
+    const effectiveExtraRoti = (state.isSunday && selectedSlot === 'Dinner') ? 0 : extraRotiCount;
     const currentPrice = state.isSunday ? (selectedSlot === 'Lunch' ? 99 : 120) : state.price;
-    const totalPrice = (currentPrice * quantity) + ((state.extraRotiPrice || 10) * extraRotiCount);
+    const totalPrice = (currentPrice * quantity) + ((state.extraRotiPrice || 10) * effectiveExtraRoti);
 
     const formattedDate = state.menuDate ? format(new Date(state.menuDate), 'EEEE, MMM do') : "Today's Menu";
 
@@ -159,8 +198,20 @@ export function HomemadeSection() {
                                     <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-stone-100">
 
                                         {/* LUNCH SECTION */}
-                                        <div className="p-6 md:p-8 bg-orange-50/10 hover:bg-orange-50/30 transition-colors relative group">
-                                            <div className="absolute top-4 right-4">
+                                        <div 
+                                            onClick={() => setSelectedSlot('Lunch')}
+                                            className={`p-6 md:p-8 transition-all relative group cursor-pointer ${
+                                                selectedSlot === 'Lunch'
+                                                    ? 'bg-orange-50/40 ring-2 ring-inset ring-orange-500 shadow-inner'
+                                                    : 'bg-orange-50/10 hover:bg-orange-50/25'
+                                            }`}
+                                        >
+                                            <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                                                {selectedSlot === 'Lunch' && (
+                                                    <Badge className="bg-orange-600 text-white border-0 text-[10px] font-bold shadow-sm">
+                                                        Selected
+                                                    </Badge>
+                                                )}
                                                 {state.lunchSlotAvailable ? (
                                                     <Badge className="bg-green-500 hover:bg-green-600 border-0">Open</Badge>
                                                 ) : (
@@ -191,11 +242,18 @@ export function HomemadeSection() {
                                                 <div>
                                                     <p className="text-xs text-stone-400 font-bold uppercase">Price</p>
                                                     <p className="text-2xl font-bold text-stone-800">₹{state.isSunday ? 99 : state.price}</p>
+                                                    <span className={`text-[11px] font-semibold block mt-0.5 ${isLunchLate ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                                        {isLunchLate ? '+ ₹30 Delivery (After 1 PM)' : 'Free Delivery (Before 1 PM)'}
+                                                    </span>
                                                 </div>
                                                 <Button
                                                     size="sm"
-                                                    onClick={() => handleOrderClick(undefined, 'Lunch')}
-                                                    className="rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold px-6"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedSlot('Lunch');
+                                                        handleOrderClick(undefined, 'Lunch');
+                                                    }}
+                                                    className="rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold px-6 shadow-md shadow-orange-600/20"
                                                     disabled={!state.lunchSlotAvailable}
                                                 >
                                                     Order Lunch
@@ -204,8 +262,20 @@ export function HomemadeSection() {
                                         </div>
 
                                         {/* DINNER SECTION */}
-                                        <div className="p-6 md:p-8 bg-indigo-50/10 hover:bg-indigo-50/30 transition-colors relative group">
-                                            <div className="absolute top-4 right-4">
+                                        <div 
+                                            onClick={() => setSelectedSlot('Dinner')}
+                                            className={`p-6 md:p-8 transition-all relative group cursor-pointer ${
+                                                selectedSlot === 'Dinner'
+                                                    ? 'bg-indigo-50/40 ring-2 ring-inset ring-indigo-500 shadow-inner'
+                                                    : 'bg-indigo-50/10 hover:bg-indigo-50/25'
+                                            }`}
+                                        >
+                                            <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                                                {selectedSlot === 'Dinner' && (
+                                                    <Badge className="bg-indigo-600 text-white border-0 text-[10px] font-bold shadow-sm">
+                                                        Selected
+                                                    </Badge>
+                                                )}
                                                 {state.dinnerSlotAvailable ? (
                                                     <Badge className="bg-green-500 hover:bg-green-600 border-0">Open</Badge>
                                                 ) : (
@@ -238,11 +308,18 @@ export function HomemadeSection() {
                                                     <p className="text-2xl font-bold text-stone-800">
                                                         ₹{state.isSunday ? 120 : state.price}
                                                     </p>
+                                                    <span className={`text-[11px] font-semibold block mt-0.5 ${isDinnerLate ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                                        {isDinnerLate ? '+ ₹30 Delivery (After 9 PM)' : 'Free Delivery (Before 9 PM)'}
+                                                    </span>
                                                 </div>
                                                 <Button
                                                     size="sm"
-                                                    onClick={() => handleOrderClick(undefined, 'Dinner')}
-                                                    className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedSlot('Dinner');
+                                                        handleOrderClick(undefined, 'Dinner');
+                                                    }}
+                                                    className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 shadow-md shadow-indigo-600/20"
                                                     disabled={!state.dinnerSlotAvailable}
                                                 >
                                                     Order Dinner
@@ -266,16 +343,52 @@ export function HomemadeSection() {
                                         <div className="bg-stone-50 p-6 border-t border-stone-200">
                                             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
 
-                                                {/* Left: Quantity & Extras */}
-                                                <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-4 md:gap-8">
+                                                {/* Left: Slot, Quantity & Extras */}
+                                                <div className="w-full md:w-auto flex flex-wrap items-center justify-between md:justify-start gap-4 md:gap-6">
+
+                                                    {/* Slot Toggle */}
+                                                    <div>
+                                                        <label className="text-xs font-bold text-stone-400 uppercase block mb-1">Select Meal</label>
+                                                        <div className="inline-flex p-1 bg-stone-200/80 rounded-xl gap-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSelectedSlot('Lunch')}
+                                                                disabled={!state.lunchSlotAvailable}
+                                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                                                    selectedSlot === 'Lunch'
+                                                                        ? 'bg-white text-orange-600 shadow-sm ring-1 ring-orange-400/40'
+                                                                        : 'text-stone-600 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed'
+                                                                }`}
+                                                            >
+                                                                <Sun className="w-3.5 h-3.5" />
+                                                                <span>Lunch</span>
+                                                                {!state.lunchSlotAvailable && <span className="text-[10px] text-red-500 font-normal ml-0.5">(Closed)</span>}
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSelectedSlot('Dinner')}
+                                                                disabled={!state.dinnerSlotAvailable}
+                                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                                                    selectedSlot === 'Dinner'
+                                                                        ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-400/40'
+                                                                        : 'text-stone-600 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed'
+                                                                }`}
+                                                            >
+                                                                <Moon className="w-3.5 h-3.5" />
+                                                                <span>Dinner</span>
+                                                                {!state.dinnerSlotAvailable && <span className="text-[10px] text-red-500 font-normal ml-0.5">(Closed)</span>}
+                                                            </button>
+                                                        </div>
+                                                    </div>
 
                                                     {/* Qty */}
                                                     <div>
                                                         <label className="text-xs font-bold text-stone-400 uppercase block mb-1">Quantity</label>
                                                         <div className="flex items-center gap-3 bg-white rounded-lg p-1 border border-stone-200 shadow-sm">
-                                                            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Minus className="w-4 h-4 text-stone-600" /></button>
+                                                            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors cursor-pointer"><Minus className="w-4 h-4 text-stone-600" /></button>
                                                             <span className="font-bold text-stone-800 w-6 text-center">{quantity}</span>
-                                                            <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Plus className="w-4 h-4 text-stone-600" /></button>
+                                                            <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors cursor-pointer"><Plus className="w-4 h-4 text-stone-600" /></button>
                                                         </div>
                                                     </div>
 
@@ -284,22 +397,37 @@ export function HomemadeSection() {
                                                         <div>
                                                             <label className="text-xs font-bold text-stone-400 uppercase block mb-1">Extra Roti (+₹10)</label>
                                                             <div className="flex items-center gap-3 bg-white rounded-lg p-1 border border-stone-200 shadow-sm">
-                                                                <button onClick={() => setExtraRotiCount(Math.max(0, extraRotiCount - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Minus className="w-4 h-4 text-stone-600" /></button>
+                                                                <button onClick={() => setExtraRotiCount(Math.max(0, extraRotiCount - 1))} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors cursor-pointer"><Minus className="w-4 h-4 text-stone-600" /></button>
                                                                 <span className="font-bold text-stone-800 w-6 text-center">{extraRotiCount}</span>
-                                                                <button onClick={() => setExtraRotiCount(extraRotiCount + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors"><Plus className="w-4 h-4 text-stone-600" /></button>
+                                                                <button onClick={() => setExtraRotiCount(extraRotiCount + 1)} className="w-8 h-8 flex items-center justify-center hover:bg-stone-100 rounded transition-colors cursor-pointer"><Plus className="w-4 h-4 text-stone-600" /></button>
                                                             </div>
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 {/* Right: Checkout Button */}
-                                                <Button
-                                                    onClick={() => handleOrderClick()}
-                                                    disabled={selectedSlot === 'Lunch' ? !state.lunchSlotAvailable : !state.dinnerSlotAvailable}
-                                                    className="w-full md:w-auto px-8 py-6 text-lg font-bold bg-stone-900 hover:bg-black text-white rounded-2xl shadow-lg transition-all"
-                                                >
-                                                    Order {selectedSlot} • ₹{totalPrice}
-                                                </Button>
+                                                <div className="w-full md:w-auto flex flex-col items-stretch md:items-end gap-1">
+                                                    <Button
+                                                        onClick={() => handleOrderClick(undefined, selectedSlot)}
+                                                        disabled={selectedSlot === 'Lunch' ? !state.lunchSlotAvailable : !state.dinnerSlotAvailable}
+                                                        className={`w-full md:w-auto px-8 py-6 text-lg font-bold text-white rounded-2xl shadow-lg transition-all cursor-pointer ${
+                                                            (selectedSlot === 'Lunch' ? !state.lunchSlotAvailable : !state.dinnerSlotAvailable)
+                                                                ? 'bg-stone-400 cursor-not-allowed shadow-none'
+                                                                : selectedSlot === 'Lunch'
+                                                                    ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/25'
+                                                                    : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
+                                                        }`}
+                                                    >
+                                                        {(selectedSlot === 'Lunch' ? !state.lunchSlotAvailable : !state.dinnerSlotAvailable)
+                                                            ? `${selectedSlot} Closed`
+                                                            : `Order ${selectedSlot} • ₹${totalPrice + (activeTab === 'one-time' ? selectedSlotDeliveryFee : 0)}`}
+                                                    </Button>
+                                                    {selectedSlotDeliveryFee > 0 && !(selectedSlot === 'Lunch' ? !state.lunchSlotAvailable : !state.dinnerSlotAvailable) && (
+                                                        <span className="text-[11px] text-amber-600 font-semibold text-center md:text-right">
+                                                            Includes ₹30 late delivery fee
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     )}

@@ -40,11 +40,12 @@ export const useCreateOrderFromCart = () => {
 };
 
 // Get customer's orders
-export const useMyOrders = () => {
+export const useMyOrders = (options?: { refetchInterval?: number }) => {
    return useQuery({
       queryKey: ordersKeys.my(),
       queryFn: () => ordersApi.getMyOrders(),
-      staleTime: 1000 * 60 * 2, // 2 minutes
+      staleTime: 1000 * 2, // 2 seconds
+      refetchInterval: options?.refetchInterval ?? 4000, // Live auto-update every 4s
    });
 };
 
@@ -111,12 +112,13 @@ export const useCancelOrder = () => {
 };
 
 // Get public order tracking (no auth)
-export const useOrderPublic = (id: string, enabled = true) => {
+export const useOrderPublic = (id: string, enabled = true, options?: { refetchInterval?: number }) => {
    return useQuery({
       queryKey: ordersKeys.public(id),
       queryFn: () => ordersApi.getOrderPublic(id),
       enabled: enabled && !!id,
-      staleTime: 1000 * 60 * 1, // 1 minute,
+      staleTime: 1000 * 2, // 2 seconds
+      refetchInterval: options?.refetchInterval ?? 4000, // Live auto-update every 4s
     });
 };
 

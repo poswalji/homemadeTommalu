@@ -77,11 +77,14 @@ export default function AdminOrdersPage() {
 
     const getStatusColor = (status: string) => {
         switch (status?.toUpperCase()) {
-            case 'NEW': return 'bg-blue-100 text-blue-800';
-            case 'ACCEPTED': return 'bg-indigo-100 text-indigo-800';
+            case 'NEW':
+            case 'PENDING': return 'bg-blue-100 text-blue-800';
+            case 'ACCEPTED':
+            case 'CONFIRMED': return 'bg-indigo-100 text-indigo-800';
             case 'PREPARING': return 'bg-yellow-100 text-yellow-800';
             case 'READY': return 'bg-orange-100 text-orange-800';
-            case 'OUT_FOR_DELIVERY': return 'bg-purple-100 text-purple-800';
+            case 'OUT_FOR_DELIVERY':
+            case 'OUTFORDELIVERY': return 'bg-purple-100 text-purple-800';
             case 'DELIVERED': return 'bg-green-100 text-green-800';
             case 'CANCELLED':
             case 'REJECTED': return 'bg-red-100 text-red-800';
@@ -242,28 +245,28 @@ export default function AdminOrdersPage() {
                                             <Button variant="outline" className="w-full bg-white">View Details</Button>
                                         </Link>
 
-                                        {order.status?.toUpperCase() === 'NEW' && (
-                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'Confirmed')} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                                        {(order.status?.toUpperCase() === 'NEW' || order.status?.toUpperCase() === 'PENDING') && (
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'Confirmed')} disabled={updateOrderStatus.isPending} className="w-full bg-indigo-600 hover:bg-indigo-700">
                                                 <CheckCircle2 className="w-4 h-4 mr-2" /> Accept Order
                                             </Button>
                                         )}
-                                        {order.status?.toUpperCase() === 'ACCEPTED' && (
-                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'preparing')} className="w-full bg-yellow-600 hover:bg-yellow-700">
+                                        {(order.status?.toUpperCase() === 'ACCEPTED' || order.status?.toUpperCase() === 'CONFIRMED') && (
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'preparing')} disabled={updateOrderStatus.isPending} className="w-full bg-yellow-600 hover:bg-yellow-700">
                                                 Start Preparing
                                             </Button>
                                         )}
                                         {order.status?.toUpperCase() === 'PREPARING' && (
-                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'ready')} className="w-full bg-orange-600 hover:bg-orange-700">
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'ready')} disabled={updateOrderStatus.isPending} className="w-full bg-orange-600 hover:bg-orange-700">
                                                 Mark Ready
                                             </Button>
                                         )}
                                         {order.status?.toUpperCase() === 'READY' && (
-                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'OutForDelivery')} className="w-full bg-purple-600 hover:bg-purple-700">
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'OutForDelivery')} disabled={updateOrderStatus.isPending} className="w-full bg-purple-600 hover:bg-purple-700">
                                                 <Truck className="w-4 h-4 mr-2" /> Out for Delivery
                                             </Button>
                                         )}
-                                        {order.status?.toUpperCase() === 'OUT_FOR_DELIVERY' && (
-                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'Delivered')} className="w-full bg-green-600 hover:bg-green-700">
+                                        {(order.status?.toUpperCase() === 'OUT_FOR_DELIVERY' || order.status?.toUpperCase() === 'OUTFORDELIVERY') && (
+                                            <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'Delivered')} disabled={updateOrderStatus.isPending} className="w-full bg-green-600 hover:bg-green-700">
                                                 <Check className="w-4 h-4 mr-2" /> Mark Delivered
                                             </Button>
                                         )}

@@ -72,6 +72,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
    themeColor: '#FF6B6B',
+   colorScheme: 'light',
 };
 
 import { PushNotificationManager } from '@/components/global/push-notification-manager';
@@ -82,8 +83,10 @@ export default function RootLayout({
    children: React.ReactNode;
 }>) {
    return (
-      <html lang='en' suppressHydrationWarning>
+      <html lang='en' className="light" style={{ colorScheme: 'light' }} suppressHydrationWarning>
          <head suppressHydrationWarning>
+            <meta name="color-scheme" content="only light" />
+            <meta name="supported-color-schemes" content="light" />
             {/* Organization JSON-LD */}
             <script
                type='application/ld+json'
@@ -149,8 +152,12 @@ export default function RootLayout({
                   </Script>
                </>
             ) : null}
+            <Script
+               src="https://checkout.razorpay.com/v1/checkout.js"
+               strategy="lazyOnload"
+            />
          </head>
-         <body className={`${figtree.className} antialiased`} suppressHydrationWarning>
+         <body className={`${figtree.className} antialiased bg-white text-stone-900`} style={{ colorScheme: 'light' }} suppressHydrationWarning>
             <QueryProvider>
                <AppProvider>
                   <AuthProvider>

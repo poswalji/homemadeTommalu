@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ordersKeys } from "@/config/query.config";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthMe } from "@/hooks/api";
 import { toast } from "sonner";
-import { Calendar, Clock, MapPin, Phone, Loader2, User, Navigation, CheckCircle2, Coins, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, MapPin, Phone, Loader2, User, Navigation, CheckCircle2, Coins, ArrowLeft, Truck, CreditCard, Banknote, ShieldCheck } from "lucide-react";
 import { placeHomemadeOrder, submitSubscription } from "@/services/homemadeService";
 import { referralApi } from "@/services/api/referral.api";
 import { promotionsApi } from "@/services/api/promotions.api";
+import { paymentApi } from "@/services/api/payments.api";
+import { loadRazorpayScript } from "@/utils/razorpay";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,7 +90,9 @@ export default function CheckoutPage() {
         }
     });
 
-    const isSubmitting = placeOrderMutation.isPending || submitSubscriptionMutation.isPending;
+    const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+    const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+    const isSubmitting = placeOrderMutation.isPending || submitSubscriptionMutation.isPending || isProcessingPayment;
 
     // Form States
     const [name, setName] = useState("");
@@ -132,6 +136,33 @@ export default function CheckoutPage() {
     const [appliedDiscount, setAppliedDiscount] = useState(0);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
+    const isSubscription = Boolean(orderDetails?.isSubscription);
+    // Base items total
+    const itemsTotal = isSubscription
+        ? Number(orderDetails?.totalPrice || 0)
+        : Number(orderDetails?.itemsTotal || (orderDetails?.totalPrice && orderDetails?.deliveryCharge ? orderDetails.totalPrice - orderDetails.deliveryCharge : orderDetails?.totalPrice) || 0);
+
+    // Dynamic Delivery Fee in IST:
+    // Lunch after 1:00 PM (13:00) -> ₹30
+    // Dinner after 9:00 PM (21:00) -> ₹30
+    const deliveryCharge = useMemo(() => {
+        if (isSubscription) return 0;
+        if (orderDetails?.deliveryCharge !== undefined) return Number(orderDetails.deliveryCharge);
+        const istDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+        const totalMinutes = istDate.getHours() * 60 + istDate.getMinutes();
+        if (orderDetails?.slot === 'Lunch') {
+            return totalMinutes >= 13 * 60 ? 30 : 0;
+        } else if (orderDetails?.slot === 'Dinner') {
+            return totalMinutes >= 21 * 60 ? 30 : 0;
+        }
+        return 0;
+    }, [isSubscription, orderDetails]);
+
+    const orderSubtotalWithDelivery = itemsTotal + deliveryCharge;
+    const maxTokenDiscount = Math.max(0, orderSubtotalWithDelivery - appliedDiscount);
+    const tokenDiscount = useTokens ? Math.min(availableTokens / 10, maxTokenDiscount) : 0;
+    const finalAmountToPay = Math.max(0, orderSubtotalWithDelivery - appliedDiscount - tokenDiscount);
+
     if (isLoading || !orderDetails) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -146,7 +177,7 @@ export default function CheckoutPage() {
         try {
             const res = await promotionsApi.validatePromotion({
                 code: couponCode,
-                orderAmount: orderDetails.totalPrice
+                orderAmount: itemsTotal
             });
             if (res.valid && res.data) {
                 setAppliedDiscount(res.data.discount);
@@ -215,6 +246,161 @@ export default function CheckoutPage() {
             return;
         }
 
+        // STEP 2: Online Payment via Razorpay Standard Checkout
+        if (paymentMethod === "online" && finalAmountToPay > 0) {
+            const amountInPaise = Math.round(finalAmountToPay * 100);
+            if (amountInPaise < 100) {
+                toast.error("Online payment amount must be at least ₹1.00");
+                return;
+            }
+
+            const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+            if (!razorpayKey) {
+                toast.error("Razorpay Key is not configured. Please check environment variables.");
+                return;
+            }
+
+            setIsProcessingPayment(true);
+
+            try {
+                // Ensure Razorpay SDK is loaded
+                const isLoaded = await loadRazorpayScript();
+                if (!isLoaded || typeof (window as any).Razorpay === "undefined") {
+                    toast.error("Failed to load Razorpay payment gateway. Please check your connection.");
+                    setIsProcessingPayment(false);
+                    return;
+                }
+
+                // STEP 1: Call Backend to Create Order (POST /api/create-order)
+                const rzpOrder = await paymentApi.createRazorpayOrder({
+                    amount: amountInPaise,
+                    currency: "INR",
+                    receipt: `rcpt_${Date.now()}`,
+                });
+
+                if (!rzpOrder || !rzpOrder.order_id) {
+                    throw new Error(rzpOrder?.message || "Failed to create payment order");
+                }
+
+                // STEP 2: Open Razorpay modal with order_id
+                const options = {
+                    key: razorpayKey,
+                    amount: rzpOrder.amount,
+                    currency: rzpOrder.currency || "INR",
+                    name: "Tommalu Homemade Food",
+                    description: orderDetails.isSubscription
+                        ? "Subscription Plan Payment"
+                        : `${orderDetails.slot || "Meal"} Order - Tommalu`,
+                    image: "/logo.png",
+                    order_id: rzpOrder.order_id,
+                    prefill: {
+                        name: name || user?.name || "",
+                        email: user?.email || "",
+                        contact: phone || user?.phone || "",
+                    },
+                    theme: {
+                        color: "#ea580c",
+                    },
+                    handler: async function (response: any) {
+                        const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
+                        toast.loading("Verifying payment...", { id: "razorpay-verification" });
+
+                        try {
+                            // STEP 3: Backend - Verify Signature (POST /api/verify-payment)
+                            const verifyResult = await paymentApi.verifyRazorpayPayment({
+                                razorpay_order_id,
+                                razorpay_payment_id,
+                                razorpay_signature,
+                            });
+
+                            if (verifyResult.success) {
+                                toast.success("Payment verified successfully!", { id: "razorpay-verification" });
+
+                                // Finalize order with online payment details
+                                if (orderDetails.isSubscription) {
+                                    const payload = {
+                                        planId: orderDetails.planId,
+                                        customerName: name,
+                                        mobileNumber: phone,
+                                        deliveryAddress: {
+                                            street: address,
+                                            city: 'Jaipur',
+                                            pincode: '303002'
+                                        },
+                                        startDate: new Date().toISOString(),
+                                        quantity: orderDetails.quantity,
+                                        referralCode: appliedDiscount > 0 ? couponCode : undefined,
+                                        redeemTokens: useTokens,
+                                        paymentMethod: 'online',
+                                        razorpayPaymentId: razorpay_payment_id,
+                                        razorpayOrderId: razorpay_order_id,
+                                    };
+                                    submitSubscriptionMutation.mutate(payload);
+                                } else {
+                                    const payload = {
+                                        customerName: name,
+                                        mobileNumber: phone,
+                                        customerEmail: user?.email || '',
+                                        area: selectedAddressIndex !== "new" ? "Home" : area,
+                                        customAddress: address,
+                                        quantity: orderDetails.quantity,
+                                        slot: orderDetails.slot,
+                                        items: orderDetails.items,
+                                        itemsTotal: itemsTotal,
+                                        deliveryCharge: deliveryCharge,
+                                        totalPrice: itemsTotal,
+                                        locationLink: locationLink,
+                                        promoCode: appliedDiscount > 0 ? couponCode : undefined,
+                                        useTokens: useTokens,
+                                        idempotencyKey: idempotencyKeyRef.current,
+                                        paymentMethod: 'online',
+                                        razorpayPaymentId: razorpay_payment_id,
+                                        razorpayOrderId: razorpay_order_id,
+                                    };
+                                    placeOrderMutation.mutate(payload);
+                                }
+                            } else {
+                                toast.error(verifyResult.message || "Payment verification failed", { id: "razorpay-verification" });
+                                setIsProcessingPayment(false);
+                            }
+                        } catch (err: any) {
+                            console.error("Signature verification error:", err);
+                            const errMsg = err.response?.data?.message || "Payment verification failed. Please contact support.";
+                            toast.error(errMsg, { id: "razorpay-verification" });
+                            setIsProcessingPayment(false);
+                        }
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            toast.info("Payment cancelled. You can retry or choose Cash on Delivery.");
+                            setIsProcessingPayment(false);
+                        }
+                    }
+                };
+
+                const razorpayInstance = new (window as any).Razorpay(options);
+
+                razorpayInstance.on("payment.failed", function (response: any) {
+                    console.error("Payment failed:", response.error);
+                    const errMsg =
+                        response.error?.description ||
+                        response.error?.reason ||
+                        "Payment processing failed";
+                    toast.error(`Payment failed: ${errMsg}`);
+                    setIsProcessingPayment(false);
+                });
+
+                razorpayInstance.open();
+            } catch (err: any) {
+                console.error("Failed to start payment:", err);
+                const errMsg = err.response?.data?.message || err.message || "Failed to start payment";
+                toast.error(errMsg);
+                setIsProcessingPayment(false);
+            }
+            return;
+        }
+
+        // Cash on delivery path
         if (orderDetails.isSubscription) {
             const payload = {
                 planId: orderDetails.planId,
@@ -225,26 +411,31 @@ export default function CheckoutPage() {
                     city: 'Jaipur',
                     pincode: '303002'
                 },
-                startDate: new Date().toISOString(), // Default to today/tomorrow
+                startDate: new Date().toISOString(),
                 quantity: orderDetails.quantity,
                 referralCode: appliedDiscount > 0 ? couponCode : undefined,
                 redeemTokens: useTokens,
+                paymentMethod: 'cash_on_delivery',
             };
             submitSubscriptionMutation.mutate(payload);
         } else {
             const payload = {
                 customerName: name,
                 mobileNumber: phone,
-                area: selectedAddressIndex !== "new" ? "Home" : area, // Fallback for saved addresses without explicit area
+                customerEmail: user?.email || '',
+                area: selectedAddressIndex !== "new" ? "Home" : area,
                 customAddress: address,
                 quantity: orderDetails.quantity,
-                slot: orderDetails.slot, // "Lunch" or "Dinner"
-                items: orderDetails.items, // Array of strings e.g. ["Dal Bati", "Extra Roti x2"]
-                totalPrice: orderDetails.totalPrice, // Full calculated price including extras
+                slot: orderDetails.slot,
+                items: orderDetails.items,
+                itemsTotal: itemsTotal,
+                deliveryCharge: deliveryCharge,
+                totalPrice: itemsTotal,
                 locationLink: locationLink,
                 promoCode: appliedDiscount > 0 ? couponCode : undefined,
                 useTokens: useTokens,
-                idempotencyKey: idempotencyKeyRef.current
+                idempotencyKey: idempotencyKeyRef.current,
+                paymentMethod: 'cash_on_delivery',
             };
             
             placeOrderMutation.mutate(payload);
@@ -392,7 +583,7 @@ export default function CheckoutPage() {
                             <div className="bg-white p-4 rounded-lg space-y-3 text-sm border border-stone-100 shadow-sm">
                                 <div className="flex justify-between font-bold text-stone-800 text-base border-b border-stone-100 pb-3">
                                     <span>{orderDetails.isSubscription ? orderDetails.planName : "Homemade Thali"} x {orderDetails.quantity}</span>
-                                    <span>₹{orderDetails.totalPrice}</span>
+                                    <span>₹{itemsTotal}</span>
                                 </div>
                                 
                                 {!orderDetails.isSubscription && (
@@ -412,6 +603,29 @@ export default function CheckoutPage() {
                                             <span className="font-medium bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-xs uppercase tracking-wide">
                                                 {orderDetails.slot}
                                             </span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-stone-600 border-t border-stone-100 pt-3 mt-1">
+                                            <div className="flex items-center gap-2">
+                                                <Truck className="w-4 h-4 text-orange-500" /> 
+                                                <span>Delivery Fee</span>
+                                            </div>
+                                            <div className="text-right">
+                                                {deliveryCharge > 0 ? (
+                                                    <div>
+                                                        <span className="font-bold text-orange-600">₹{deliveryCharge}</span>
+                                                        <span className="block text-[10px] text-stone-400">
+                                                            {orderDetails.slot === 'Lunch' ? 'Order after 1:00 PM' : 'Order after 9:00 PM'}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div>
+                                                        <span className="font-bold text-green-600">FREE</span>
+                                                        <span className="block text-[10px] text-stone-400">
+                                                            {orderDetails.slot === 'Lunch' ? 'Pre-order before 1:00 PM' : 'Pre-order before 9:00 PM'}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </>
                                 )}
@@ -479,6 +693,16 @@ export default function CheckoutPage() {
                             
                             {/* Final Price Breakdown */}
                             <div className="space-y-3 pt-2">
+                                {deliveryCharge > 0 && (
+                                    <div className="bg-amber-50/50 p-3 rounded-lg border border-amber-200 flex justify-between items-center text-sm">
+                                        <span className="font-medium text-amber-900 flex items-center gap-1.5">
+                                            <Truck className="w-4 h-4 text-amber-600" />
+                                            Late Delivery Fee
+                                        </span>
+                                        <span className="font-bold text-amber-700">+₹{deliveryCharge}</span>
+                                    </div>
+                                )}
+
                                 {appliedDiscount > 0 && (
                                     <div className="bg-green-50/50 p-3 rounded-lg border border-green-100 flex justify-between items-center text-sm">
                                         <span className="font-medium text-green-800">
@@ -501,7 +725,7 @@ export default function CheckoutPage() {
                                         <div className="flex items-center gap-3">
                                             {useTokens && availableTokens > 0 && (
                                                 <span className="font-black text-orange-600 text-base tracking-tight">
-                                                    -₹{Math.min(availableTokens / 10, orderDetails.totalPrice - appliedDiscount).toFixed(2)}
+                                                    -₹{tokenDiscount.toFixed(2)}
                                                 </span>
                                             )}
                                             <input 
@@ -521,11 +745,57 @@ export default function CheckoutPage() {
                                 </p>
                             )}
 
+                            {/* Payment Method Selection */}
+                            <div className="border-t border-stone-100 pt-4 mt-2 space-y-2">
+                                <label className="text-xs font-semibold text-stone-600 uppercase tracking-wider block">
+                                    Select Payment Method
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod("online")}
+                                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                                            paymentMethod === "online"
+                                                ? "border-orange-500 bg-orange-50/70 shadow-sm ring-1 ring-orange-500"
+                                                : "border-stone-200 hover:border-stone-300 bg-white"
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <CreditCard className={`w-4 h-4 ${paymentMethod === "online" ? "text-orange-600" : "text-stone-500"}`} />
+                                            <span className="text-[10px] bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded">UPI / Cards</span>
+                                        </div>
+                                        <div className="mt-2">
+                                            <p className="text-xs font-bold text-stone-900">Pay Online</p>
+                                            <p className="text-[10px] text-stone-500">Razorpay Secure</p>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethod("cod")}
+                                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                                            paymentMethod === "cod"
+                                                ? "border-orange-500 bg-orange-50/70 shadow-sm ring-1 ring-orange-500"
+                                                : "border-stone-200 hover:border-stone-300 bg-white"
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <Banknote className={`w-4 h-4 ${paymentMethod === "cod" ? "text-orange-600" : "text-stone-500"}`} />
+                                            <span className="text-[10px] bg-stone-100 text-stone-600 font-medium px-1.5 py-0.5 rounded">Cash</span>
+                                        </div>
+                                        <div className="mt-2">
+                                            <p className="text-xs font-bold text-stone-900">Cash on Delivery</p>
+                                            <p className="text-[10px] text-stone-500">Pay upon arrival</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
                             <div className="border-t border-stone-100 pt-4 mt-2">
                                 <div className="flex justify-between items-center mb-6">
                                     <span className="text-stone-600 font-medium">To Pay</span>
                                     <span className="text-2xl font-black text-stone-900">
-                                        ₹{(orderDetails.totalPrice - appliedDiscount - (useTokens ? Math.min(availableTokens / 10, orderDetails.totalPrice - appliedDiscount) : 0)).toFixed(2)}
+                                        ₹{finalAmountToPay.toFixed(2)}
                                     </span>
                                 </div>
 
@@ -536,13 +806,20 @@ export default function CheckoutPage() {
                                 >
                                     {isSubmitting ? (
                                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
+                                    ) : paymentMethod === "online" ? (
+                                        <><CreditCard className="mr-2 h-5 w-5" /> Pay ₹{finalAmountToPay.toFixed(2)} with Razorpay</>
                                     ) : (
-                                        orderDetails.isSubscription ? "Subscribe Now" : "Confirm Order"
+                                        orderDetails.isSubscription ? "Subscribe Now (COD)" : "Confirm Order (COD)"
                                     )}
                                 </Button>
-                                <p className="text-center text-xs text-stone-500 mt-3 font-medium">
-                                    Cash on Delivery Only. You will earn 10 Tokens on this order!
-                                </p>
+                                <div className="flex items-center justify-center gap-1.5 text-center text-xs text-stone-500 mt-3 font-medium">
+                                    <ShieldCheck className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                                    <span>
+                                        {paymentMethod === "online"
+                                            ? "Secured by Razorpay • UPI, Cards, NetBanking"
+                                            : "Cash on Delivery • You will earn 10 Tokens on this order!"}
+                                    </span>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

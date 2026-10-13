@@ -6,12 +6,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-comp
 // your app's Firebase config object.
 // https://firebase.google.com/docs/web/setup#config-object
 const firebaseConfig = {
-  apiKey: self.location.search.match(/apiKey=([^&]+)/)?.[1] || "YOUR_API_KEY",
-  authDomain: self.location.search.match(/authDomain=([^&]+)/)?.[1] || "YOUR_AUTH_DOMAIN",
-  projectId: self.location.search.match(/projectId=([^&]+)/)?.[1] || "YOUR_PROJECT_ID",
-  storageBucket: self.location.search.match(/storageBucket=([^&]+)/)?.[1] || "YOUR_STORAGE_BUCKET",
-  messagingSenderId: self.location.search.match(/messagingSenderId=([^&]+)/)?.[1] || "YOUR_MESSAGING_SENDER_ID",
-  appId: self.location.search.match(/appId=([^&]+)/)?.[1] || "YOUR_APP_ID"
+  apiKey: self.location.search.match(/apiKey=([^&]+)/)?.[1] || "AIzaSyBTtTW6g02fKfjm0xaO4PJyUYF0ax-Gr4c",
+  authDomain: self.location.search.match(/authDomain=([^&]+)/)?.[1] || "tommalu-553e0.firebaseapp.com",
+  projectId: self.location.search.match(/projectId=([^&]+)/)?.[1] || "tommalu-553e0",
+  storageBucket: self.location.search.match(/storageBucket=([^&]+)/)?.[1] || "tommalu-553e0.firebasestorage.app",
+  messagingSenderId: self.location.search.match(/messagingSenderId=([^&]+)/)?.[1] || "3389779380",
+  appId: self.location.search.match(/appId=([^&]+)/)?.[1] || "1:33897793800:web:8e9ad37b4ee7f341bc44bd"
 };
 
 try {

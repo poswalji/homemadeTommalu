@@ -64,14 +64,26 @@ export const usePushNotifications = () => {
           console.warn('VAPID key not found in environment variables');
         }
 
-        const currentToken = await getToken(messaging, { vapidKey });
+        let swReg: ServiceWorkerRegistration | undefined;
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+          try {
+            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          } catch (swErr) {
+            console.warn('Service Worker registration failed:', swErr);
+          }
+        }
+
+        const currentToken = await getToken(messaging, { 
+          vapidKey,
+          serviceWorkerRegistration: swReg
+        });
         
         if (currentToken) {
           console.log('FCM Token received:', currentToken.substring(0, 10) + '...');
           // Save token to backend
           if (user) {
             await authApi.saveFcmToken(currentToken);
-            console.log('FCM token saved to backend');
+            console.log('✅ FCM token saved to backend for user:', user._id || user.id);
           }
           return currentToken;
         } else {
