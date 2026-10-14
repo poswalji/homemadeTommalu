@@ -301,6 +301,38 @@ export default function CheckoutPage() {
                     theme: {
                         color: "#ea580c",
                     },
+                    config: {
+                        display: {
+                            blocks: {
+                                upi: {
+                                    name: "Pay via UPI (GPay / PhonePe / Paytm / QR)",
+                                    instruments: [
+                                        {
+                                            method: "upi",
+                                        },
+                                    ],
+                                },
+                                other: {
+                                    name: "Cards, NetBanking & Wallets",
+                                    instruments: [
+                                        {
+                                            method: "card",
+                                        },
+                                        {
+                                            method: "netbanking",
+                                        },
+                                        {
+                                            method: "wallet",
+                                        },
+                                    ],
+                                },
+                            },
+                            sequence: ["block.upi", "block.other"],
+                            preferences: {
+                                show_default_blocks: true,
+                            },
+                        },
+                    },
                     handler: async function (response: any) {
                         const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
                         toast.loading("Verifying payment...", { id: "razorpay-verification" });
@@ -820,6 +852,9 @@ export default function CheckoutPage() {
                                             : "Cash on Delivery • You will earn 10 Tokens on this order!"}
                                     </span>
                                 </div>
+                                <p className="text-[11px] text-center text-stone-400 mt-2 font-medium">
+                                    Tommalu Kitchen • FSSAI Lic. No. 22226043000221
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

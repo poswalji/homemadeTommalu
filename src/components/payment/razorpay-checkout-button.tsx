@@ -102,6 +102,38 @@ export function RazorpayCheckoutButton({
         theme: {
           color: "#ea580c", // Tommalu primary orange
         },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: "Pay via UPI (GPay / PhonePe / Paytm / QR)",
+                instruments: [
+                  {
+                    method: "upi",
+                  },
+                ],
+              },
+              other: {
+                name: "Cards, NetBanking & Wallets",
+                instruments: [
+                  {
+                    method: "card",
+                  },
+                  {
+                    method: "netbanking",
+                  },
+                  {
+                    method: "wallet",
+                  },
+                ],
+              },
+            },
+            sequence: ["block.upi", "block.other"],
+            preferences: {
+              show_default_blocks: true,
+            },
+          },
+        },
         handler: async function (response: RazorpaySuccessResponse) {
           const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
           toast.loading("Verifying payment...", { id: "razorpay-verification" });

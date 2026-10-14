@@ -13,7 +13,18 @@ export function Footer() {
                 <Image src="/logo.png" alt="Tommalu" width={140} height={36} />
               </Link>
             </div>
-            <p className="text-sm text-gray-600">{appConfig.description}</p>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Ghar jaisa swaad, apno jaisa pyaar. Fresh home-cooked meals & daily essentials delivered with care across Achrol & NIMS.
+            </p>
+            {/* FSSAI Certification Badge */}
+            <div className="mt-4 inline-flex items-center gap-2.5 px-3 py-1.5 bg-white border border-stone-200 rounded-lg shadow-2xs text-xs">
+              <span className="font-black text-orange-600 tracking-wider text-[11px] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
+                fssai
+              </span>
+              <span className="text-stone-700 font-medium">
+                Lic. No. <span className="font-semibold text-stone-900">{appConfig.fssaiNumber}</span>
+              </span>
+            </div>
           </div>
 
           <div>
@@ -73,8 +84,12 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t text-center text-sm text-gray-600">
-          <p>© 2025 Tommalu. All rights reserved.</p>
+        <div className="mt-8 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+          <p>© {new Date().getFullYear()} Tommalu. All rights reserved.</p>
+          <div className="flex items-center gap-2">
+            <span className="font-black text-orange-600 tracking-wider">fssai</span>
+            <span>Food License No: <strong className="text-gray-700">{appConfig.fssaiNumber}</strong></span>
+          </div>
         </div>
       </div>
     </footer>

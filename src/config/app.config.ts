@@ -1,7 +1,8 @@
 export const appConfig = {
   name: "Tommalu",
   description:
-    "Hyperlocal delivery in Achrol & NIMS — Homemade food, daily essentials delivered fast.",
+    "Ghar jaisa swaad, apno jaisa pyaar — Fresh home-cooked meals & essentials delivered with care across Achrol & NIMS.",
+  fssaiNumber: "22226043000221",
 
   url: process.env.NEXT_PUBLIC_APP_URL || "https://tommalu.com",
   apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",

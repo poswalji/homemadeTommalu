@@ -188,9 +188,13 @@ export function HomemadeSection() {
                                                 <p className="text-stone-500 text-sm mt-1">Freshly prepared for you</p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-wrap items-center gap-2">
                                             <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-0">Pure Veg</Badge>
                                             <Badge variant="secondary" className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-0">Desi Ghee</Badge>
+                                            <Badge variant="secondary" className="bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 font-semibold flex items-center gap-1">
+                                                <span className="font-extrabold text-[10px] tracking-wide text-amber-700">fssai</span>
+                                                <span className="text-[11px]">22226043000221</span>
+                                            </Badge>
                                         </div>
                                     </div>
 
@@ -433,15 +437,17 @@ export function HomemadeSection() {
                                     )}
                                 </div>
                                 {/* Trust Badges */}
-                                <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto mt-8 opacity-80">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto mt-8 opacity-90">
                                     {[
                                         { icon: Flame, label: "Freshly Made", text: "Every Meal" },
-                                        { icon: ShieldCheck, label: "Top Hygiene", text: "Guaranteed" },
+                                        { icon: ShieldCheck, label: "FSSAI Registered", text: "Lic #22226043000221" },
                                         { icon: Leaf, label: "Pure Veg", text: "Home Kitchen" },
+                                        { icon: Utensils, label: "Top Hygiene", text: "Desi Ghee" },
                                     ].map((item, idx) => (
-                                        <div key={idx} className="flex flex-col items-center text-center p-3">
-                                            <item.icon className="w-6 h-6 text-stone-400 mb-1" />
-                                            <span className="text-xs font-bold text-stone-600 uppercase tracking-wide">{item.label}</span>
+                                        <div key={idx} className="flex flex-col items-center text-center p-3 bg-white/60 rounded-xl border border-stone-100 shadow-2xs">
+                                            <item.icon className="w-5 h-5 text-orange-500 mb-1" />
+                                            <span className="text-xs font-bold text-stone-700 uppercase tracking-wide">{item.label}</span>
+                                            <span className="text-[11px] text-stone-400 font-medium">{item.text}</span>
                                         </div>
                                     ))}
                                 </div>
