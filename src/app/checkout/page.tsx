@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthMe } from "@/hooks/api";
 import { toast } from "sonner";
-import { Calendar, Clock, MapPin, Phone, Loader2, User, Navigation, CheckCircle2, Coins, ArrowLeft, Truck, CreditCard, Banknote, ShieldCheck } from "lucide-react";
+import { Calendar, Clock, MapPin, Phone, Loader2, User, Navigation, CheckCircle2, Coins, ArrowLeft, Truck, CreditCard, Banknote, ShieldCheck, Zap, Smartphone } from "lucide-react";
 import { placeHomemadeOrder, submitSubscription } from "@/services/homemadeService";
 import { referralApi } from "@/services/api/referral.api";
 import { promotionsApi } from "@/services/api/promotions.api";
@@ -287,16 +287,23 @@ export default function CheckoutPage() {
                     key: razorpayKey,
                     amount: rzpOrder.amount,
                     currency: rzpOrder.currency || "INR",
-                    name: "Tommalu Homemade Food",
+                    name: "Tommalu Kitchen",
                     description: orderDetails.isSubscription
-                        ? "Subscription Plan Payment"
-                        : `${orderDetails.slot || "Meal"} Order - Tommalu`,
-                    image: "/logo.png",
+                        ? "Subscription Plan Payment - Tommalu"
+                        : `Homemade Thali (${orderDetails.slot || "Meal"}) x${orderDetails.quantity}`,
+                    image: "/favicon.ico",
                     order_id: rzpOrder.order_id,
                     prefill: {
                         name: name || user?.name || "",
                         email: user?.email || "",
                         contact: phone || user?.phone || "",
+                        method: "upi",
+                    },
+                    notes: {
+                        slot: orderDetails.slot || "Meal",
+                        quantity: orderDetails.quantity,
+                        customerName: name,
+                        customerPhone: phone,
                     },
                     theme: {
                         color: "#ea580c",
@@ -786,19 +793,28 @@ export default function CheckoutPage() {
                                     <button
                                         type="button"
                                         onClick={() => setPaymentMethod("online")}
-                                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer relative ${
                                             paymentMethod === "online"
-                                                ? "border-orange-500 bg-orange-50/70 shadow-sm ring-1 ring-orange-500"
+                                                ? "border-orange-500 bg-orange-50/80 shadow-sm ring-2 ring-orange-500"
                                                 : "border-stone-200 hover:border-stone-300 bg-white"
                                         }`}
                                     >
                                         <div className="flex items-center justify-between">
-                                            <CreditCard className={`w-4 h-4 ${paymentMethod === "online" ? "text-orange-600" : "text-stone-500"}`} />
-                                            <span className="text-[10px] bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded">UPI / Cards</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <Zap className={`w-4 h-4 ${paymentMethod === "online" ? "text-orange-600 fill-orange-500" : "text-stone-500"}`} />
+                                                <Smartphone className={`w-3.5 h-3.5 ${paymentMethod === "online" ? "text-orange-600" : "text-stone-400"}`} />
+                                            </div>
+                                            <span className="text-[10px] bg-green-100 text-green-700 font-extrabold px-1.5 py-0.5 rounded shadow-2xs">
+                                                ⚡ UPI Fast
+                                            </span>
                                         </div>
                                         <div className="mt-2">
-                                            <p className="text-xs font-bold text-stone-900">Pay Online</p>
-                                            <p className="text-[10px] text-stone-500">Razorpay Secure</p>
+                                            <p className="text-xs font-bold text-stone-900 flex items-center gap-1">
+                                                Pay Online (UPI)
+                                            </p>
+                                            <p className="text-[10px] text-stone-500 font-medium">
+                                                GPay • PhonePe • Paytm • QR
+                                            </p>
                                         </div>
                                     </button>
 
@@ -807,7 +823,7 @@ export default function CheckoutPage() {
                                         onClick={() => setPaymentMethod("cod")}
                                         className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
                                             paymentMethod === "cod"
-                                                ? "border-orange-500 bg-orange-50/70 shadow-sm ring-1 ring-orange-500"
+                                                ? "border-orange-500 bg-orange-50/80 shadow-sm ring-2 ring-orange-500"
                                                 : "border-stone-200 hover:border-stone-300 bg-white"
                                         }`}
                                     >
@@ -817,10 +833,22 @@ export default function CheckoutPage() {
                                         </div>
                                         <div className="mt-2">
                                             <p className="text-xs font-bold text-stone-900">Cash on Delivery</p>
-                                            <p className="text-[10px] text-stone-500">Pay upon arrival</p>
+                                            <p className="text-[10px] text-stone-500">Pay cash upon arrival</p>
                                         </div>
                                     </button>
                                 </div>
+
+                                {paymentMethod === "online" && (
+                                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-2.5 mt-2 flex items-start gap-2 text-xs text-orange-900">
+                                        <Zap className="w-4 h-4 text-orange-600 shrink-0 mt-0.5 fill-orange-500" />
+                                        <div>
+                                            <p className="font-semibold text-orange-950">Direct UPI Payment via Razorpay</p>
+                                            <p className="text-[11px] text-orange-700">
+                                                Opens Google Pay, PhonePe, Paytm, or UPI QR code for 1-click instant payment.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="border-t border-stone-100 pt-4 mt-2">
@@ -839,7 +867,7 @@ export default function CheckoutPage() {
                                     {isSubmitting ? (
                                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                                     ) : paymentMethod === "online" ? (
-                                        <><CreditCard className="mr-2 h-5 w-5" /> Pay ₹{finalAmountToPay.toFixed(2)} with Razorpay</>
+                                        <><Zap className="mr-2 h-5 w-5 fill-current" /> Pay ₹{finalAmountToPay.toFixed(2)} with UPI / Razorpay</>
                                     ) : (
                                         orderDetails.isSubscription ? "Subscribe Now (COD)" : "Confirm Order (COD)"
                                     )}
@@ -848,7 +876,7 @@ export default function CheckoutPage() {
                                     <ShieldCheck className="w-3.5 h-3.5 text-green-600 shrink-0" />
                                     <span>
                                         {paymentMethod === "online"
-                                            ? "Secured by Razorpay • UPI, Cards, NetBanking"
+                                            ? "Secured by Razorpay • UPI (GPay, PhonePe, Paytm, QR) & Cards"
                                             : "Cash on Delivery • You will earn 10 Tokens on this order!"}
                                     </span>
                                 </div>

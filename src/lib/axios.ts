@@ -38,8 +38,12 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Handle 401 Unauthorized - Try refresh once, then clear
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Handle 401 Unauthorized - Try refresh once only if user had an active session and request is not a payment endpoint
+    const currentToken = cookieService.getCurrentToken();
+    const requestUrl = (originalRequest?.url || '').toString();
+    const isPaymentEndpoint = requestUrl.includes('/payments/') || requestUrl.includes('/create-order');
+
+    if (error.response?.status === 401 && !originalRequest._retry && currentToken && !isPaymentEndpoint) {
       originalRequest._retry = true;
 
       try {

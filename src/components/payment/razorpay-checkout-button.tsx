@@ -8,7 +8,8 @@ import { paymentApi, VerifyPaymentResponse } from "@/services/api/payments.api";
 import { loadRazorpayScript, RazorpaySuccessResponse } from "@/utils/razorpay";
 
 interface RazorpayCheckoutButtonProps {
-  amountInRupees: number;
+  amount?: number; // In rupees
+  amountInRupees?: number; // In rupees
   name?: string;
   description?: string;
   prefill?: {
@@ -33,6 +34,7 @@ interface RazorpayCheckoutButtonProps {
 }
 
 export function RazorpayCheckoutButton({
+  amount,
   amountInRupees,
   name = "Tommalu",
   description = "Food Order Payment",
@@ -48,10 +50,11 @@ export function RazorpayCheckoutButton({
   children,
 }: RazorpayCheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
+  const resolvedRupees = amountInRupees !== undefined ? amountInRupees : (amount !== undefined ? amount : 1);
 
   const handlePayment = async () => {
     // Validate amount (minimum ₹1 = 100 paise)
-    const amountInPaise = Math.round(amountInRupees * 100);
+    const amountInPaise = Math.round(resolvedRupees * 100);
     if (amountInPaise < 100) {
       toast.error("Payment amount must be at least ₹1.00");
       return;
@@ -221,7 +224,7 @@ export function RazorpayCheckoutButton({
       ) : (
         <>
           <CreditCard className="w-4 h-4 mr-2" />
-          {buttonText || `Pay ₹${amountInRupees.toFixed(2)} with Razorpay`}
+          {buttonText || `Pay ₹${resolvedRupees.toFixed(2)} with Razorpay`}
         </>
       )}
     </Button>
