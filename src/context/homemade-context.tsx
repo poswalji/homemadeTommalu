@@ -3,6 +3,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { getTodayMenu } from "@/services/homemadeService";
 
+export interface ThaliOption {
+    id: "regular" | "desiSpecial" | "paneerSpecial";
+    name: string;
+    price: number;
+    isAvailable: boolean;
+    badge?: string;
+    image?: string;
+    items: string[];
+}
+
 interface HomemadeState {
     dailySabji: string;
     price: number;
@@ -22,6 +32,12 @@ interface HomemadeState {
     dinnerSabji?: string;
     availableRotis?: Array<{ type: string; priceExtra: number; isDefault: boolean }>;
     extraRotiPrice?: number;
+    paneerSabji?: string;
+    thalis: {
+        regular: ThaliOption;
+        desiSpecial: ThaliOption;
+        paneerSpecial: ThaliOption;
+    };
 }
 
 interface HomemadeContextType {
@@ -31,6 +47,40 @@ interface HomemadeContextType {
 }
 
 const HomemadeContext = createContext<HomemadeContextType | undefined>(undefined);
+
+const defaultThalis: {
+    regular: ThaliOption;
+    desiSpecial: ThaliOption;
+    paneerSpecial: ThaliOption;
+} = {
+    regular: {
+        id: "regular",
+        name: "Regular Thali",
+        price: 99,
+        isAvailable: true,
+        badge: "Everyday Value",
+        image: "/thali-regular.jpg",
+        items: ["1 Seasonal Sabji", "4 Roti, Dal", "Rice", "Salad"]
+    },
+    desiSpecial: {
+        id: "desiSpecial",
+        name: "Desi Special Thali",
+        price: 119,
+        isAvailable: true,
+        badge: "Desi Ghee & Raita",
+        image: "/thali-desi.jpg",
+        items: ["1 Seasonal Sabji", "Dal", "6 Ghee Roti / Chawal", "Boondi Raita", "Lahsun Chutney", "Salad"]
+    },
+    paneerSpecial: {
+        id: "paneerSpecial",
+        name: "Paneer Special Thali",
+        price: 199,
+        isAvailable: true,
+        badge: "Royal Paneer Feast",
+        image: "/thali-paneer.jpg",
+        items: ["1 Paneer Sabji", "Dal", "4 Ghee Roti", "Jeera Rice", "Boondi Raita", "Salad", "1 Gulab Jamun"]
+    }
+};
 
 const defaultState: HomemadeState = {
     dailySabji: "Loading...",
@@ -47,7 +97,9 @@ const defaultState: HomemadeState = {
     dinnerSabji: "",
     availableRotis: [],
     extraRotiPrice: 10,
-    isServiceOff: false
+    isServiceOff: false,
+    paneerSabji: "Paneer Butter Masala",
+    thalis: defaultThalis
 };
 
 export function HomemadeProvider({ children }: { children: ReactNode }) {
@@ -118,7 +170,37 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                     dinnerSabji,
                     availableRotis: data.weekdayMenu?.availableRotis || [],
                     extraRotiPrice: data.product.extraRotiPrice || 10,
-                    isServiceOff: data.isServiceOff || false
+                    isServiceOff: data.isServiceOff || false,
+                    paneerSabji: data.paneerSabji || "Paneer Butter Masala",
+                    thalis: data.thalis ? {
+                        regular: {
+                            id: "regular",
+                            name: data.thalis.regular?.name || "Regular Thali",
+                            price: data.thalis.regular?.price ?? price ?? 99,
+                            isAvailable: data.thalis.regular?.isAvailable !== false,
+                            badge: data.thalis.regular?.badge || "Everyday Value",
+                            image: data.thalis.regular?.image || "/thali-regular.jpg",
+                            items: data.thalis.regular?.items || ["1 Seasonal Sabji", "4 Roti, Dal", "Rice", "Salad"]
+                        },
+                        desiSpecial: {
+                            id: "desiSpecial",
+                            name: data.thalis.desiSpecial?.name || "Desi Special Thali",
+                            price: data.thalis.desiSpecial?.price ?? 119,
+                            isAvailable: data.thalis.desiSpecial?.isAvailable !== false,
+                            badge: data.thalis.desiSpecial?.badge || "Desi Ghee & Raita",
+                            image: data.thalis.desiSpecial?.image || "/thali-desi.jpg",
+                            items: data.thalis.desiSpecial?.items || ["1 Seasonal Sabji", "Dal", "6 Ghee Roti / Chawal", "Boondi Raita", "Lahsun Chutney", "Salad"]
+                        },
+                        paneerSpecial: {
+                            id: "paneerSpecial",
+                            name: data.thalis.paneerSpecial?.name || "Paneer Special Thali",
+                            price: data.thalis.paneerSpecial?.price ?? 199,
+                            isAvailable: data.thalis.paneerSpecial?.isAvailable !== false,
+                            badge: data.thalis.paneerSpecial?.badge || "Royal Paneer Feast",
+                            image: data.thalis.paneerSpecial?.image || "/thali-paneer.jpg",
+                            items: data.thalis.paneerSpecial?.items || ["1 Paneer Sabji", "Dal", "4 Ghee Roti", "Jeera Rice", "Boondi Raita", "Salad", "1 Gulab Jamun"]
+                        }
+                    } : defaultThalis
                 });
             }
         } catch (error) {

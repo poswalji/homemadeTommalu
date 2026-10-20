@@ -12,11 +12,11 @@ import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
       <Header />
-      <main className=" ">
+      <main className="w-full overflow-x-hidden">
         <HeroSection />
-        <section id="homemadefood" className="py-20 bg-stone-50">
+        <section id="homemadefood" className="py-20 bg-stone-50 w-full overflow-hidden">
           <HomemadeSection />
         </section>
         <SubscriptionPlansSection />

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 
 interface CartItem {
   id: string;
@@ -42,6 +42,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     user: null,
     isAuthenticated: false,
   });
+
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("tommalu_app_cart");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setState((prev) => ({ ...prev, cart: parsed }));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load cart from localStorage", e);
+    }
+  }, []);
+
+  // Save cart to localStorage on update
+  useEffect(() => {
+    try {
+      localStorage.setItem("tommalu_app_cart", JSON.stringify(state.cart));
+    } catch (e) {
+      console.error("Failed to save cart to localStorage", e);
+    }
+  }, [state.cart]);
 
   const addToCart = useCallback((item: Omit<CartItem, "quantity">) => {
     setState((prev) => {
@@ -126,4 +150,6 @@ export function useApp() {
   }
   return context;
 }
+
+export const useAppContext = useApp;
 

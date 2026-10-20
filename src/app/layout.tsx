@@ -32,10 +32,16 @@ export const metadata: Metadata = {
    alternates: {
       canonical: appConfig.url,
    },
+   manifest: '/manifest.json',
+   appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: 'Tommalu',
+   },
    icons: {
-      icon: '/logo.png',
+      icon: '/icons/icon-192x192.png',
       shortcut: '/logo.png',
-      apple: '/logo.png',
+      apple: '/icons/apple-touch-icon.png',
    },
    category: 'Food & Grocery Delivery',
    openGraph: {
@@ -71,11 +77,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-   themeColor: '#FF6B6B',
+   themeColor: '#EA580C',
    colorScheme: 'light',
+   width: 'device-width',
+   initialScale: 1,
+   maximumScale: 5,
 };
 
 import { PushNotificationManager } from '@/components/global/push-notification-manager';
+import { PwaInstallPrompt } from '@/components/pwa/PwaInstallPrompt';
 
 export default function RootLayout({
    children,
@@ -87,6 +97,14 @@ export default function RootLayout({
          <head suppressHydrationWarning>
             <meta name="color-scheme" content="only light" />
             <meta name="supported-color-schemes" content="light" />
+            <meta name="theme-color" content="#EA580C" />
+            <link rel="manifest" href="/manifest.json" />
+            <meta name="mobile-web-app-capable" content="yes" />
+            <meta name="apple-mobile-web-app-capable" content="yes" />
+            <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+            <meta name="apple-mobile-web-app-title" content="Tommalu" />
+            <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+            <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
             {/* Organization JSON-LD */}
             <script
                type='application/ld+json'
@@ -168,6 +186,7 @@ export default function RootLayout({
                               <DeliveryFloatingButton />
                               <TokenRewardAnimation />
                               <PushNotificationManager />
+                              <PwaInstallPrompt />
                            </SocketProvider>
                         </HomemadeProvider>
                      </GoogleAuthProvider>

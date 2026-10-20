@@ -24,6 +24,8 @@ import { getGuestCart } from '@/lib/cart-storage';
 import { useLogout } from '@/hooks/api/use-auth';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
+import { useApp } from '@/context/app-context';
+import { CartDrawer } from '@/components/cart/cart-drawer';
 
 const customerNavItems = [
    { name: 'Dashboard', href: '/customer', icon: Home },
@@ -35,9 +37,11 @@ const customerNavItems = [
 export function Header() {
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
    const [customerSidebarOpen, setCustomerSidebarOpen] = useState(false);
+   const [isCartOpen, setIsCartOpen] = useState(false);
    const router = useRouter();
    const pathname = usePathname();
    const { isAuthenticated, user } = useAuth();
+   const { cartCount } = useApp();
    const logout = useLogout();
 
    // Check if we're on a customer page
@@ -120,7 +124,22 @@ export function Header() {
                   ) : null}
                </nav>
 
-               <div className='flex items-center space-x-4'>
+               <div className='flex items-center space-x-3'>
+                  {/* Cart Button with Count Badge */}
+                  <button
+                     type='button'
+                     onClick={() => setIsCartOpen(true)}
+                     className='relative flex items-center gap-1.5 px-3 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition-all cursor-pointer shadow-2xs group'
+                     title='View Cart'
+                     aria-label='View Food Cart'>
+                     <ShoppingCart className='w-4 h-4 text-orange-600 transition-transform group-hover:scale-110' />
+                     <span className='hidden sm:inline text-xs font-black text-orange-950'>Cart</span>
+                     {cartCount > 0 && (
+                        <span className='ml-0.5 bg-orange-600 text-white font-black text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-xs animate-in zoom-in-75 duration-200'>
+                           {cartCount}
+                        </span>
+                     )}
+                  </button>
                  
                   {!isAuthenticated ? (
                      <>
@@ -190,6 +209,24 @@ export function Header() {
             {mobileMenuOpen && (
                <div className='md:hidden border-t bg-white'>
                   <nav className='flex flex-col px-4 py-4 space-y-1'>
+                     {/* Mobile Cart Link */}
+                     <button
+                        type='button'
+                        onClick={() => {
+                           setMobileMenuOpen(false);
+                           setIsCartOpen(true);
+                        }}
+                        className='flex items-center justify-between px-3 py-3 text-base font-bold text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors w-full text-left cursor-pointer'>
+                        <div className='flex items-center gap-3'>
+                           <ShoppingCart className='w-5 h-5 text-orange-600' />
+                           <span>View Food Cart</span>
+                        </div>
+                        {cartCount > 0 && (
+                           <span className='bg-orange-600 text-white font-extrabold text-xs px-2 py-0.5 rounded-full'>
+                              {cartCount} {cartCount === 1 ? 'item' : 'items'}
+                           </span>
+                        )}
+                     </button>
                      <Link
                         href='/'
                         className='flex items-center gap-3 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors'
@@ -218,6 +255,19 @@ export function Header() {
                         <CalendarDays className='w-5 h-5 text-gray-500' />
                         Subscription Plans
                      </Link>
+                     <button
+                        type="button"
+                        onClick={() => {
+                           setMobileMenuOpen(false);
+                           if (typeof window !== 'undefined') {
+                              window.dispatchEvent(new CustomEvent('open-pwa-install'));
+                           }
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-3 text-base font-bold text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer text-left"
+                     >
+                        <div className="w-5 h-5 flex items-center justify-center text-lg">📲</div>
+                        Install Tommalu App
+                     </button>
 
                      <div className='pt-4 border-t space-y-2'>
                         {!isAuthenticated ? (
@@ -353,6 +403,8 @@ export function Header() {
             </nav>
          )}
 
-      </>
+      {/* Slide-over Cart Drawer */}
+          <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+       </>
    );
 }

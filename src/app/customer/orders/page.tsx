@@ -198,7 +198,7 @@ export default function CustomerOrdersPage() {
                             <p className="text-xs sm:text-sm text-orange-700 font-semibold break-words">
                               {order.metadata.mealType}
                               <span className="font-normal text-orange-600/80 ml-1">
-                                ({order.metadata.mealType === 'Lunch' ? '12:30-2:00 PM' : '8:00-9:00 PM'})
+                                ({order.metadata.mealType === 'Lunch' ? '11:30 AM-2:00 PM' : '7:30-10:00 PM'})
                               </span>
                             </p>
                           </div>

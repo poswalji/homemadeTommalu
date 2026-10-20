@@ -1,46 +1,45 @@
 import { format } from "date-fns";
 
 interface MenuShareData {
-    date: string | Date; // Date string or object
+    date: string | Date;
     lunchSabji: string;
-    lunchItems: string[];
+    lunchItems?: string[];
     dinnerSabji: string;
-    dinnerItems: string[];
-    lunchPrice: number;
-    dinnerPrice: number;
+    dinnerItems?: string[];
+    lunchPrice?: number;
+    dinnerPrice?: number;
     isSunday?: boolean;
     sundayItem?: string;
+    thalis?: {
+        regularPrice?: number;
+        desiPrice?: number;
+        paneerPrice?: number;
+    };
 }
 
 export const generateMenuShareText = (data: MenuShareData): string => {
     const dateObj = typeof data.date === 'string' ? new Date(data.date) : data.date;
     const dateStr = format(dateObj, 'EEE, MMM do');
 
-    // Helper to format items list
-    const formatItems = (items: string[]) => {
-        if (!items || items.length === 0) return "";
-        return `+ ${items.join(", ")}`;
-    };
+    let text = `🍽️ *Tommalu Homemade Food Menu* - ${dateStr}\n\n`;
 
-    let text = `🍽️ *Tommalu Daily Menu* - ${dateStr}\n\n`;
+    // Today's Sabji
+    text += `☀️ *Lunch*: ${data.lunchSabji || "Seasonal Sabji"}\n`;
+    text += `🌙 *Dinner*: ${data.dinnerSabji || "Seasonal Sabji"}\n\n`;
 
-    // Lunch Section
-    text += `☀️ *Lunch Special* (₹${data.lunchPrice})\n`;
-    text += `${data.lunchSabji || "Tasty Sabji"}\n`;
-    const lunchExtras = formatItems(data.lunchItems);
-    if (lunchExtras) text += `${lunchExtras}\n`;
-    text += `\n`;
+    // 3 Thali Options
+    text += `🍱 *Our 3 Thali Options:*\n`;
+    text += `1️⃣ *Regular Thali — ₹${data.thalis?.regularPrice || data.lunchPrice || 99}*\n`;
+    text += `   • 1 Seasonal Sabji\n   • 4 Roti, Dal\n   • Rice\n   • Salad\n\n`;
 
-    // Dinner Section
-    const dinnerTitle = data.isSunday ? `🌙 *Sunday Special Dinner*` : `🌙 *Dinner Special*`;
-    const dinnerPriceStr = data.isSunday ? "" : `(₹${data.dinnerPrice})`; // Sunday usually special price logic, or same? assuming same for now or hidden if distinct
+    text += `2️⃣ *Desi Special Thali — ₹${data.thalis?.desiPrice || 119}*\n`;
+    text += `   • 1 Seasonal Sabji\n   • Dal\n   • 6 Ghee Roti / Chawal\n   • Boondi Raita\n   • Lahsun Chutney\n   • Salad\n\n`;
 
-    text += `${dinnerTitle} ${dinnerPriceStr}\n`;
-    text += `${data.dinnerSabji || "Special Dinner"}\n`;
-    const dinnerExtras = formatItems(data.dinnerItems);
-    if (dinnerExtras) text += `${dinnerExtras}\n`;
+    text += `3️⃣ *Paneer Special Thali — ₹${data.thalis?.paneerPrice || 199}*\n`;
+    text += `   • 1 Paneer Sabji\n   • Dal\n   • 4 Ghee Roti\n   • Jeera Rice\n   • Boondi Raita\n   • Salad\n   • 1 Gulab Jamun\n\n`;
 
-    text += `\n`;
+    text += `🕒 *Delivery Timings:*\n`;
+    text += `Lunch: 11:30 AM–2:00 PM | Dinner: 7:30–10:00 PM\n\n`;
     text += `Order Now: https://tommalu.com/homemade\n`;
     text += `Or Call/WhatsApp: 7742892352`;
 

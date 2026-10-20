@@ -290,7 +290,7 @@ export default function CheckoutPage() {
                     name: "Tommalu Kitchen",
                     description: orderDetails.isSubscription
                         ? "Subscription Plan Payment - Tommalu"
-                        : `Homemade Thali (${orderDetails.slot || "Meal"}) x${orderDetails.quantity}`,
+                        : `${orderDetails.thaliName || "Homemade Thali"} (${orderDetails.slot || "Meal"}) x${orderDetails.quantity}`,
                     image: "/favicon.ico",
                     order_id: rzpOrder.order_id,
                     prefill: {
@@ -383,6 +383,9 @@ export default function CheckoutPage() {
                                         area: selectedAddressIndex !== "new" ? "Home" : area,
                                         customAddress: address,
                                         quantity: orderDetails.quantity,
+                                        thaliType: orderDetails.thaliType || 'regular',
+                                        thaliName: orderDetails.thaliName || 'Regular Thali',
+                                        extraRotiCount: orderDetails.extraRotiCount || 0,
                                         slot: orderDetails.slot,
                                         items: orderDetails.items,
                                         itemsTotal: itemsTotal,
@@ -465,6 +468,9 @@ export default function CheckoutPage() {
                 area: selectedAddressIndex !== "new" ? "Home" : area,
                 customAddress: address,
                 quantity: orderDetails.quantity,
+                thaliType: orderDetails.thaliType || 'regular',
+                thaliName: orderDetails.thaliName || 'Regular Thali',
+                extraRotiCount: orderDetails.extraRotiCount || 0,
                 slot: orderDetails.slot,
                 items: orderDetails.items,
                 itemsTotal: itemsTotal,
@@ -620,10 +626,33 @@ export default function CheckoutPage() {
                         </CardHeader>
                         <CardContent className="pt-6 space-y-4">
                             <div className="bg-white p-4 rounded-lg space-y-3 text-sm border border-stone-100 shadow-sm">
-                                <div className="flex justify-between font-bold text-stone-800 text-base border-b border-stone-100 pb-3">
-                                    <span>{orderDetails.isSubscription ? orderDetails.planName : "Homemade Thali"} x {orderDetails.quantity}</span>
-                                    <span>₹{itemsTotal}</span>
+                                <div className="flex justify-between items-start font-bold text-stone-800 text-base border-b border-stone-100 pb-3">
+                                    <div>
+                                        <p className="text-base font-black text-stone-900">
+                                            {orderDetails.isSubscription 
+                                                ? orderDetails.planName 
+                                                : (orderDetails.thaliName || "Regular Thali")}
+                                        </p>
+                                        <p className="text-xs font-normal text-stone-500">
+                                            Qty: {orderDetails.quantity} {orderDetails.unitPrice ? `(@ ₹${orderDetails.unitPrice}/plate)` : ""}
+                                            {orderDetails.extraRotiCount > 0 ? ` + ${orderDetails.extraRotiCount} Extra Roti` : ""}
+                                        </p>
+                                    </div>
+                                    <span className="text-lg font-black text-stone-900">₹{itemsTotal}</span>
                                 </div>
+                                
+                                {!orderDetails.isSubscription && orderDetails.items && orderDetails.items.length > 0 && (
+                                    <div className="py-2 border-b border-stone-100 space-y-1">
+                                        <p className="text-[11px] font-bold text-stone-400 uppercase tracking-wide">Included Items:</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {orderDetails.items.map((it: string, idx: number) => (
+                                                <span key={idx} className="text-xs bg-stone-100 text-stone-700 px-2 py-0.5 rounded-md font-medium">
+                                                    {it}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                                 
                                 {!orderDetails.isSubscription && (
                                     <>

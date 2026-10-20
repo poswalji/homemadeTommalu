@@ -8,12 +8,19 @@
 html {
    color-scheme: only light !important;
    background-color: #ffffff !important;
+   overflow-x: hidden !important;
+   max-width: 100vw !important;
+   width: 100%;
 }
 
 body {
    color-scheme: only light !important;
    background-color: #ffffff !important;
    color: #1c1917 !important;
+   overflow-x: hidden !important;
+   max-width: 100vw !important;
+   width: 100%;
+   position: relative;
 }
 
 @media (prefers-color-scheme: dark) {
