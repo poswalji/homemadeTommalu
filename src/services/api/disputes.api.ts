@@ -4,9 +4,9 @@ import apiClient from '@/lib/axios';
 export interface Dispute {
   id: string;
   _id?: string;
-  orderId: string | { _id?: string; id?: string }; // Backend may populate
-  userId: string | { _id?: string; name?: string; email?: string }; // Backend may populate
-  storeId: string | { _id?: string; storeName?: string }; // Backend may populate
+  orderId: string | { _id?: string; id?: string; status?: string; finalPrice?: number; totalAmount?: number }; // Backend may populate
+  userId: string | { _id?: string; id?: string; name?: string; email?: string; phone?: string }; // Backend may populate
+  storeId: string | { _id?: string; id?: string; storeName?: string }; // Backend may populate
   type: 'order_issue' | 'payment_issue' | 'quality_issue' | 'delivery_issue' | 'other';
   title: string;
   description: string;

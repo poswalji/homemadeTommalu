@@ -26,6 +26,35 @@ export interface User {
   }>;
   emailVerified?: boolean;
   tokens?: number;
+  referralCode?: string;
+  createdAt?: string;
+}
+
+export interface CreateUserData {
+  name: string;
+  email: string;
+  phone?: string;
+  password: string;
+  role?: UserRole;
+  tokens?: number;
+  status?: UserStatus;
+}
+
+export interface UpdateUserData {
+  name?: string;
+  phone?: string;
+  role?: UserRole;
+  status?: UserStatus;
+  tokens?: number;
+  addresses?: Array<{
+    label?: string;
+    street: string;
+    city: string;
+    state?: string;
+    pincode: string;
+    country?: string;
+    isDefault?: boolean;
+  }>;
 }
 
 export interface Store {
@@ -132,6 +161,8 @@ export interface UsersQueryParams {
   status?: UserStatus;
   city?: string;
   phone?: string;
+  email?: string;
+  q?: string;
 }
 
 // Admin API Service
@@ -139,6 +170,18 @@ export const adminApi = {
   // List users with filters
   getUsers: async (params?: UsersQueryParams): Promise<UsersListResponse> => {
     const response = await apiClient.get<UsersListResponse>('/admin/users', { params });
+    return response.data;
+  },
+
+  // Create a user (superAdmin)
+  createUser: async (data: CreateUserData): Promise<AdminResponse<User>> => {
+    const response = await apiClient.post<AdminResponse<User>>('/admin/users', data);
+    return response.data;
+  },
+
+  // Update a user (superAdmin)
+  updateUser: async (id: string, data: UpdateUserData): Promise<AdminResponse<User>> => {
+    const response = await apiClient.patch<AdminResponse<User>>(`/admin/users/${id}`, data);
     return response.data;
   },
 

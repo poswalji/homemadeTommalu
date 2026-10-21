@@ -146,6 +146,7 @@ export interface CreateHomemadeFoodData {
 export interface UpdateOrderStatusData {
     status: HomemadeFoodOrderStatus;
     adminNotes?: string;
+    assignedTo?: string | null;
     cancellationReason?: string;
     refundDetails?: {
         amount?: number;

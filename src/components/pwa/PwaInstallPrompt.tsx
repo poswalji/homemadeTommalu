@@ -22,9 +22,9 @@ export function PwaInstallPrompt() {
         // 1. Register service worker for PWA
         if (typeof window !== "undefined" && "serviceWorker" in navigator) {
             navigator.serviceWorker
-                .register("/sw.js")
+                .register("/firebase-messaging-sw.js")
                 .then((reg) => {
-                    console.log("[PWA] Service Worker registered with scope:", reg.scope);
+                    console.log("[PWA + Push] Service Worker registered with scope:", reg.scope);
                 })
                 .catch((err) => {
                     console.log("[PWA] Service Worker registration failed:", err);

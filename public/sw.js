@@ -1,4 +1,10 @@
-// Tommalu PWA Service Worker
+// Tommalu PWA + Push Messaging Service Worker
+try {
+  importScripts('/firebase-messaging-sw.js');
+} catch (e) {
+  console.log('[SW] Firebase messaging import notice:', e);
+}
+
 const CACHE_NAME = 'tommalu-pwa-v1';
 const PRECACHE_ASSETS = [
   '/',

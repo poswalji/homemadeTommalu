@@ -70,6 +70,12 @@ export const notificationsApi = {
   updateFCMToken: async (fcmToken: string): Promise<{ success: boolean; message: string; data: any }> => {
     const response = await axios.post('/notifications/fcm-token', { fcmToken });
     return response.data;
+  },
+
+  // Test Push Notification
+  testPush: async (): Promise<{ success: boolean; message: string; tokensCount: number }> => {
+    const response = await axios.post('/notifications/test-push');
+    return response.data;
   }
 };
 

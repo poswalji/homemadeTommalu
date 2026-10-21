@@ -10,25 +10,25 @@ const firebaseConfig = {
   authDomain: self.location.search.match(/authDomain=([^&]+)/)?.[1] || "tommalu-553e0.firebaseapp.com",
   projectId: self.location.search.match(/projectId=([^&]+)/)?.[1] || "tommalu-553e0",
   storageBucket: self.location.search.match(/storageBucket=([^&]+)/)?.[1] || "tommalu-553e0.firebasestorage.app",
-  messagingSenderId: self.location.search.match(/messagingSenderId=([^&]+)/)?.[1] || "3389779380",
+  messagingSenderId: self.location.search.match(/messagingSenderId=([^&]+)/)?.[1] || "33897793800",
   appId: self.location.search.match(/appId=([^&]+)/)?.[1] || "1:33897793800:web:8e9ad37b4ee7f341bc44bd"
 };
 
 try {
-  // Try to initialize firebase, but we don't have the config here easily since it's an SW.
-  // Instead, the best practice is to pass it via query params when registering the SW, or hardcode it.
-  // However, `messagingSenderId` is often enough to just receive messages if we initialize properly.
   firebase.initializeApp(firebaseConfig);
   const messaging = firebase.messaging();
 
   messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
-    const notificationTitle = payload.notification.title;
+    const notificationTitle = payload.notification?.title || payload.data?.title || 'Tommalu Notification';
     const notificationOptions = {
-      body: payload.notification.body,
-      icon: '/logo.png', // Add a logo.png in public folder
-      badge: '/logo.png',
-      data: payload.data
+      body: payload.notification?.body || payload.data?.body || payload.data?.message || 'You have a new update.',
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-192x192.png',
+      vibrate: [200, 100, 200],
+      tag: payload.data?.orderId || 'tommalu-alert',
+      renotify: true,
+      data: payload.data || {}
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);

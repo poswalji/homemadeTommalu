@@ -74,6 +74,7 @@ export interface CreatePromotionData {
   maxUsesPerUser?: number;
   validFrom?: string;
   validUntil: string;
+  isActive?: boolean;
 }
 
 export interface ApiResponse<T> {

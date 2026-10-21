@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { useApp } from '@/context/app-context';
 import { CartDrawer } from '@/components/cart/cart-drawer';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 const customerNavItems = [
    { name: 'Dashboard', href: '/customer', icon: Home },
@@ -43,6 +44,7 @@ export function Header() {
    const { isAuthenticated, user } = useAuth();
    const { cartCount } = useApp();
    const logout = useLogout();
+   const { permission, requestPermission, testPush, isRegistering } = usePushNotifications();
 
    // Check if we're on a customer page
    const isCustomerPage = pathname?.startsWith('/customer');
@@ -153,33 +155,19 @@ export function Header() {
                   ) : (
                      <>
                         <Button
-                           onClick={() => {
-                              import('@/hooks/use-push-notifications').then(({ usePushNotifications }) => {
-                                 // Simple workaround to trigger the permission on click
-                                 // Actually better to just request it directly here since it's a client component
-                                 import('firebase/messaging').then(({ getToken }) => {
-                                    import('@/config/firebase.config').then(({ messaging }) => {
-                                       import('@/services/api/auth.api').then(({ authApi }) => {
-                                          if (messaging) {
-                                            Notification.requestPermission().then((permissionResult) => {
-                                              if (permissionResult === 'granted') {
-                                                const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-                                                getToken(messaging, { vapidKey }).then(token => {
-                                                   if (token) authApi.saveFcmToken(token);
-                                                   alert('Notifications enabled!');
-                                                });
-                                              }
-                                            });
-                                          }
-                                       })
-                                    })
-                                 })
-                              });
+                           onClick={async () => {
+                              if (permission !== 'granted') {
+                                 await requestPermission();
+                              } else {
+                                 await testPush();
+                              }
                            }}
                            variant='outline'
-                           className='hidden md:inline-flex'
-                           title="Enable Push Notifications">
-                           <Bell className='h-4 w-4 mr-2' /> Enable Alerts
+                           className='hidden md:inline-flex rounded-xl font-bold text-xs'
+                           title={permission === 'granted' ? 'Send Test Push Notification' : 'Enable Push Notifications'}
+                           disabled={isRegistering}>
+                           <Bell className={`h-4 w-4 mr-1.5 ${permission === 'granted' ? 'text-emerald-500 fill-emerald-500/20' : 'text-stone-500'}`} />
+                           {isRegistering ? 'Connecting...' : permission === 'granted' ? 'Test Alert' : 'Enable Alerts'}
                         </Button>
                         <Button
                            onClick={() => logout.mutate()}
