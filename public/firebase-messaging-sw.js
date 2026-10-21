@@ -60,7 +60,7 @@ self.addEventListener('notificationclick', function(event) {
 });
 
 // --- PWA Lifecycle & Offline Caching ---
-const CACHE_NAME = 'tommalu-pwa-v1';
+const CACHE_NAME = 'tommalu-pwa-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/homemade',

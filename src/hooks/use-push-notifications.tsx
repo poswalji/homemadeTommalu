@@ -87,15 +87,12 @@ export const usePushNotifications = () => {
       if (permissionResult === 'granted') {
         console.log('Notification permission granted.');
         
-        const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-        if (!vapidKey) {
-          console.warn('VAPID key not found in environment variables');
-        }
+        const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || 'BKroVyv-HpCqe5p6GVLZOOXa6AXTOL45ZUj9_eHQGN4cp_tXlKnlY0lr3JvV3Zaz6UDqZN7h1uKdaVPLDds7F2E';
 
         let swReg: ServiceWorkerRegistration | undefined;
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
           try {
-            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js?messagingSenderId=33897793800&projectId=tommalu-553e0');
             await navigator.serviceWorker.ready;
           } catch (swErr) {
             console.warn('Service Worker registration warning:', swErr);
@@ -137,6 +134,13 @@ export const usePushNotifications = () => {
       setIsRegistering(false);
     }
   }, [user]);
+
+  // Auto-sync token if permission is already granted and user is logged in
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && user) {
+      requestPermissionAndGetToken();
+    }
+  }, [user, requestPermissionAndGetToken]);
 
   const testPush = useCallback(async () => {
     try {
