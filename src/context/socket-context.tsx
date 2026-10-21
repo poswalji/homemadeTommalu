@@ -176,11 +176,14 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
           read: notificationData.read || false,
           createdAt: notificationData.createdAt || new Date().toISOString()
         };
-      } else if (event === 'new_order') {
+      } else if (event === 'new_order' || event === 'NEW_ORDER' || event === 'order_created') {
+        const orderNum = String(notificationData.orderNumber || (notificationData.orderId ? String(notificationData.orderId).slice(-6) : 'Order')).toUpperCase();
         notification = {
-          id: `order-${notificationData.orderId}`,
-          title: 'New Order Received',
-          message: `You have received a new order #${notificationData.orderId?.slice(-6)} for ₹${notificationData.finalPrice}`,
+          id: `order-${notificationData.orderId || notif.key}`,
+          title: notificationData.title || (userRole === 'customer' ? '🎉 Order Placed Successfully!' : '🔔 New Order Received'),
+          message: notificationData.message || (userRole === 'customer'
+            ? `Your order #${orderNum} has been placed successfully!`
+            : `New order #${orderNum} for ₹${notificationData.finalPrice || notificationData.amount || ''}`),
           type: 'order_created',
           relatedId: notificationData.orderId,
           read: false,
@@ -247,7 +250,24 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         }
 
         // Handle different notification types for all user roles
-        if (notification.type === 'order_created') {
+        if (notification.type === 'order_created' || notification.type === 'new_order' || notification.type === 'NEW_ORDER') {
+          if (userRole === 'customer') {
+            toast.success(notification.title || '🎉 Order Placed Successfully!', {
+              description: notification.message || 'We have received your order and started preparing!',
+              duration: 7000,
+            });
+            try {
+              const audio = new Audio('/notification-ring.wav');
+              audio.volume = 0.5;
+              audio.play().catch(() => {});
+            } catch (e) {}
+          } else if (userRole === 'storeOwner' || userRole === 'admin') {
+            toast.success(notification.title || '🔔 New Order Received!', {
+              description: notification.message || 'A new order has been placed on Tommalu.',
+              duration: 8000,
+            });
+          }
+
           // Store owner queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.storeOwner.orders() });
           QueryClient.invalidateQueries({ queryKey: queryKeys.payouts.storeOwner() });
@@ -265,6 +285,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
           // General orders queries
           QueryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+          QueryClient.invalidateQueries({ queryKey: ['homemadeFoodOrders'] });
+          QueryClient.invalidateQueries({ queryKey: ['adminHomemadeFoodOrders'] });
         } else if (notification.type === 'delivery_assigned' && userRole === 'admin') {
           // Admin delivery assignment notifications
           QueryClient.invalidateQueries({ queryKey: queryKeys.admin.analytics.dashboard() });

@@ -53,12 +53,13 @@ export const usePushNotifications = () => {
           : undefined,
       });
 
-      // Also trigger browser desktop notification if permitted and window in background
+      // Always trigger browser desktop notification if permitted
       try {
-        if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+        if ('Notification' in window && Notification.permission === 'granted') {
           new Notification(title, {
             body: body,
             icon: '/icons/icon-192x192.png',
+            tag: payload.data?.orderId || `tommalu-${Date.now()}`,
           });
         }
       } catch (e) {

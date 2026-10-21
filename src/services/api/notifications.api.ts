@@ -76,6 +76,40 @@ export const notificationsApi = {
   testPush: async (): Promise<{ success: boolean; message: string; tokensCount: number }> => {
     const response = await axios.post('/notifications/test-push');
     return response.data;
+  },
+
+  // Broadcast Notification (Admin sends to customers / all users)
+  broadcast: async (data: {
+    title: string;
+    message: string;
+    url?: string;
+    targetRole?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      targetedUsers: number;
+      deviceTokensTargeted: number;
+      pushDelivered: number;
+      pushFailed: number;
+    };
+  }> => {
+    const response = await axios.post('/notifications/broadcast', data);
+    return response.data;
+  },
+
+  // Get Notification & Push Subscriber stats (Admin)
+  getStats: async (): Promise<{
+    success: boolean;
+    data: {
+      totalUsers: number;
+      totalCustomers: number;
+      totalStoreOwners: number;
+      usersWithPush: number;
+    };
+  }> => {
+    const response = await axios.get('/notifications/stats');
+    return response.data;
   }
 };
 

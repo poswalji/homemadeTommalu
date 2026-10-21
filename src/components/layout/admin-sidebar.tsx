@@ -13,6 +13,7 @@ import {
    Bike,
    CreditCard,
    Tag,
+   Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import { useEffect } from 'react';
 
 const adminNavItems = [
    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+   { name: 'Push Notifications', href: '/admin/notifications', icon: Bell },
    { name: 'Homemade Food', href: '/admin/homemade-food', icon: ChefHat },
    { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
    { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },

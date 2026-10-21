@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { useApp } from '@/context/app-context';
 import { CartDrawer } from '@/components/cart/cart-drawer';
-import { usePushNotifications } from '@/hooks/use-push-notifications';
+import { NotificationBell } from './notification-bell';
 
 const customerNavItems = [
    { name: 'Dashboard', href: '/customer', icon: Home },
@@ -44,7 +44,6 @@ export function Header() {
    const { isAuthenticated, user } = useAuth();
    const { cartCount } = useApp();
    const logout = useLogout();
-   const { permission, requestPermission, testPush, isRegistering } = usePushNotifications();
 
    // Check if we're on a customer page
    const isCustomerPage = pathname?.startsWith('/customer');
@@ -127,7 +126,10 @@ export function Header() {
                </nav>
 
                <div className='flex items-center space-x-3'>
-                  {/* Cart Button with Count Badge */}
+                  {/* Notification Bell (Swiggy / Zomato style) */}
+                   <NotificationBell />
+
+                   {/* Cart Button with Count Badge */}
                   <button
                      type='button'
                      onClick={() => setIsCartOpen(true)}
@@ -154,21 +156,6 @@ export function Header() {
                      </>
                   ) : (
                      <>
-                        <Button
-                           onClick={async () => {
-                              if (permission !== 'granted') {
-                                 await requestPermission();
-                              } else {
-                                 await testPush();
-                              }
-                           }}
-                           variant='outline'
-                           className='hidden md:inline-flex rounded-xl font-bold text-xs'
-                           title={permission === 'granted' ? 'Send Test Push Notification' : 'Enable Push Notifications'}
-                           disabled={isRegistering}>
-                           <Bell className={`h-4 w-4 mr-1.5 ${permission === 'granted' ? 'text-emerald-500 fill-emerald-500/20' : 'text-stone-500'}`} />
-                           {isRegistering ? 'Connecting...' : permission === 'granted' ? 'Test Alert' : 'Enable Alerts'}
-                        </Button>
                         <Button
                            onClick={() => logout.mutate()}
                            variant='ghost'
