@@ -10,6 +10,8 @@ interface MenuShareData {
     dinnerPrice?: number;
     isSunday?: boolean;
     sundayItem?: string;
+    sundayLunchName?: string;
+    sundayDinnerName?: string;
     thalis?: {
         regularPrice?: number;
         desiPrice?: number;
@@ -20,6 +22,22 @@ interface MenuShareData {
 export const generateMenuShareText = (data: MenuShareData): string => {
     const dateObj = typeof data.date === 'string' ? new Date(data.date) : data.date;
     const dateStr = format(dateObj, 'EEE, MMM do');
+
+    if (data.isSunday) {
+        let text = `🌟 *Tommalu Sunday Special Menu* - ${dateStr}\n\n`;
+        text += `☀️ *Sunday Lunch: ${data.sundayLunchName || "Paratha Special Menu"} — ₹${data.lunchPrice || 99}*\n`;
+        text += `   • Fresh Stuffed Parathas (Aloo, Paneer, Pyaj, Gobhi)\n`;
+        text += `   • Served with Fresh Dahi, Amul Butter, Hari Chutney & Achar\n\n`;
+
+        text += `🌙 *Sunday Dinner: ${data.sundayDinnerName || data.sundayItem || "Sunday Special Feast"} — ₹${data.dinnerPrice || 149}*\n`;
+        text += `   • Complete Weekend Royal Feast with Sabzi, Dal, Rice, Roti/Puri, Salad & Sweet\n\n`;
+
+        text += `🕒 *Delivery Timings:*\n`;
+        text += `Lunch: 11:30 AM–2:00 PM | Dinner: 7:30–10:00 PM\n\n`;
+        text += `Order Now: https://tommalu.com/homemade\n`;
+        text += `Or Call/WhatsApp: 7742892352`;
+        return text;
+    }
 
     let text = `🍽️ *Tommalu Homemade Food Menu* - ${dateStr}\n\n`;
 

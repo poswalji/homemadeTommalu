@@ -29,7 +29,7 @@ interface MenuDetails {
 interface AiThaliImageModalProps {
     isOpen: boolean;
     onClose: () => void;
-    thaliId: "regular" | "desiSpecial" | "paneerSpecial" | "sunday";
+    thaliId: "regular" | "desiSpecial" | "paneerSpecial" | "sunday" | "sundayLunch";
     thaliTitle: string;
     currentImage: string;
     defaultImage: string;
@@ -104,6 +104,14 @@ export const REAL_THALI_LIBRARY: ThaliPhotoItem[] = [
         description: "4 Desi Ghee Baatis, Spicy Panchmel Dal, Sweet Churma, Lahsun Chutney, Salad"
     },
     {
+        id: "paratha",
+        title: "Sunday Special: Stuffed Paratha Brunch",
+        keywords: ["paratha", "aloo paratha", "paneer paratha", "pyaj paratha", "gobhi paratha", "butter", "dahi"],
+        url: "/thali-enhanced.jpg",
+        tag: "Sunday Lunch • Paratha",
+        description: "Hot Crispy Stuffed Parathas, Fresh Thick Dahi/Curd, Melting White Butter, Hari Chutney, Pickle"
+    },
+    {
         id: "enhanced",
         title: "Tommalu Signature Thali Plate",
         keywords: ["signature", "enhanced", "special"],
@@ -116,6 +124,9 @@ export const REAL_THALI_LIBRARY: ThaliPhotoItem[] = [
 export function matchAiImageForMenu(dishText: string, thaliType: string): ThaliPhotoItem {
     const text = (dishText || "").toLowerCase().trim();
 
+    if (text.includes("paratha") || thaliType === "sundayLunch") {
+        return REAL_THALI_LIBRARY.find(p => p.id === "paratha")!;
+    }
     if (text.includes("chole") || text.includes("bhature")) {
         return REAL_THALI_LIBRARY.find(p => p.id === "chole-bhature")!;
     }

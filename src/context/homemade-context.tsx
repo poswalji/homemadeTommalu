@@ -30,9 +30,23 @@ interface HomemadeState {
     dinnerItems: string[]; // Explicit Dinner Items
     lunchSabji?: string;
     dinnerSabji?: string;
+    paneerSabji?: string;
     availableRotis?: Array<{ type: string; priceExtra: number; isDefault: boolean }>;
     extraRotiPrice?: number;
-    paneerSabji?: string;
+    sundayLunch?: {
+        name: string;
+        price: number;
+        parathas: string;
+        accompaniments: string;
+        image: string;
+        includes: string[];
+    };
+    sundayDinner?: {
+        name: string;
+        price: number;
+        image: string;
+        includes: string[];
+    };
     thalis: {
         regular: ThaliOption;
         desiSpecial: ThaliOption;
@@ -122,26 +136,36 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                 let lunchItems: string[] = [];
                 let dinnerItems: string[] = [];
 
+                let sundayLunchData = undefined;
+                let sundayDinnerData = undefined;
+
                 if (isSunday) {
-                    sabjiDisplay = data.product.itemName || "Sunday Special";
-                    price = data.product.price;
+                    const sm = data.sundayMenu || {};
+                    const lp = data.product?.lunchProduct;
+                    const dp = data.product?.dinnerProduct;
 
-                    // Hybrid Sunday Logic handling
-                    if (data.product.lunchProduct) {
-                        lunchSabji = data.product.lunchProduct.sabji || "Standard Lunch";
-                        lunchItems = data.product.lunchProduct.includes || [];
-                    } else {
-                        lunchSabji = sabjiDisplay;
-                        lunchItems = data.product.includes || [];
-                    }
+                    sundayLunchData = {
+                        name: lp?.name || sm.lunchItemName || "Sunday Special Paratha Menu",
+                        price: lp?.price || sm.lunchPrice || 99,
+                        parathas: lp?.parathas || sm.parathaTypes || "Aloo Paratha, Paneer Paratha, Pyaj Paratha",
+                        accompaniments: lp?.accompaniments || sm.lunchAccompaniments || "Fresh Dahi, Amul Butter, Hari Chutney, Achar",
+                        image: lp?.image || sm.lunchImage || "/thali-enhanced.jpg",
+                        includes: lp?.includes || ["Special Parathas", "Fresh Dahi", "Butter & Chutney"]
+                    };
 
-                    if (data.product.dinnerProduct) {
-                        dinnerSabji = data.product.dinnerProduct.name || sabjiDisplay; // Name often used as item name
-                        dinnerItems = data.product.dinnerProduct.includes || ["Special Preparation"];
-                    } else {
-                        dinnerSabji = sabjiDisplay;
-                        dinnerItems = data.product.includes || [];
-                    }
+                    sundayDinnerData = {
+                        name: dp?.name || sm.specialItemName || "Sunday Special Feast",
+                        price: dp?.price || sm.price || 149,
+                        image: dp?.image || sm.image || "/thali-enhanced.jpg",
+                        includes: dp?.includes || ["Special Sabzi", "Dal", "Rice", "Roti / Puri", "Dessert"]
+                    };
+
+                    sabjiDisplay = `Lunch: ${sundayLunchData.name} | Dinner: ${sundayDinnerData.name}`;
+                    price = sundayDinnerData.price;
+                    lunchSabji = sundayLunchData.parathas;
+                    dinnerSabji = sundayDinnerData.name;
+                    lunchItems = sundayLunchData.includes;
+                    dinnerItems = sundayDinnerData.includes;
                 } else {
                     lunchSabji = data.product.lunchSabji || "Sabji 1";
                     dinnerSabji = data.product.dinnerSabji || "Sabji 2";
@@ -162,16 +186,18 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                     dinnerDeliveryCharge: data.slots?.dinner?.deliveryCharge ?? 0,
                     menuDate: data.date,
                     isSunday: isSunday,
-                    sundayItem: isSunday ? data.product.itemName : undefined,
+                    sundayItem: isSunday ? (data.product?.dinnerProduct?.name || data.product?.itemName) : undefined,
+                    sundayLunch: sundayLunchData,
+                    sundayDinner: sundayDinnerData,
                     items: data.product.includes || [],
                     lunchItems: lunchItems,
                     dinnerItems: dinnerItems,
                     lunchSabji,
                     dinnerSabji,
+                    paneerSabji: data.paneerSabji || data.product?.paneerSabji || "Paneer Butter Masala",
                     availableRotis: data.weekdayMenu?.availableRotis || [],
                     extraRotiPrice: data.product.extraRotiPrice || 10,
                     isServiceOff: data.isServiceOff || false,
-                    paneerSabji: data.paneerSabji || "Paneer Butter Masala",
                     thalis: data.thalis ? {
                         regular: {
                             id: "regular",
