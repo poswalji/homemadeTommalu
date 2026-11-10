@@ -26,12 +26,41 @@ export const subscriptionApi = {
     },
 
     // Admin: Active Subscriptions
+    createManualSubscription: async (data: {
+        customerName: string;
+        mobileNumber: string;
+        deliveryAddress: {
+            street: string;
+            landmark?: string;
+            city: string;
+            pincode: string;
+            coordinates?: { lat: number; lng: number };
+        };
+        planId?: string;
+        planName?: string;
+        price?: number;
+        planType: 'lunch' | 'dinner' | 'both';
+        duration?: number;
+        startDate?: string;
+        quantity?: number;
+        rotiPreference?: string;
+        paymentMethod?: string;
+        paymentStatus?: string;
+        adminNotes?: string;
+    }) => {
+        const response = await apiClient.post('/subscriptions/manual', data);
+        return response.data;
+    },
     getAllActiveSubscriptions: async (status?: string, page = 1) => {
         const response = await apiClient.get(`/subscriptions?page=${page}${status ? `&status=${status}` : ''}`);
         return response.data;
     },
     updateStatus: async (id: string, status: string, adminNotes?: string) => {
         const response = await apiClient.patch(`/subscriptions/${id}/status`, { status, adminNotes });
+        return response.data;
+    },
+    updateSubscriptionDetails: async (id: string, data: any) => {
+        const response = await apiClient.put(`/subscriptions/${id}`, data);
         return response.data;
     },
     updatePeriod: async (id: string, startDate: Date | string, endDate: Date | string) => {

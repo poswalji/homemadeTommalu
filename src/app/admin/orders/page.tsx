@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Package, MapPin, Phone, Loader2, ListFilter, Clock, CheckCircle2, Truck, Check, Users, User } from 'lucide-react';
+import { Search, Package, MapPin, Phone, Loader2, ListFilter, Clock, CheckCircle2, Truck, Check, Users, User, Plus, MessageCircle } from 'lucide-react';
 import { useAdminHomemadeFoodOrders, useUpdateHomemadeFoodOrderStatus } from '@/hooks/api';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { AddManualOrderModal } from '@/components/admin/orders/AddManualOrderModal';
 import Link from 'next/link';
 
 export default function AdminOrdersPage() {
@@ -25,6 +26,7 @@ export default function AdminOrdersPage() {
     });
 
     const [searchInput, setSearchInput] = useState('');
+    const [isManualOrderModalOpen, setIsManualOrderModalOpen] = useState(false);
 
     // Debounce search
     useEffect(() => {
@@ -102,6 +104,14 @@ export default function AdminOrdersPage() {
                     </h1>
                     <p className="text-sm text-gray-500 mt-1">Manage and track all customer orders in real-time.</p>
                 </div>
+                <Button
+                    onClick={() => setIsManualOrderModalOpen(true)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm flex items-center gap-2 cursor-pointer"
+                >
+                    <Plus className="h-4 w-4" />
+                    <MessageCircle className="h-4 w-4" />
+                    + Create WhatsApp Order
+                </Button>
             </div>
 
             {/* Filters Section */}
@@ -328,6 +338,12 @@ export default function AdminOrdersPage() {
                     ))}
                 </div>
             )}
+
+            <AddManualOrderModal
+                isOpen={isManualOrderModalOpen}
+                onClose={() => setIsManualOrderModalOpen(false)}
+                onSuccess={() => refetch()}
+            />
         </div>
     );
 }

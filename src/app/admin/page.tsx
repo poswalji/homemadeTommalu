@@ -20,8 +20,10 @@ import {
     ShoppingBag, DollarSign, Activity, Package, Clock, Calendar, 
     CreditCard, Utensils, ChefHat, Bike, Users, CheckCircle2, 
     Sun, Moon, MapPin, Phone, ArrowRight, Search, Check, X, 
-    Flame, Sparkles, AlertCircle, RefreshCw, Layers
+    Flame, Sparkles, AlertCircle, RefreshCw, Layers, Plus, MessageCircle
 } from 'lucide-react';
+import { AddManualSubscriptionModal } from '@/components/admin/subscription/AddManualSubscriptionModal';
+import { AddManualOrderModal } from '@/components/admin/orders/AddManualOrderModal';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -81,6 +83,8 @@ export default function AdminDashboard() {
     const [orderSearch, setOrderSearch] = useState('');
     const [orderStatusFilter, setOrderStatusFilter] = useState('all');
     const [orderSlotFilter, setOrderSlotFilter] = useState('all');
+    const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+    const [isManualOrderModalOpen, setIsManualOrderModalOpen] = useState(false);
 
     // Extract orders list safely
     const rawOrders = useMemo(() => {
@@ -149,6 +153,25 @@ export default function AdminDashboard() {
     const deliveredOrders = rawOrders.filter((o: any) => 
         (o.status || '').toLowerCase() === 'delivered'
     );
+
+    // Unified delivery metrics (Daily Food Orders + Active Tiffin Deliveries)
+    const unifiedDeliveryStats = useMemo(() => {
+        const u = dashboardData?.data?.unifiedDelivery;
+        if (u) return u;
+        const dailyCount = rawOrders.length;
+        const tiffinCount = activeSubscriptions.length;
+        const unassigned = rawOrders.filter((o: any) => !o.assignedTo && !o.deliveryBoy).length;
+        const assignedRiders = rawOrders.filter((o: any) => !!(o.assignedTo || o.deliveryBoy)).length;
+        const completed = rawOrders.filter((o: any) => (o.status || '').toLowerCase() === 'delivered').length;
+        return {
+            dailyOrdersCount: dailyCount,
+            tiffinDeliveriesCount: tiffinCount,
+            totalDeliveries: dailyCount + tiffinCount,
+            unassignedDeliveries: unassigned,
+            assignedRiders: assignedRiders,
+            completedDeliveries: completed
+        };
+    }, [dashboardData, rawOrders, activeSubscriptions]);
 
     const todayRevenue = rawOrders.reduce((sum: number, o: any) => {
         if ((o.status || '').toLowerCase() !== 'cancelled') {
@@ -230,6 +253,24 @@ export default function AdminDashboard() {
                         title="Refresh data"
                     >
                         <RefreshCw className="w-3.5 h-3.5 mr-1" /> Refresh
+                    </Button>
+                    <Button 
+                        size="sm" 
+                        onClick={() => setIsManualOrderModalOpen(true)}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        + WhatsApp Order
+                    </Button>
+                    <Button 
+                        size="sm" 
+                        onClick={() => setIsManualModalOpen(true)}
+                        className="bg-teal-600 hover:bg-teal-700 text-white font-bold cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        <Calendar className="w-3.5 h-3.5" />
+                        + WhatsApp Subscriber
                     </Button>
                     <Link href="/admin/homemade-food">
                         <Button size="sm" className="bg-stone-900 hover:bg-black text-white font-bold cursor-pointer">
@@ -336,6 +377,105 @@ export default function AdminDashboard() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Unified Delivery Operations Real-Time Panel */}
+            <Card className="border-orange-200/90 bg-gradient-to-r from-orange-50/40 via-white to-stone-50/50 shadow-2xs">
+                <CardHeader className="pb-3 border-b border-orange-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                        <span className="p-2 bg-orange-600 text-white rounded-xl shadow-xs">
+                            <Bike className="w-5 h-5" />
+                        </span>
+                        <div>
+                            <CardTitle className="text-base font-bold text-stone-900 flex items-center gap-2">
+                                Unified Delivery & Fleet Operations
+                                <Badge className="bg-orange-100 text-orange-800 font-bold text-xs">
+                                    {unifiedDeliveryStats.totalDeliveries} Total Deliveries
+                                </Badge>
+                            </CardTitle>
+                            <CardDescription className="text-xs text-stone-500">
+                                Live dispatch metrics combining Daily Food Orders and Active Tiffin Meal Plans.
+                            </CardDescription>
+                        </div>
+                    </div>
+
+                    <Link href="/admin/delivery-boys">
+                        <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs cursor-pointer">
+                            <Bike className="w-3.5 h-3.5 mr-1.5" />
+                            Manage Fleet & Dispatch ›
+                        </Button>
+                    </Link>
+                </CardHeader>
+
+                <CardContent className="p-4 sm:p-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                        {/* 1. Daily Orders */}
+                        <div className="bg-white p-3 rounded-xl border border-stone-200/80">
+                            <span className="text-[11px] font-bold text-stone-500 uppercase block">
+                                Today's Daily Orders
+                            </span>
+                            <div className="text-xl sm:text-2xl font-black text-blue-900 mt-1">
+                                {unifiedDeliveryStats.dailyOrdersCount}
+                            </div>
+                            <span className="text-[10px] text-stone-400">One-time orders</span>
+                        </div>
+
+                        {/* 2. Tiffin Deliveries */}
+                        <div className="bg-white p-3 rounded-xl border border-stone-200/80">
+                            <span className="text-[11px] font-bold text-stone-500 uppercase block">
+                                Today's Tiffins
+                            </span>
+                            <div className="text-xl sm:text-2xl font-black text-emerald-900 mt-1">
+                                {unifiedDeliveryStats.tiffinDeliveriesCount}
+                            </div>
+                            <span className="text-[10px] text-stone-400">Active meal plans</span>
+                        </div>
+
+                        {/* 3. Total Deliveries */}
+                        <div className="bg-white p-3 rounded-xl border border-stone-200/80">
+                            <span className="text-[11px] font-bold text-stone-500 uppercase block">
+                                Total Deliveries
+                            </span>
+                            <div className="text-xl sm:text-2xl font-black text-stone-900 mt-1">
+                                {unifiedDeliveryStats.totalDeliveries}
+                            </div>
+                            <span className="text-[10px] text-stone-400">Combined dispatch</span>
+                        </div>
+
+                        {/* 4. Unassigned Deliveries */}
+                        <div className="bg-amber-50/60 p-3 rounded-xl border border-amber-200">
+                            <span className="text-[11px] font-bold text-amber-800 uppercase block">
+                                Unassigned
+                            </span>
+                            <div className="text-xl sm:text-2xl font-black text-amber-800 mt-1">
+                                {unifiedDeliveryStats.unassignedDeliveries}
+                            </div>
+                            <span className="text-[10px] text-amber-600">Pending rider</span>
+                        </div>
+
+                        {/* 5. Assigned Riders */}
+                        <div className="bg-white p-3 rounded-xl border border-stone-200/80">
+                            <span className="text-[11px] font-bold text-stone-500 uppercase block">
+                                Assigned Riders
+                            </span>
+                            <div className="text-xl sm:text-2xl font-black text-purple-900 mt-1">
+                                {unifiedDeliveryStats.assignedRiders}
+                            </div>
+                            <span className="text-[10px] text-stone-400">Riders on route</span>
+                        </div>
+
+                        {/* 6. Completed Deliveries */}
+                        <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200">
+                            <span className="text-[11px] font-bold text-emerald-800 uppercase block">
+                                Completed
+                            </span>
+                            <div className="text-xl sm:text-2xl font-black text-emerald-800 mt-1">
+                                {unifiedDeliveryStats.completedDeliveries}
+                            </div>
+                            <span className="text-[10px] text-emerald-600">Delivered today</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Tabs Section: Orders vs Plans vs Kitchen Tally */}
             <Tabs defaultValue="orders" className="w-full">
@@ -445,8 +585,8 @@ export default function AdminDashboard() {
                                     />
                                 </div>
 
-                                {/* Status Filters */}
-                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                                    {/* Status Filters */}
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 flex-1">
                                     {[
                                         { id: 'all', label: 'All Orders' },
                                         { id: 'pending', label: 'Pending / New' },
@@ -468,6 +608,16 @@ export default function AdminDashboard() {
                                         </button>
                                     ))}
                                 </div>
+
+                                <Button
+                                    size="sm"
+                                    onClick={() => setIsManualOrderModalOpen(true)}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer flex items-center gap-1.5 shadow-xs self-start sm:self-auto shrink-0"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                    + Create WhatsApp Order
+                                </Button>
                             </div>
                         </CardHeader>
 
@@ -724,11 +874,21 @@ export default function AdminDashboard() {
                                     Customers currently active on weekly or monthly meal subscription plans.
                                 </CardDescription>
                             </div>
-                            <Link href="/admin/subscriptions">
-                                <Button variant="outline" size="sm" className="text-xs font-bold border-stone-200 cursor-pointer">
-                                    Manage All Plans ›
+                            <div className="flex items-center gap-2">
+                                <Button 
+                                    size="sm" 
+                                    onClick={() => setIsManualModalOpen(true)}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer flex items-center gap-1 shadow-xs"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    + Add WhatsApp User
                                 </Button>
-                            </Link>
+                                <Link href="/admin/subscriptions">
+                                    <Button variant="outline" size="sm" className="text-xs font-bold border-stone-200 cursor-pointer">
+                                        Manage All Plans ›
+                                    </Button>
+                                </Link>
+                            </div>
                         </CardHeader>
 
                         <CardContent>
@@ -969,6 +1129,25 @@ export default function AdminDashboard() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            <AddManualSubscriptionModal
+                isOpen={isManualModalOpen}
+                onClose={() => setIsManualModalOpen(false)}
+                onSuccess={() => {
+                    refetchSubs();
+                    refetchRequests();
+                    refetchDashboard();
+                }}
+            />
+
+            <AddManualOrderModal
+                isOpen={isManualOrderModalOpen}
+                onClose={() => setIsManualOrderModalOpen(false)}
+                onSuccess={() => {
+                    refetchOrders();
+                    refetchDashboard();
+                }}
+            />
         </div>
     );
 }

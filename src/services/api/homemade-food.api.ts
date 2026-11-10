@@ -15,9 +15,13 @@ export interface Subscription {
     duration: number;
     startDate: string;
     endDate: string;
-    status: 'pending' | 'active' | 'paused' | 'completed' | 'cancelled';
+    status: 'pending' | 'active' | 'paused' | 'completed' | 'cancelled' | 'rejected' | 'expired';
     quantity: number;
     rotiPreference: string;
+    deliverySequence?: number;
+    adminNotes?: string;
+    planName?: string;
+    price?: number;
     createdAt: string;
 }
 
@@ -360,6 +364,12 @@ export const homemadeFoodAdminApi = {
         search?: string;
     }): Promise<PaginatedResponse<HomemadeFoodOrder>> => {
         const response = await apiClient.get<PaginatedResponse<HomemadeFoodOrder>>('/admin/homemade-food/orders', { params });
+        return response.data;
+    },
+
+    // Create manual WhatsApp / offline order
+    createManualOrder: async (data: any): Promise<ApiResponse<any>> => {
+        const response = await apiClient.post<ApiResponse<any>>('/admin/homemade-food/orders/manual', data);
         return response.data;
     },
 

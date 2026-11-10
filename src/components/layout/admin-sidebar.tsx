@@ -14,6 +14,7 @@ import {
    CreditCard,
    Tag,
    Bell,
+   Boxes,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ import { useEffect } from 'react';
 
 const adminNavItems = [
    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+   { name: 'Kitchen & Inventory', href: '/admin/inventory', icon: Boxes },
    { name: 'Push Notifications', href: '/admin/notifications', icon: Bell },
    { name: 'Homemade Food', href: '/admin/homemade-food', icon: ChefHat },
    { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },

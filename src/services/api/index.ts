@@ -9,6 +9,8 @@ export { reviewsApi } from './reviews.api';
 export { promotionsApi } from './promotions.api';
 export { disputesApi } from './disputes.api';
 export { payoutsApi } from './payouts.api';
+export { dispatchApi } from './dispatch.api';
+export { inventoryApi } from './inventory.api';
 
 
 
