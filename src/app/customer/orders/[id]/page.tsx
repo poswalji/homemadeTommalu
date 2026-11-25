@@ -26,17 +26,21 @@ import {
   Truck,
   ArrowLeft,
   Clock,
-  Utensils
+  Utensils,
+  FileText,
+  Printer
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
+import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
 
 export default function CustomerOrderDetailPage() {
   const params = useParams();
   const orderId = (params?.id as string) || '';
   const [cancellationReason, setCancellationReason] = useState('');
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   const { data, isLoading, error } = useOrder(orderId);
   const cancelOrder = useCancelOrder();
 
@@ -196,6 +200,12 @@ export default function CustomerOrderDetailPage() {
                     ))}
                   </ul>
                 </div>
+                {(order.metadata?.specialInstructions || (order as any).notes || (order as any).specialInstructions) && (
+                  <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200 text-amber-900 text-sm">
+                    <span className="font-bold">Special Instructions: </span>
+                    <span>{order.metadata?.specialInstructions || (order as any).notes || (order as any).specialInstructions}</span>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
@@ -288,6 +298,17 @@ export default function CustomerOrderDetailPage() {
                 <span className="font-semibold text-lg">Total</span>
                 <span className="font-bold text-lg">₹{order.finalPrice.toFixed(2)}</span>
               </div>
+
+              {order.status?.toLowerCase() === 'delivered' && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsInvoiceOpen(true)}
+                  className="w-full mt-3 border-stone-300 text-stone-800 hover:bg-stone-50 gap-2 font-medium cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-orange-600" />
+                  View & Print Bill
+                </Button>
+              )}
             </div>
           </Card>
 
@@ -401,6 +422,12 @@ export default function CustomerOrderDetailPage() {
         </div>
       </div>
 
+      {/* Invoice / Bill Modal */}
+      <OrderInvoiceModal
+        isOpen={isInvoiceOpen}
+        onClose={() => setIsInvoiceOpen(false)}
+        order={order}
+      />
     </div>
   );
 }

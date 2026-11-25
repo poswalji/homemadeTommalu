@@ -80,7 +80,7 @@ const defaultThalis: {
         id: "desiSpecial",
         name: "Desi Special Thali",
         price: 119,
-        isAvailable: true,
+        isAvailable: false,
         badge: "Desi Ghee & Raita",
         image: "/thali-desi.jpg",
         items: ["1 Seasonal Sabji", "Dal", "6 Ghee Roti / Chawal", "Boondi Raita", "Lahsun Chutney", "Salad"]
@@ -89,7 +89,7 @@ const defaultThalis: {
         id: "paneerSpecial",
         name: "Paneer Special Thali",
         price: 199,
-        isAvailable: true,
+        isAvailable: false,
         badge: "Royal Paneer Feast",
         image: "/thali-paneer.jpg",
         items: ["1 Paneer Sabji", "Dal", "4 Ghee Roti", "Jeera Rice", "Boondi Raita", "Salad", "1 Gulab Jamun"]
@@ -212,7 +212,7 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                             id: "desiSpecial",
                             name: data.thalis.desiSpecial?.name || "Desi Special Thali",
                             price: data.thalis.desiSpecial?.price ?? 119,
-                            isAvailable: data.thalis.desiSpecial?.isAvailable !== false,
+                            isAvailable: Boolean(data.thalis.desiSpecial?.isAvailable),
                             badge: data.thalis.desiSpecial?.badge || "Desi Ghee & Raita",
                             image: data.thalis.desiSpecial?.image || "/thali-desi.jpg",
                             items: data.thalis.desiSpecial?.items || ["1 Seasonal Sabji", "Dal", "6 Ghee Roti / Chawal", "Boondi Raita", "Lahsun Chutney", "Salad"]
@@ -221,7 +221,7 @@ export function HomemadeProvider({ children }: { children: ReactNode }) {
                             id: "paneerSpecial",
                             name: data.thalis.paneerSpecial?.name || "Paneer Special Thali",
                             price: data.thalis.paneerSpecial?.price ?? 199,
-                            isAvailable: data.thalis.paneerSpecial?.isAvailable !== false,
+                            isAvailable: Boolean(data.thalis.paneerSpecial?.isAvailable),
                             badge: data.thalis.paneerSpecial?.badge || "Royal Paneer Feast",
                             image: data.thalis.paneerSpecial?.image || "/thali-paneer.jpg",
                             items: data.thalis.paneerSpecial?.items || ["1 Paneer Sabji", "Dal", "4 Ghee Roti", "Jeera Rice", "Boondi Raita", "Salad", "1 Gulab Jamun"]

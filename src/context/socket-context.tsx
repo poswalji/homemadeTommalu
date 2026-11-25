@@ -58,6 +58,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const pendingSounds = useRef<Set<string>>(new Set());
   // Track if user has interacted with the page
   const hasUserInteracted = useRef(false);
+  // Track seen notifications to prevent duplicate sounds/toasts (4x notification bug fix)
+  const seenNotificationKeys = useRef<Map<string, number>>(new Map());
 
   // Function to play notification sound for a specific order
   const playNotificationSound = useCallback((orderId: string, forcePlay = false) => {
@@ -222,21 +224,45 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         };
       }
 
+      const notifDedupeKey = String(notification.relatedId || notification.id || notif.key);
+      const now = Date.now();
+      const lastAlertTime = seenNotificationKeys.current.get(notifDedupeKey);
+
       // Add notification to state
+      let isNew = false;
       setNotifications((prev) => {
         // Check if notification already exists
         const exists = prev.some(n => n.id === notification.id);
         if (exists) return prev;
+        isNew = true;
         return [notification, ...prev];
       });
-      setUnreadCount((prev) => prev + 1);
 
-      // Show browser notification if permission granted
+      if (isNew) {
+        setUnreadCount((prev) => prev + 1);
+      }
+
+      // If this exact notification was already processed in the last 2 minutes, skip duplicate sound & toast!
+      if (lastAlertTime && (now - lastAlertTime < 120000)) {
+        return;
+      }
+      seenNotificationKeys.current.set(notifDedupeKey, now);
+
+      // Check if user is on admin dashboard (where AdminRealtimeListener owns order ringing and toast)
+      const isOnAdminPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+
+      // If user is on admin page and this is an order alert, AdminRealtimeListener handles ringing, modal, and toast
+      const isOrderEvent = notification.type === 'order_created' || notification.type === 'new_order' || notification.type === 'NEW_ORDER' || event === 'new_order';
+      if (isOnAdminPage && isOrderEvent) {
+        return;
+      }
+
+      // Show browser notification if permission granted (with dedupe tag to collapse duplicates)
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(notification.title, {
           body: notification.message,
           icon: '/logo.png',
-          tag: notification.id
+          tag: `order-${notifDedupeKey}`
         });
       }
 
@@ -244,8 +270,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       if (notification.relatedId) {
         const orderId = String(notification.relatedId);
 
-        // Play notification sound for store owners and admin on new order notifications
-        if ((userRole === 'storeOwner' || userRole === 'admin') && (notification.type === 'order_created' || notification.type === 'new_order' || notification.type === 'delivery_assigned')) {
+        // Play notification sound for store owners and admin on new order notifications (only if not on admin dashboard)
+        if ((userRole === 'storeOwner' || userRole === 'admin') && !isOnAdminPage && (notification.type === 'order_created' || notification.type === 'new_order' || notification.type === 'delivery_assigned')) {
           playNotificationSound(orderId);
         }
 
@@ -253,6 +279,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         if (notification.type === 'order_created' || notification.type === 'new_order' || notification.type === 'NEW_ORDER') {
           if (userRole === 'customer') {
             toast.success(notification.title || '🎉 Order Placed Successfully!', {
+              id: `customer-order-${orderId}`,
               description: notification.message || 'We have received your order and started preparing!',
               duration: 7000,
             });
@@ -261,8 +288,9 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
               audio.volume = 0.5;
               audio.play().catch(() => {});
             } catch (e) {}
-          } else if (userRole === 'storeOwner' || userRole === 'admin') {
+          } else if ((userRole === 'storeOwner' || userRole === 'admin') && !isOnAdminPage) {
             toast.success(notification.title || '🔔 New Order Received!', {
+              id: `admin-order-${orderId}`,
               description: notification.message || 'A new order has been placed on Tommalu.',
               duration: 8000,
             });

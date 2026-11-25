@@ -40,11 +40,6 @@ export function Footer() {
                   Home Kitchen
                 </Link>
               </li>
-              <li>
-                <Link href="/delivery/login" className="text-gray-400 hover:text-gray-600">
-                  Delivery Login
-                </Link>
-              </li>
             </ul>
           </div>
 

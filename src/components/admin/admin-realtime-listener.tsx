@@ -101,6 +101,7 @@ export function AdminRealtimeListener() {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const listenerReady = useRef(false);
     const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const seenOrdersRef = useRef<Map<string, number>>(new Map());
 
     // Stop ringtone function
     const stopRing = useCallback(() => {
@@ -200,14 +201,30 @@ export function AdminRealtimeListener() {
 
             if (isOrderEvent && listenerReady.current) {
                 const payload = data.data || {};
+                const orderId = payload.orderId ? payload.orderId.toString() : "";
+                const orderNumber = payload.orderNumber || (orderId ? orderId.slice(-6).toUpperCase() : "NEW");
+                const dedupeKey = String(orderId || orderNumber || snapshot.key || "");
+
+                // Prevent duplicate alerts: only alert once per order
+                const now = Date.now();
+                const lastAlertTimeId = orderId ? seenOrdersRef.current.get(orderId) : 0;
+                const lastAlertTimeNum = orderNumber ? seenOrdersRef.current.get(orderNumber) : 0;
+                const lastAlertTime = Math.max(lastAlertTimeId || 0, lastAlertTimeNum || 0, seenOrdersRef.current.get(dedupeKey) || 0);
+
+                if (lastAlertTime && (now - lastAlertTime < 120000)) {
+                    console.log(`[AdminRealtimeListener] Deduplicating order alert for: ${dedupeKey}`);
+                    return;
+                }
+                if (orderId) seenOrdersRef.current.set(orderId, now);
+                if (orderNumber) seenOrdersRef.current.set(orderNumber, now);
+                seenOrdersRef.current.set(dedupeKey, now);
+
                 console.log("🔔 Real-time New Order received for Admin:", payload);
 
-                const orderNumber = payload.orderNumber || payload.orderId?.toString().slice(-6).toUpperCase() || "NEW";
                 const customerName = payload.customerName || "Customer";
                 const amount = payload.amount || payload.finalPrice || "0";
                 const area = payload.area || payload.deliveryAddress?.city || "Jaipur";
                 const mealType = payload.mealType || (payload.isHomemade ? "Homemade" : "Restaurant");
-                const orderId = payload.orderId ? payload.orderId.toString() : "";
 
                 const alertData: ActiveOrderAlert = {
                     orderNumber,
@@ -223,7 +240,7 @@ export function AdminRealtimeListener() {
                 // 1. Ring the phone-like sound
                 startRing(alertData);
 
-                // 2. Show prominent toast
+                // 2. Show prominent toast (with unique ID so it never stacks duplicates)
                 toast.success(
                     <div className="flex flex-col gap-1.5 p-1">
                         <div className="flex items-center gap-2">
@@ -236,6 +253,7 @@ export function AdminRealtimeListener() {
                         <span className="text-sm font-bold text-green-700">₹{amount} • {mealType}</span>
                     </div>,
                     {
+                        id: `admin-order-${dedupeKey}`,
                         duration: 15000,
                         position: "top-center",
                     }

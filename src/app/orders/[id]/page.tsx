@@ -13,17 +13,21 @@ import {
   Truck,
   XCircle,
   Clock,
-  Star
+  Star,
+  FileText,
+  Printer
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useMemo } from 'react';
 import { OrderReviewModal } from '@/components/reviews/order-review-modal';
+import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
 
 export default function PublicOrderTrackingPage() {
   const params = useParams();
   const orderId = params?.id as string;
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
 
   const { data, isLoading, error } = useOrderPublic(orderId);
   const { user, isAuthenticated } = useAuth();
@@ -199,6 +203,17 @@ export default function PublicOrderTrackingPage() {
               <span className="font-bold text-gray-900">Total Amount</span>
               <span className="font-bold text-lg text-gray-900">₹{Number(order.finalPrice || 0).toFixed(2)}</span>
             </div>
+
+            {order?.status?.toLowerCase() === 'delivered' && (
+              <Button
+                onClick={() => setIsInvoiceOpen(true)}
+                variant="outline"
+                className="w-full mt-3 border-stone-300 text-stone-800 hover:bg-stone-50 gap-2 font-medium cursor-pointer"
+              >
+                <FileText className="w-4 h-4 text-orange-600" />
+                View & Download Bill / Invoice
+              </Button>
+            )}
           </div>
 
           {order?.items?.map((item, index) => (
@@ -229,6 +244,13 @@ export default function PublicOrderTrackingPage() {
               })}
             </p>
           </div>
+
+          {(order.metadata?.specialInstructions || (order as any).notes || (order as any).specialInstructions) && (
+            <div className="mb-6 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <p className="text-xs font-bold text-amber-900 uppercase tracking-wide mb-0.5">Special Instructions</p>
+              <p className="text-sm text-amber-800">{order.metadata?.specialInstructions || (order as any).notes || (order as any).specialInstructions}</p>
+            </div>
+          )}
         </Card>
 
         <Card className="p-8">
@@ -335,6 +357,13 @@ export default function PublicOrderTrackingPage() {
           }}
         />
       )}
+
+      {/* Invoice / Bill Modal */}
+      <OrderInvoiceModal
+        isOpen={isInvoiceOpen}
+        onClose={() => setIsInvoiceOpen(false)}
+        order={order}
+      />
     </div>
   );
 }

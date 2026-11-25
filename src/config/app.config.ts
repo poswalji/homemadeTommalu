@@ -33,7 +33,7 @@ export const appConfig = {
     phone: "+91 7742892352",
     whatsapp: "7742892352",
     email: "support@tommalu.com",
-    address: "Achrol & NIMS Area, Jaipur",
+    address: "N.H.11 C Delhi Road, Achrol, Jaipur, Rajasthan 303002",
   },
 
   features: [

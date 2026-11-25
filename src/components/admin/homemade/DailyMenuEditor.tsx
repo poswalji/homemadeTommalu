@@ -30,6 +30,7 @@ import {
     ChevronRight,
     RefreshCw,
     X,
+    Plus,
     Info,
     ShieldAlert
 } from 'lucide-react';
@@ -80,6 +81,72 @@ const COMMON_ACCOMPANIMENT_TAGS = [
     "Gulab Jamun"
 ];
 
+// Daily Items Checklist Item model for Admin Review & Verification
+export interface ThaliChecklistItem {
+    id: string;
+    name: string;
+    checked: boolean;
+    tag?: string;
+}
+
+export function deduceTag(name: string): string {
+    const l = name.toLowerCase();
+    if (l.includes('sabji') || l.includes('paneer') || l.includes('aloo') || l.includes('curry') || l.includes('bhindi') || l.includes('matar') || l.includes('gobhi')) return 'Sabji';
+    if (l.includes('roti') || l.includes('phulka') || l.includes('chapati') || l.includes('puri') || l.includes('baati')) return 'Roti';
+    if (l.includes('dal')) return 'Dal';
+    if (l.includes('rice') || l.includes('chawal')) return 'Rice';
+    if (l.includes('raita')) return 'Raita';
+    if (l.includes('chutney')) return 'Chutney';
+    if (l.includes('chach') || l.includes('chhach') || l.includes('lassi')) return 'Beverage';
+    if (l.includes('salad') || l.includes('pyaj')) return 'Salad';
+    if (l.includes('jamun') || l.includes('sweet') || l.includes('halwa') || l.includes('ladoo') || l.includes('churma')) return 'Sweet';
+    if (l.includes('papad') || l.includes('achar')) return 'Extra';
+    return 'Item';
+}
+
+export function buildChecklistFromSavedOrDefaults(
+    savedItems: any,
+    fallbackSabji: string,
+    fallbackRoti: string,
+    fallbackAcc: string,
+    fallbackUnique: string = ""
+): ThaliChecklistItem[] {
+    // If the database already has saved items for this thali, load them as admin-checked
+    if (Array.isArray(savedItems) && savedItems.length > 0) {
+        return savedItems.map((name, idx) => ({
+            id: `saved-${idx}-${String(name).toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+            name: String(name).trim(),
+            checked: true,
+            tag: deduceTag(String(name))
+        }));
+    }
+
+    // Otherwise build candidate items from the shared daily setup for the admin to review & check
+    const list: ThaliChecklistItem[] = [];
+    const seen = new Set<string>();
+
+    const addCand = (itemName: string, tag?: string) => {
+        const clean = itemName.trim();
+        if (!clean) return;
+        const key = clean.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!seen.has(key)) {
+            seen.add(key);
+            list.push({
+                id: `cand-${list.length}-${key}`,
+                name: clean,
+                checked: true,
+                tag: tag || deduceTag(clean)
+            });
+        }
+    };
+
+    if (fallbackSabji) addCand(fallbackSabji, 'Sabji');
+    if (fallbackRoti) addCand(fallbackRoti, 'Roti');
+    parseCommaItems(fallbackAcc).forEach(acc => addCand(acc));
+    parseCommaItems(fallbackUnique).forEach(u => addCand(u, 'Special'));
+    return list;
+}
+
 // Helper to determine if a date is Sunday in Asia/Kolkata timezone
 function isSundayInKolkata(d: Date): boolean {
     try {
@@ -120,6 +187,192 @@ function parseSafeDate(str: string): Date {
         return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12, 0, 0);
     }
     return new Date(str);
+}
+
+/**
+ * ThaliChecklistEditor
+ * Provides interactive checklist for daily review:
+ * - Admin checks/unchecks individual items daily
+ * - Zero automatic blind additions
+ * - Fast "+ Add" dish and delete
+ * - 1-Click Sync from Daily Shared Menu
+ */
+function ThaliChecklistEditor({
+    title,
+    subtitle = "Admin daily check: Items must be checked to be included.",
+    items = [],
+    accentColor = 'orange',
+    onToggle,
+    onRemove,
+    onCheckAll,
+    onSync,
+    newItemValue,
+    onNewItemChange,
+    onAddNewItem
+}: {
+    title: string;
+    subtitle?: string;
+    items: ThaliChecklistItem[];
+    accentColor?: 'orange' | 'amber' | 'purple';
+    onToggle: (id: string) => void;
+    onRemove: (id: string) => void;
+    onCheckAll: (checked: boolean) => void;
+    onSync: () => void;
+    newItemValue: string;
+    onNewItemChange: (val: string) => void;
+    onAddNewItem: () => void;
+}) {
+    const checkedCount = items.filter(i => i.checked).length;
+
+    const accentClasses = {
+        orange: {
+            check: "text-orange-600 focus:ring-orange-500",
+            activeItem: "bg-orange-50/50 border-orange-200/90 text-stone-900",
+            syncText: "text-orange-600 hover:text-orange-700",
+            buttonHover: "hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300"
+        },
+        amber: {
+            check: "text-amber-600 focus:ring-amber-500",
+            activeItem: "bg-amber-50/50 border-amber-200/90 text-stone-900",
+            syncText: "text-amber-700 hover:text-amber-800",
+            buttonHover: "hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300"
+        },
+        purple: {
+            check: "text-purple-600 focus:ring-purple-500",
+            activeItem: "bg-purple-50/50 border-purple-200/90 text-stone-900",
+            syncText: "text-purple-700 hover:text-purple-800",
+            buttonHover: "hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300"
+        }
+    }[accentColor];
+
+    return (
+        <div className="space-y-2 pt-2 border-t border-stone-200/80">
+            {/* Header with Admin Verification Status Badge */}
+            <div className="flex items-center justify-between gap-1">
+                <div>
+                    <label className="text-xs font-black text-stone-900 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        {title}
+                    </label>
+                    <p className="text-[10px] text-stone-500 font-medium">
+                        {subtitle}
+                    </p>
+                </div>
+                <Badge className={`text-[10px] font-extrabold px-1.5 py-0.5 shrink-0 ${
+                    checkedCount > 0 ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-rose-100 text-rose-800 border-rose-300"
+                }`}>
+                    {checkedCount > 0 ? `✓ ${checkedCount} Checked` : "⚠️ 0 Checked"}
+                </Badge>
+            </div>
+
+            {/* Quick Actions Row */}
+            <div className="flex items-center justify-between text-[11px] text-stone-500 pb-0.5">
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => onCheckAll(true)}
+                        className={`font-bold hover:underline cursor-pointer ${accentClasses.syncText}`}
+                    >
+                        Check All
+                    </button>
+                    <span>•</span>
+                    <button
+                        type="button"
+                        onClick={() => onCheckAll(false)}
+                        className="font-medium text-stone-400 hover:text-stone-700 hover:underline cursor-pointer"
+                    >
+                        Uncheck All
+                    </button>
+                </div>
+                <button
+                    type="button"
+                    onClick={onSync}
+                    className={`flex items-center gap-1 font-bold hover:underline cursor-pointer ${accentClasses.syncText}`}
+                    title="Re-populate Sabji, Roti & Accompaniments from Section 1"
+                >
+                    <RotateCcw className="w-3 h-3" />
+                    Sync Daily Setup
+                </button>
+            </div>
+
+            {/* Checklist Items Container */}
+            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                {items.length === 0 ? (
+                    <div className="text-[11px] text-stone-400 p-3 text-center border border-dashed rounded-lg bg-stone-50">
+                        No items in checklist. Click <strong>Sync Daily Setup</strong> or add items below.
+                    </div>
+                ) : (
+                    items.map((item) => (
+                        <div
+                            key={item.id}
+                            onClick={() => onToggle(item.id)}
+                            className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition-all select-none ${
+                                item.checked
+                                    ? `${accentClasses.activeItem} shadow-2xs`
+                                    : "bg-stone-50/70 border-dashed border-stone-200 text-stone-400"
+                            }`}
+                        >
+                            <div className="flex items-center gap-2 min-w-0">
+                                <input
+                                    type="checkbox"
+                                    checked={item.checked}
+                                    onChange={() => onToggle(item.id)}
+                                    className={`h-3.5 w-3.5 rounded border-stone-300 ${accentClasses.check} cursor-pointer shrink-0`}
+                                />
+                                <span className={`truncate ${item.checked ? "font-bold text-stone-900" : "line-through text-stone-400"}`}>
+                                    {item.name}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                                    item.checked ? "bg-white/80 text-stone-700 border border-stone-200/80" : "bg-stone-200 text-stone-400"
+                                }`}>
+                                    {item.tag || "Item"}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onRemove(item.id);
+                                    }}
+                                    className="text-stone-300 hover:text-rose-600 p-0.5 rounded cursor-pointer transition-colors"
+                                    title="Delete item"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Add Custom Item Input */}
+            <div className="flex items-center gap-1.5 pt-1">
+                <Input
+                    value={newItemValue}
+                    onChange={(e) => onNewItemChange(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            onAddNewItem();
+                        }
+                    }}
+                    placeholder="+ Add dish (e.g. Papad, Achar, Jamun)"
+                    className="text-xs h-7.5 bg-stone-50/80 focus:bg-white"
+                />
+                <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={onAddNewItem}
+                    className={`h-7.5 text-xs font-bold px-2.5 shrink-0 border-stone-300 ${accentClasses.buttonHover}`}
+                >
+                    <Plus className="w-3.5 h-3.5 mr-0.5" />
+                    Add
+                </Button>
+            </div>
+        </div>
+    );
 }
 
 export function DailyMenuEditor() {
@@ -168,20 +421,47 @@ export function DailyMenuEditor() {
         regularAvailable: true,
         regularImage: "/thali-regular.jpg",
         regularDescription: "Daily comfort meal with home-style goodness",
-        regularUniqueItems: "", // Empty: inherits shared menu completely!
+        regularUniqueItems: "",
+        regularChecklist: [
+            { id: 'reg-sabji', name: 'Seasonal Sabji', checked: true, tag: 'Sabji' },
+            { id: 'reg-roti', name: '4 Ghee Roti', checked: true, tag: 'Roti' },
+            { id: 'reg-dal', name: 'Dal Tadka', checked: true, tag: 'Dal' },
+            { id: 'reg-rice', name: 'Steamed Rice', checked: true, tag: 'Rice' },
+            { id: 'reg-salad', name: 'Green Salad', checked: true, tag: 'Salad' },
+            { id: 'reg-chach', name: 'Desi Chach', checked: true, tag: 'Beverage' },
+        ] as ThaliChecklistItem[],
 
         desiPrice: 119,
-        desiAvailable: true,
+        desiAvailable: false,
         desiImage: "/thali-desi.jpg",
         desiDescription: "Rich meal with extra roti, raita & garlic chutney",
         desiUniqueItems: "Boondi Raita, Lahsun Chutney, 5 Ghee Roti",
+        desiChecklist: [
+            { id: 'desi-sabji', name: 'Seasonal Sabji', checked: true, tag: 'Sabji' },
+            { id: 'desi-roti', name: '5 Ghee Roti', checked: true, tag: 'Roti' },
+            { id: 'desi-dal', name: 'Dal Tadka', checked: true, tag: 'Dal' },
+            { id: 'desi-rice', name: 'Steamed Rice', checked: true, tag: 'Rice' },
+            { id: 'desi-raita', name: 'Boondi Raita', checked: true, tag: 'Raita' },
+            { id: 'desi-chutney', name: 'Lahsun Chutney', checked: true, tag: 'Chutney' },
+            { id: 'desi-salad', name: 'Green Salad', checked: true, tag: 'Salad' },
+            { id: 'desi-chach', name: 'Desi Chach', checked: true, tag: 'Beverage' },
+        ] as ThaliChecklistItem[],
 
         paneerPrice: 199,
-        paneerAvailable: true,
+        paneerAvailable: false,
         paneerImage: "/thali-paneer.jpg",
         paneerSabji: "Paneer Butter Masala",
         paneerDescription: "Premium royal feast with rich paneer delicacy & sweet",
         paneerUniqueItems: "Boondi Raita, 1 Gulab Jamun",
+        paneerChecklist: [
+            { id: 'paneer-sabji', name: 'Paneer Butter Masala', checked: true, tag: 'Sabji' },
+            { id: 'paneer-roti', name: '4 Ghee Roti', checked: true, tag: 'Roti' },
+            { id: 'paneer-dal', name: 'Dal Tadka', checked: true, tag: 'Dal' },
+            { id: 'paneer-rice', name: 'Jeera Rice', checked: true, tag: 'Rice' },
+            { id: 'paneer-raita', name: 'Boondi Raita', checked: true, tag: 'Raita' },
+            { id: 'paneer-salad', name: 'Green Salad', checked: true, tag: 'Salad' },
+            { id: 'paneer-sweet', name: '1 Gulab Jamun', checked: true, tag: 'Sweet' },
+        ] as ThaliChecklistItem[],
 
         // Section 3: Sunday Special Menu
         // Sunday Lunch (Paratha Special Menu)
@@ -217,6 +497,101 @@ export function DailyMenuEditor() {
     const isDirty = useMemo(() => {
         return JSON.stringify(menuForm) !== initialFormRef.current;
     }, [menuForm]);
+
+    // Input state for inline "+ Add dish" input in each thali checklist
+    const [newChecklistInputs, setNewChecklistInputs] = useState<{
+        regular: string;
+        desiSpecial: string;
+        paneerSpecial: string;
+    }>({
+        regular: "",
+        desiSpecial: "",
+        paneerSpecial: ""
+    });
+
+    // Checkbox toggling handler for items in a thali checklist
+    const toggleItemChecked = (thaliKey: 'regular' | 'desiSpecial' | 'paneerSpecial', itemId: string) => {
+        setMenuForm(prev => {
+            const listKey = thaliKey === 'regular' ? 'regularChecklist' : thaliKey === 'desiSpecial' ? 'desiChecklist' : 'paneerChecklist';
+            const currentList = prev[listKey] || [];
+            const updated = currentList.map(item => item.id === itemId ? { ...item, checked: !item.checked } : item);
+            return { ...prev, [listKey]: updated };
+        });
+    };
+
+    // Remove item completely from a thali checklist
+    const removeItemFromChecklist = (thaliKey: 'regular' | 'desiSpecial' | 'paneerSpecial', itemId: string) => {
+        setMenuForm(prev => {
+            const listKey = thaliKey === 'regular' ? 'regularChecklist' : thaliKey === 'desiSpecial' ? 'desiChecklist' : 'paneerChecklist';
+            const currentList = prev[listKey] || [];
+            const updated = currentList.filter(item => item.id !== itemId);
+            return { ...prev, [listKey]: updated };
+        });
+    };
+
+    // Check all or uncheck all items in a thali checklist
+    const setAllChecked = (thaliKey: 'regular' | 'desiSpecial' | 'paneerSpecial', checked: boolean) => {
+        setMenuForm(prev => {
+            const listKey = thaliKey === 'regular' ? 'regularChecklist' : thaliKey === 'desiSpecial' ? 'desiChecklist' : 'paneerChecklist';
+            const currentList = prev[listKey] || [];
+            const updated = currentList.map(item => ({ ...item, checked }));
+            return { ...prev, [listKey]: updated };
+        });
+    };
+
+    // Add a new unique item to a thali checklist
+    const addNewItemToChecklist = (thaliKey: 'regular' | 'desiSpecial' | 'paneerSpecial') => {
+        const rawName = newChecklistInputs[thaliKey]?.trim();
+        if (!rawName) return;
+
+        setMenuForm(prev => {
+            const listKey = thaliKey === 'regular' ? 'regularChecklist' : thaliKey === 'desiSpecial' ? 'desiChecklist' : 'paneerChecklist';
+            const currentList = prev[listKey] || [];
+            const key = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (currentList.some(i => i.name.toLowerCase().replace(/[^a-z0-9]/g, '') === key)) {
+                toast.error(`"${rawName}" is already in this checklist!`);
+                return prev;
+            }
+            const newItem: ThaliChecklistItem = {
+                id: `user-${Date.now()}-${key}`,
+                name: rawName,
+                checked: true,
+                tag: deduceTag(rawName)
+            };
+            return { ...prev, [listKey]: [...currentList, newItem] };
+        });
+
+        setNewChecklistInputs(prev => ({ ...prev, [thaliKey]: "" }));
+        toast.success(`Added "${rawName}" to checklist!`);
+    };
+
+    // Re-sync checklist candidate items from Daily Shared Menu setup (Section 1)
+    const syncFromSharedMenu = (thaliKey: 'regular' | 'desiSpecial' | 'paneerSpecial') => {
+        setMenuForm(prev => {
+            const listKey = thaliKey === 'regular' ? 'regularChecklist' : thaliKey === 'desiSpecial' ? 'desiChecklist' : 'paneerChecklist';
+            const fallbackSabji = thaliKey === 'paneerSpecial'
+                ? (prev.paneerSabji || "Paneer Butter Masala")
+                : (prev.lunchSabji || "Seasonal Sabji");
+            const fallbackRoti = thaliKey === 'desiSpecial'
+                ? `${prev.rotiQty + 1} ${prev.rotiType}`
+                : `${prev.rotiQty} ${prev.rotiType}`;
+            const fallbackUnique = thaliKey === 'desiSpecial'
+                ? ["Boondi Raita", "Lahsun Chutney"]
+                : thaliKey === 'paneerSpecial'
+                    ? ["Boondi Raita", "1 Gulab Jamun"]
+                    : [];
+
+            const synced = buildChecklistFromSavedOrDefaults(
+                null,
+                fallbackSabji,
+                fallbackRoti,
+                prev.lunchItemsList,
+                fallbackUnique.join(', ')
+            );
+            return { ...prev, [listKey]: synced };
+        });
+        toast.success(`Checklist synced from Daily Shared Menu!`);
+    };
 
     // AI Photo Studio Modal State
     const [activeImageModal, setActiveImageModal] = useState<{
@@ -264,7 +639,6 @@ export function DailyMenuEditor() {
                     return thaliObj.uniqueItems.join(', ');
                 }
                 if (thaliObj?.items && Array.isArray(thaliObj.items) && thaliObj.items.length > 0) {
-                    // Automatically deduce unique additions by removing shared items
                     const extracted = extractUniqueItems(thaliObj.items, lunchSabjiStr, defaultRotiStr, lunchAcc);
                     if (extracted.length > 0) return extracted.join(', ');
                 }
@@ -274,6 +648,31 @@ export function DailyMenuEditor() {
             const regularUnique = getUniqueItemsString('regular', "");
             const desiUnique = getUniqueItemsString('desiSpecial', "Boondi Raita, Lahsun Chutney, 5 Ghee Roti");
             const paneerUnique = getUniqueItemsString('paneerSpecial', "Boondi Raita, 1 Gulab Jamun");
+
+            // Build initial checklists: uses saved thali items if available, or builds from shared setup
+            const regChecklist = buildChecklistFromSavedOrDefaults(
+                thalis.regular?.items,
+                lunchSabjiStr || "Seasonal Sabji",
+                defaultRotiStr,
+                lunchAcc,
+                regularUnique
+            );
+
+            const desiChecklist = buildChecklistFromSavedOrDefaults(
+                thalis.desiSpecial?.items,
+                lunchSabjiStr || "Seasonal Sabji",
+                `${loadedRotiQty + 1} ${loadedRotiName}`,
+                lunchAcc,
+                desiUnique || "Boondi Raita, Lahsun Chutney"
+            );
+
+            const paneerChecklist = buildChecklistFromSavedOrDefaults(
+                thalis.paneerSpecial?.items,
+                wm.paneerSabji || m.paneerSabji || "Paneer Butter Masala",
+                defaultRotiStr,
+                lunchAcc,
+                paneerUnique || "Boondi Raita, 1 Gulab Jamun"
+            );
 
             const configured = Boolean(
                 sm.isConfigured || 
@@ -295,25 +694,28 @@ export function DailyMenuEditor() {
                 rotiQty: loadedRotiQty,
                 extraRotiPrice: wm.extraRotiPrice || prod.extraRotiPrice || 10,
 
-                // Section 2: Weekday Three Thalis
+                // Section 2: Weekday Three Thalis with Daily Checklists
                 regularPrice: thalis.regular?.price ?? wm.fixedPrice ?? 99,
                 regularAvailable: thalis.regular?.isAvailable !== false,
                 regularImage: thalis.regular?.image || "/thali-regular.jpg",
                 regularDescription: thalis.regular?.description || "Daily comfort meal with home-style goodness",
                 regularUniqueItems: regularUnique,
+                regularChecklist: regChecklist,
 
                 desiPrice: thalis.desiSpecial?.price ?? 119,
-                desiAvailable: thalis.desiSpecial?.isAvailable !== false,
+                desiAvailable: Boolean(thalis.desiSpecial?.isAvailable),
                 desiImage: thalis.desiSpecial?.image || "/thali-desi.jpg",
                 desiDescription: thalis.desiSpecial?.description || "Rich meal with extra roti, raita & garlic chutney",
                 desiUniqueItems: desiUnique,
+                desiChecklist: desiChecklist,
 
                 paneerPrice: thalis.paneerSpecial?.price ?? 199,
-                paneerAvailable: thalis.paneerSpecial?.isAvailable !== false,
+                paneerAvailable: Boolean(thalis.paneerSpecial?.isAvailable),
                 paneerImage: thalis.paneerSpecial?.image || "/thali-paneer.jpg",
                 paneerSabji: wm.paneerSabji || m.paneerSabji || "Paneer Butter Masala",
                 paneerDescription: thalis.paneerSpecial?.description || "Premium royal feast with rich paneer delicacy & sweet",
                 paneerUniqueItems: paneerUnique,
+                paneerChecklist: paneerChecklist,
 
                 // Section 3: Sunday Special Menu
                 sundayLunchItemName: sm.lunchItemName || prod.lunchProduct?.name || "Sunday Special Paratha Menu",
@@ -344,40 +746,31 @@ export function DailyMenuEditor() {
         }
     }, [menuData, date]);
 
-    // Automatic Menu Composition Engine (Live Reactive Calculations)
+    // Active Live Preview Sabji
     const activePreviewSabji = previewSlot === 'lunch' ? (menuForm.lunchSabji || "Seasonal Sabji") : (menuForm.dinnerSabji || "Seasonal Sabji");
     const activePreviewAccompaniments = previewSlot === 'lunch' ? menuForm.lunchItemsList : menuForm.dinnerItemsList;
 
+    // Direct Reactive Composed Thalis from Admin Checklist (Only CHECKED items are included!)
     const composedRegular = useMemo(() => {
-        return composeThaliItems({
-            sabji: activePreviewSabji,
-            rotiType: menuForm.rotiType,
-            rotiQty: menuForm.rotiQty,
-            commonItems: activePreviewAccompaniments,
-            uniqueItems: menuForm.regularUniqueItems
-        });
-    }, [activePreviewSabji, menuForm.rotiType, menuForm.rotiQty, activePreviewAccompaniments, menuForm.regularUniqueItems]);
+        return (menuForm.regularChecklist || [])
+            .filter(i => i.checked)
+            .map(i => i.name.trim())
+            .filter(Boolean);
+    }, [menuForm.regularChecklist]);
 
     const composedDesi = useMemo(() => {
-        return composeThaliItems({
-            sabji: activePreviewSabji,
-            rotiType: menuForm.rotiType,
-            rotiQty: menuForm.rotiQty + 1, // Desi thali gets extra roti by default
-            commonItems: activePreviewAccompaniments,
-            uniqueItems: menuForm.desiUniqueItems
-        });
-    }, [activePreviewSabji, menuForm.rotiType, menuForm.rotiQty, activePreviewAccompaniments, menuForm.desiUniqueItems]);
+        return (menuForm.desiChecklist || [])
+            .filter(i => i.checked)
+            .map(i => i.name.trim())
+            .filter(Boolean);
+    }, [menuForm.desiChecklist]);
 
     const composedPaneer = useMemo(() => {
-        return composeThaliItems({
-            sabji: menuForm.paneerSabji || "Paneer Butter Masala",
-            rotiType: menuForm.rotiType,
-            rotiQty: menuForm.rotiQty,
-            commonItems: activePreviewAccompaniments,
-            uniqueItems: menuForm.paneerUniqueItems,
-            isPaneerSpecial: true
-        });
-    }, [menuForm.paneerSabji, menuForm.rotiType, menuForm.rotiQty, activePreviewAccompaniments, menuForm.paneerUniqueItems]);
+        return (menuForm.paneerChecklist || [])
+            .filter(i => i.checked)
+            .map(i => i.name.trim())
+            .filter(Boolean);
+    }, [menuForm.paneerChecklist]);
 
     // Quick AI image generation based on current menu form dishes
     const quickGenerateAiPhoto = (thaliId: "regular" | "desiSpecial" | "paneerSpecial" | "sunday" | "sundayLunch") => {
@@ -405,35 +798,25 @@ export function DailyMenuEditor() {
         toast.success(`✨ Matched photo: "${matched.title}"! Save to apply.`);
     };
 
-    // Save Menu with Centralized Composition
+    // Save Menu with Admin-Checked Daily Items
     const handleSave = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         try {
-            // Pre-compose thalis using the deduplication engine
-            const regularComposed = composeThaliItems({
-                sabji: menuForm.lunchSabji || '1 Seasonal Sabji',
-                rotiType: menuForm.rotiType,
-                rotiQty: menuForm.rotiQty,
-                commonItems: menuForm.lunchItemsList,
-                uniqueItems: menuForm.regularUniqueItems
-            });
+            // Take ONLY the items explicitly checked by the admin
+            const regularComposed = (menuForm.regularChecklist || [])
+                .filter(i => i.checked)
+                .map(i => i.name.trim())
+                .filter(Boolean);
 
-            const desiComposed = composeThaliItems({
-                sabji: menuForm.lunchSabji || '1 Seasonal Sabji',
-                rotiType: menuForm.rotiType,
-                rotiQty: menuForm.rotiQty + 1,
-                commonItems: menuForm.lunchItemsList,
-                uniqueItems: menuForm.desiUniqueItems
-            });
+            const desiComposed = (menuForm.desiChecklist || [])
+                .filter(i => i.checked)
+                .map(i => i.name.trim())
+                .filter(Boolean);
 
-            const paneerComposed = composeThaliItems({
-                sabji: menuForm.paneerSabji || 'Paneer Butter Masala',
-                rotiType: menuForm.rotiType,
-                rotiQty: menuForm.rotiQty,
-                commonItems: menuForm.lunchItemsList,
-                uniqueItems: menuForm.paneerUniqueItems,
-                isPaneerSpecial: true
-            });
+            const paneerComposed = (menuForm.paneerChecklist || [])
+                .filter(i => i.checked)
+                .map(i => i.name.trim())
+                .filter(Boolean);
 
             const lunchArr = parseCommaItems(menuForm.lunchItemsList);
             const defaultRotiStr = `${menuForm.rotiQty} ${menuForm.rotiName}`;
@@ -450,69 +833,69 @@ export function DailyMenuEditor() {
                 date: dateStr,
 
                 // Section 1: Shared Daily Menu
-                lunchSabji: menuForm.lunchSabji.trim(),
-                dinnerSabji: menuForm.dinnerSabji.trim(),
+                lunchSabji: (menuForm.lunchSabji || '').trim(),
+                dinnerSabji: (menuForm.dinnerSabji || '').trim(),
                 lunchItems: lunchArr,
                 dinnerItems: dinnerArr,
                 weekdayItems: lunchArr,
-                rotiType: menuForm.rotiType.trim(),
-                defaultRotiQty: Number(menuForm.rotiQty),
-                extraRotiPrice: Number(menuForm.extraRotiPrice),
-                weekdayPrice: Number(menuForm.regularPrice),
-                isServiceOff: menuForm.isServiceOff,
+                rotiType: (menuForm.rotiType || 'Ghee Roti').trim(),
+                defaultRotiQty: Math.max(1, Number(menuForm.rotiQty) || 4),
+                extraRotiPrice: Math.max(0, Number(menuForm.extraRotiPrice) || 10),
+                weekdayPrice: Math.max(1, Number(menuForm.regularPrice) || 99),
+                isServiceOff: Boolean(menuForm.isServiceOff),
 
-                // Section 2: Weekday Three Thalis (Unique items + Pre-composed deduplicated items)
-                regularPrice: Number(menuForm.regularPrice),
+                // Section 2: Weekday Three Thalis (Admin-Checked Items)
+                regularPrice: Math.max(1, Number(menuForm.regularPrice) || 99),
                 regularAvailable: Boolean(menuForm.regularAvailable),
-                regularImage: menuForm.regularImage,
-                regularDescription: menuForm.regularDescription.trim(),
-                regularUniqueItems: parseCommaItems(menuForm.regularUniqueItems),
+                regularImage: menuForm.regularImage || '/thali-regular.jpg',
+                regularDescription: (menuForm.regularDescription || '').trim(),
+                regularUniqueItems: extractUniqueItems(regularComposed, menuForm.lunchSabji || '', defaultRotiStr, menuForm.lunchItemsList || ''),
                 regularItems: regularComposed,
 
-                desiPrice: Number(menuForm.desiPrice),
+                desiPrice: Math.max(1, Number(menuForm.desiPrice) || 119),
                 desiAvailable: Boolean(menuForm.desiAvailable),
-                desiImage: menuForm.desiImage,
-                desiDescription: menuForm.desiDescription.trim(),
-                desiUniqueItems: parseCommaItems(menuForm.desiUniqueItems),
+                desiImage: menuForm.desiImage || '/thali-desi.jpg',
+                desiDescription: (menuForm.desiDescription || '').trim(),
+                desiUniqueItems: extractUniqueItems(desiComposed, menuForm.lunchSabji || '', defaultRotiStr, menuForm.lunchItemsList || ''),
                 desiItems: desiComposed,
 
-                paneerPrice: Number(menuForm.paneerPrice),
+                paneerPrice: Math.max(1, Number(menuForm.paneerPrice) || 199),
                 paneerAvailable: Boolean(menuForm.paneerAvailable),
-                paneerImage: menuForm.paneerImage,
-                paneerSabji: menuForm.paneerSabji.trim(),
-                paneerDescription: menuForm.paneerDescription.trim(),
-                paneerUniqueItems: parseCommaItems(menuForm.paneerUniqueItems),
+                paneerImage: menuForm.paneerImage || '/thali-paneer.jpg',
+                paneerSabji: (menuForm.paneerSabji || 'Paneer Butter Masala').trim(),
+                paneerDescription: (menuForm.paneerDescription || '').trim(),
+                paneerUniqueItems: extractUniqueItems(paneerComposed, menuForm.paneerSabji || '', defaultRotiStr, menuForm.lunchItemsList || ''),
                 paneerItems: paneerComposed,
 
                 // Section 3: Sunday Special Menu
-                lunchItemName: menuForm.sundayLunchItemName,
-                sundayLunchItemName: menuForm.sundayLunchItemName,
-                lunchPrice: Number(menuForm.sundayLunchPrice),
-                sundayLunchPrice: Number(menuForm.sundayLunchPrice),
-                parathaTypes: menuForm.sundayParathas,
-                sundayParathas: menuForm.sundayParathas,
-                lunchAccompaniments: menuForm.sundayLunchAccompaniments,
-                sundayLunchAccompaniments: menuForm.sundayLunchAccompaniments,
-                sundayLunchImage: menuForm.sundayLunchImage,
-                sundayLunchOpen: menuForm.sundayLunchOpen,
+                lunchItemName: (menuForm.sundayLunchItemName || '').trim(),
+                sundayLunchItemName: (menuForm.sundayLunchItemName || '').trim(),
+                lunchPrice: Math.max(0, Number(menuForm.sundayLunchPrice) || 99),
+                sundayLunchPrice: Math.max(0, Number(menuForm.sundayLunchPrice) || 99),
+                parathaTypes: (menuForm.sundayParathas || '').trim(),
+                sundayParathas: (menuForm.sundayParathas || '').trim(),
+                lunchAccompaniments: (menuForm.sundayLunchAccompaniments || '').trim(),
+                sundayLunchAccompaniments: (menuForm.sundayLunchAccompaniments || '').trim(),
+                sundayLunchImage: menuForm.sundayLunchImage || '/thali-enhanced.jpg',
+                sundayLunchOpen: Boolean(menuForm.sundayLunchOpen),
 
-                sundayItemName: menuForm.sundayItemName,
-                sundayPrice: Number(menuForm.sundayPrice),
-                specialSabzi: menuForm.specialSabzi,
-                dal: menuForm.dal,
-                rice: menuForm.rice,
-                rotiPuri: menuForm.rotiPuri,
-                salad: menuForm.salad,
-                dessert: menuForm.dessert,
-                sundayDescription: menuForm.sundayDescription,
-                sundayImage: menuForm.sundayImage,
-                sundayDinnerOpen: menuForm.sundayDinnerOpen,
+                sundayItemName: (menuForm.sundayItemName || '').trim(),
+                sundayPrice: Math.max(0, Number(menuForm.sundayPrice) || 0),
+                specialSabzi: (menuForm.specialSabzi || '').trim(),
+                dal: (menuForm.dal || '').trim(),
+                rice: (menuForm.rice || '').trim(),
+                rotiPuri: (menuForm.rotiPuri || '').trim(),
+                salad: (menuForm.salad || '').trim(),
+                dessert: (menuForm.dessert || '').trim(),
+                sundayDescription: (menuForm.sundayDescription || '').trim(),
+                sundayImage: menuForm.sundayImage || '/thali-enhanced.jpg',
+                sundayDinnerOpen: Boolean(menuForm.sundayDinnerOpen),
                 isSundayConfigured: Boolean(
                     menuForm.sundayParathas ||
                     menuForm.sundayItemName || 
                     menuForm.specialSabzi || 
                     menuForm.dal || 
-                    (menuForm.sundayPrice > 0 && menuForm.rotiPuri)
+                    (Number(menuForm.sundayPrice) > 0 && menuForm.rotiPuri)
                 )
             };
 
@@ -520,9 +903,10 @@ export function DailyMenuEditor() {
             initialFormRef.current = JSON.stringify(menuForm);
 
             toast.success(`Menu successfully updated & published for ${format(date, 'EEE, MMM dd, yyyy')}`);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Save menu error:", error);
-            toast.error("Failed to save menu");
+            const errMsg = error?.response?.data?.message || error?.message || "Failed to save menu";
+            toast.error(`Save failed: ${errMsg}`);
         }
     };
 
@@ -818,7 +1202,7 @@ export function DailyMenuEditor() {
                                                     className="text-xs bg-white font-medium"
                                                 />
                                                 <p className="text-[11px] text-stone-500">
-                                                    💡 e.g. <em>Dal Tadka, Steamed Rice, Green Salad, Desi Chach</em>. These are inherited by all lunch thalis.
+                                                    💡 e.g. <em>Dal Tadka, Steamed Rice, Green Salad, Desi Chach</em>. Admin checks/unchecks these in each thali below.
                                                 </p>
                                             </div>
                                         </div>
@@ -886,7 +1270,7 @@ export function DailyMenuEditor() {
                                                 🥖 Roti & Bread Configuration
                                             </span>
                                             <span className="text-[11px] text-stone-500">
-                                                Automatically configured into all thalis
+                                                Default bread configuration for daily thalis
                                             </span>
                                         </div>
 
@@ -936,11 +1320,11 @@ export function DailyMenuEditor() {
                                             Section 2: Weekday Thali Management (Monday–Saturday)
                                         </h3>
                                         <p className="text-xs text-stone-500 font-medium">
-                                            Configure prices, photos, and <strong>unique additional items only</strong>. Shared sabji and accompaniments are inherited automatically without duplicate typing!
+                                            Configure prices, photos, and review the <strong>Daily Items Checklist</strong>. Every item must be checked by the admin daily before being included in customer orders!
                                         </p>
                                     </div>
                                     <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs font-bold shrink-0">
-                                        No Duplicate Items
+                                        ✓ Admin Daily Check Active
                                     </Badge>
                                 </div>
 
@@ -1046,24 +1430,20 @@ export function DailyMenuEditor() {
                                                 </div>
                                             </div>
 
-                                            {/* Unique Additional Items Only */}
-                                            <div className="space-y-1 pt-1">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-xs font-bold text-stone-800">
-                                                        Unique Additional Items Only
-                                                    </label>
-                                                    <span className="text-[10px] text-stone-400 font-semibold">Optional</span>
-                                                </div>
-                                                <Input
-                                                    value={menuForm.regularUniqueItems}
-                                                    onChange={(e) => setMenuForm({ ...menuForm, regularUniqueItems: e.target.value })}
-                                                    placeholder="Leave empty or add e.g. Papad, Achar"
-                                                    className="text-xs bg-stone-50/50"
-                                                />
-                                                <div className="text-[11px] text-stone-500 bg-stone-50 p-2 rounded-lg border border-stone-200/60 leading-relaxed">
-                                                    ✨ <strong>Inherited automatically:</strong> Seasonal Sabji + {menuForm.rotiQty} {menuForm.rotiName} + Dal, Rice, Salad.
-                                                </div>
-                                            </div>
+                                            {/* Daily Items Checklist (Admin Daily Check) */}
+                                            <ThaliChecklistEditor
+                                                title="Daily Included Items (Admin Check)"
+                                                subtitle="Check items to include in today's Regular Thali. Unchecked items won't be added."
+                                                items={menuForm.regularChecklist || []}
+                                                accentColor="orange"
+                                                onToggle={(id) => toggleItemChecked('regular', id)}
+                                                onRemove={(id) => removeItemFromChecklist('regular', id)}
+                                                onCheckAll={(checked) => setAllChecked('regular', checked)}
+                                                onSync={() => syncFromSharedMenu('regular')}
+                                                newItemValue={newChecklistInputs.regular}
+                                                onNewItemChange={(val) => setNewChecklistInputs(prev => ({ ...prev, regular: val }))}
+                                                onAddNewItem={() => addNewItemToChecklist('regular')}
+                                            />
                                         </div>
                                     </div>
 
@@ -1168,21 +1548,20 @@ export function DailyMenuEditor() {
                                                 </div>
                                             </div>
 
-                                            {/* Unique Additional Items Only */}
-                                            <div className="space-y-1 pt-1">
-                                                <label className="text-xs font-bold text-stone-800">
-                                                    Unique Additional Items Only
-                                                </label>
-                                                <Input
-                                                    value={menuForm.desiUniqueItems}
-                                                    onChange={(e) => setMenuForm({ ...menuForm, desiUniqueItems: e.target.value })}
-                                                    placeholder="Boondi Raita, Lahsun Chutney, 5 Ghee Roti"
-                                                    className="text-xs bg-amber-50/40 font-medium"
-                                                />
-                                                <div className="text-[11px] text-stone-500 bg-amber-50/40 p-2 rounded-lg border border-amber-200/60 leading-relaxed">
-                                                    ✨ <strong>Special additions:</strong> Raita, Lahsun Chutney, and 5 Ghee Roti (supersedes 4 Roti).
-                                                </div>
-                                            </div>
+                                            {/* Daily Items Checklist (Admin Daily Check) */}
+                                            <ThaliChecklistEditor
+                                                title="Daily Included Items (Admin Check)"
+                                                subtitle="Check items to include in today's Desi Special Thali. Unchecked items won't be added."
+                                                items={menuForm.desiChecklist || []}
+                                                accentColor="amber"
+                                                onToggle={(id) => toggleItemChecked('desiSpecial', id)}
+                                                onRemove={(id) => removeItemFromChecklist('desiSpecial', id)}
+                                                onCheckAll={(checked) => setAllChecked('desiSpecial', checked)}
+                                                onSync={() => syncFromSharedMenu('desiSpecial')}
+                                                newItemValue={newChecklistInputs.desiSpecial}
+                                                onNewItemChange={(val) => setNewChecklistInputs(prev => ({ ...prev, desiSpecial: val }))}
+                                                onAddNewItem={() => addNewItemToChecklist('desiSpecial')}
+                                            />
                                         </div>
                                     </div>
 
@@ -1310,21 +1689,20 @@ export function DailyMenuEditor() {
                                                 </div>
                                             </div>
 
-                                            {/* Unique Additional Items Only */}
-                                            <div className="space-y-1 pt-1">
-                                                <label className="text-xs font-bold text-stone-800">
-                                                    Unique Additional Items Only
-                                                </label>
-                                                <Input
-                                                    value={menuForm.paneerUniqueItems}
-                                                    onChange={(e) => setMenuForm({ ...menuForm, paneerUniqueItems: e.target.value })}
-                                                    placeholder="Boondi Raita, 1 Gulab Jamun"
-                                                    className="text-xs bg-purple-50/40 font-medium"
-                                                />
-                                                <div className="text-[11px] text-stone-500 bg-purple-50/40 p-2 rounded-lg border border-purple-200/60 leading-relaxed">
-                                                    ✨ <strong>Special additions:</strong> Royal Paneer Sabji + Boondi Raita & Gulab Jamun dessert.
-                                                </div>
-                                            </div>
+                                            {/* Daily Items Checklist (Admin Daily Check) */}
+                                            <ThaliChecklistEditor
+                                                title="Daily Included Items (Admin Check)"
+                                                subtitle="Check items to include in today's Paneer Special Thali. Unchecked items won't be added."
+                                                items={menuForm.paneerChecklist || []}
+                                                accentColor="purple"
+                                                onToggle={(id) => toggleItemChecked('paneerSpecial', id)}
+                                                onRemove={(id) => removeItemFromChecklist('paneerSpecial', id)}
+                                                onCheckAll={(checked) => setAllChecked('paneerSpecial', checked)}
+                                                onSync={() => syncFromSharedMenu('paneerSpecial')}
+                                                newItemValue={newChecklistInputs.paneerSpecial}
+                                                onNewItemChange={(val) => setNewChecklistInputs(prev => ({ ...prev, paneerSpecial: val }))}
+                                                onAddNewItem={() => addNewItemToChecklist('paneerSpecial')}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -1410,15 +1788,21 @@ export function DailyMenuEditor() {
 
                                             <div className="space-y-1.5 pt-1">
                                                 <span className="text-[11px] font-bold text-stone-400 uppercase block">
-                                                    Composed Menu ({composedRegular.length} items):
+                                                    Admin-Checked Items ({composedRegular.length}):
                                                 </span>
                                                 <div className="space-y-1">
-                                                    {composedRegular.map((item, idx) => (
-                                                        <div key={idx} className="flex items-center gap-2 text-xs text-stone-300 font-medium">
-                                                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                                            <span>{item}</span>
-                                                        </div>
-                                                    ))}
+                                                    {composedRegular.length === 0 ? (
+                                                        <span className="text-rose-400 italic text-xs block py-1">
+                                                            ⚠️ No items checked. Check items in card above to include.
+                                                        </span>
+                                                    ) : (
+                                                        composedRegular.map((item, idx) => (
+                                                            <div key={idx} className="flex items-center gap-2 text-xs text-stone-300 font-medium">
+                                                                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                                                <span>{item}</span>
+                                                            </div>
+                                                        ))
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1439,15 +1823,21 @@ export function DailyMenuEditor() {
 
                                             <div className="space-y-1.5 pt-1">
                                                 <span className="text-[11px] font-bold text-stone-400 uppercase block">
-                                                    Composed Menu ({composedDesi.length} items):
+                                                    Admin-Checked Items ({composedDesi.length}):
                                                 </span>
                                                 <div className="space-y-1">
-                                                    {composedDesi.map((item, idx) => (
-                                                        <div key={idx} className="flex items-center gap-2 text-xs text-stone-300 font-medium">
-                                                            <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                                            <span>{item}</span>
-                                                        </div>
-                                                    ))}
+                                                    {composedDesi.length === 0 ? (
+                                                        <span className="text-rose-400 italic text-xs block py-1">
+                                                            ⚠️ No items checked. Check items in card above to include.
+                                                        </span>
+                                                    ) : (
+                                                        composedDesi.map((item, idx) => (
+                                                            <div key={idx} className="flex items-center gap-2 text-xs text-stone-300 font-medium">
+                                                                <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                                                <span>{item}</span>
+                                                            </div>
+                                                        ))
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1468,15 +1858,21 @@ export function DailyMenuEditor() {
 
                                             <div className="space-y-1.5 pt-1">
                                                 <span className="text-[11px] font-bold text-stone-400 uppercase block">
-                                                    Composed Menu ({composedPaneer.length} items):
+                                                    Admin-Checked Items ({composedPaneer.length}):
                                                 </span>
                                                 <div className="space-y-1">
-                                                    {composedPaneer.map((item, idx) => (
-                                                        <div key={idx} className="flex items-center gap-2 text-xs text-stone-300 font-medium">
-                                                            <Check className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                                                            <span>{item}</span>
-                                                        </div>
-                                                    ))}
+                                                    {composedPaneer.length === 0 ? (
+                                                        <span className="text-rose-400 italic text-xs block py-1">
+                                                            ⚠️ No items checked. Check items in card above to include.
+                                                        </span>
+                                                    ) : (
+                                                        composedPaneer.map((item, idx) => (
+                                                            <div key={idx} className="flex items-center gap-2 text-xs text-stone-300 font-medium">
+                                                                <Check className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                                                                <span>{item}</span>
+                                                            </div>
+                                                        ))
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { 
-    Calendar, ShieldCheck, Leaf, Flame, Minus, Plus, 
-    CheckCircle2, Share2, Sun, Moon, Utensils, Sparkles, 
-    ShoppingCart, ArrowRight, Check 
+import {
+    Calendar, ShieldCheck, Leaf, Flame, Minus, Plus,
+    CheckCircle2, Share2, Sun, Moon, Utensils, Sparkles,
+    ShoppingCart, ArrowRight, Check, MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useHomemade, ThaliOption } from "@/context/homemade-context";
@@ -65,6 +65,9 @@ export function HomemadeSection() {
         paneerSpecial: { quantity: 1, extraRoti: 0 },
     });
 
+    // Customer cooking / special instructions for kitchen (e.g. Extra chawal, less spicy)
+    const [mealInstructions, setMealInstructions] = useState<string>("");
+
     // Swiggy/Zomato style instant customizer modal state
     const [customizerOpen, setCustomizerOpen] = useState(false);
     const [customizingThali, setCustomizingThali] = useState<CustomizerThali | null>(null);
@@ -101,14 +104,14 @@ export function HomemadeSection() {
     const isSlotOpen = selectedSlot === 'Lunch' ? state.lunchSlotAvailable : state.dinnerSlotAvailable;
     const isSlotLate = selectedSlot === 'Lunch' ? isLunchLate : isDinnerLate;
 
-    const activeSabji = selectedSlot === 'Lunch' 
-        ? (state.lunchSabji || "Seasonal Sabji") 
+    const activeSabji = selectedSlot === 'Lunch'
+        ? (state.lunchSabji || "Seasonal Sabji")
         : (state.dinnerSabji || "Seasonal Sabji");
     const activePaneerSabji = state.paneerSabji || "Paneer Butter Masala";
 
     // Build the 3 thali definitions with real-time ingredients & pricing
-    const regularThaliPrice = (state.isSunday && selectedSlot === 'Dinner') 
-        ? (state.price || 120) 
+    const regularThaliPrice = (state.isSunday && selectedSlot === 'Dinner')
+        ? (state.price || 120)
         : (state.thalis?.regular?.price || 99);
     const desiThaliPrice = state.thalis?.desiSpecial?.price || 119;
     const paneerThaliPrice = state.thalis?.paneerSpecial?.price || 199;
@@ -155,7 +158,7 @@ export function HomemadeSection() {
             id: "desiSpecial" as const,
             name: "Desi Special Thali",
             price: desiThaliPrice,
-            isAvailable: state.thalis?.desiSpecial?.isAvailable !== false,
+            isAvailable: Boolean(state.thalis?.desiSpecial?.isAvailable),
             badge: "Desi Ghee & Raita",
             badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
             themeBorder: "border-amber-200 hover:border-amber-400",
@@ -168,7 +171,7 @@ export function HomemadeSection() {
             id: "paneerSpecial" as const,
             name: "Paneer Special Thali",
             price: paneerThaliPrice,
-            isAvailable: state.thalis?.paneerSpecial?.isAvailable !== false,
+            isAvailable: Boolean(state.thalis?.paneerSpecial?.isAvailable),
             badge: "Royal Paneer Feast",
             badgeColor: "bg-purple-100 text-purple-800 border-purple-200",
             themeBorder: "border-purple-200 hover:border-purple-400",
@@ -186,7 +189,7 @@ export function HomemadeSection() {
     const currentTotalWithDelivery = currentItemsTotal + selectedSlotDeliveryFee;
 
     // Handle Direct Order Checkout from Customizer Modal
-    const handleCustomizedOrderNow = (thali: CustomizerThali, qty: number, extraRoti: number) => {
+    const handleCustomizedOrderNow = (thali: CustomizerThali, qty: number, extraRoti: number, instructions?: string) => {
         if (!authData?.user) {
             router.push(`/login?redirect=/homemade`);
             return;
@@ -211,6 +214,8 @@ export function HomemadeSection() {
             [thali.id]: { quantity: qty, extraRoti }
         }));
 
+        const finalInstructions = (instructions !== undefined ? instructions : mealInstructions).trim();
+
         const orderDetails = {
             date: new Date().toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }),
             slot: selectedSlot,
@@ -219,6 +224,7 @@ export function HomemadeSection() {
             unitPrice: thali.price,
             quantity: qty,
             extraRotiCount: extraRoti,
+            specialInstructions: finalInstructions,
             itemsTotal: totalItemsAmount,
             deliveryCharge: selectedSlotDeliveryFee,
             totalPrice: finalTotalPrice,
@@ -234,7 +240,7 @@ export function HomemadeSection() {
     };
 
     // Handle Add to Cart from Direct Card / Bottom bar
-    const handleCustomizedAddToCart = (thali: CustomizerThali, qty: number, extraRoti: number) => {
+    const handleCustomizedAddToCart = (thali: CustomizerThali, qty: number, extraRoti: number, instructions?: string) => {
         const extraRotiPriceUnit = state.extraRotiPrice || 10;
         const unitItemPrice = thali.price + (extraRoti * extraRotiPriceUnit);
         const rotiLabel = extraRoti > 0 ? ` (+${extraRoti} Extra Roti)` : "";
@@ -310,6 +316,7 @@ export function HomemadeSection() {
             unitPrice: activeSundayPrice,
             quantity: sundayQty,
             extraRotiCount: 0,
+            specialInstructions: mealInstructions.trim(),
             itemsTotal: sundayItemsTotal,
             deliveryCharge: selectedSlotDeliveryFee,
             totalPrice: sundayTotalWithDelivery,
@@ -317,7 +324,7 @@ export function HomemadeSection() {
                 ? [
                     `Parathas: ${activeSundayParathas.join(', ')}`,
                     `Served With: ${activeSundayAccompaniments.join(', ')}`
-                  ]
+                ]
                 : activeSundayDinnerIncludes,
             isSubscription: false,
             isSunday: true
@@ -445,37 +452,36 @@ export function HomemadeSection() {
                     </p>
                 </div>
             ) : (
-                <div className="bg-white rounded-3xl shadow-xl shadow-stone-200/60 border border-stone-200/80 overflow-hidden">
-                    
+                <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl shadow-stone-200/60 border border-stone-200/80 overflow-hidden w-full max-w-full box-border">
+
                     {/* 1. Meal Switcher Tabs: Large, intuitive, 1-tap switch */}
-                    <div className="p-2 sm:p-3 bg-stone-100/80 border-b border-stone-200 grid grid-cols-2 gap-2">
+                    <div className="p-1.5 sm:p-3 bg-stone-100/80 border-b border-stone-200 grid grid-cols-2 gap-1.5 sm:gap-2 w-full min-w-0 max-w-full box-border">
                         {/* Lunch Tab */}
                         <button
                             type="button"
                             onClick={() => setSelectedSlot("Lunch")}
-                            className={`p-3 sm:p-3.5 rounded-2xl flex items-center text-left transition-all cursor-pointer relative ${
-                                selectedSlot === "Lunch"
-                                    ? "bg-white text-orange-950 shadow-md ring-2 ring-orange-500 font-bold"
-                                    : "bg-white/50 hover:bg-white text-stone-600 font-medium"
-                            }`}
+                            className={`p-2 sm:p-3.5 rounded-xl sm:rounded-2xl flex items-center text-left transition-all cursor-pointer relative min-w-0 max-w-full overflow-hidden box-border ${selectedSlot === "Lunch"
+                                ? "bg-white text-orange-950 shadow-md ring-2 ring-orange-500 font-bold"
+                                : "bg-white/60 hover:bg-white text-stone-600 font-medium"
+                                }`}
                         >
-                            <div className="flex items-center gap-2.5">
-                                <div className={`p-2 rounded-xl shrink-0 ${selectedSlot === "Lunch" ? "bg-orange-500 text-white shadow-sm" : "bg-stone-200 text-stone-500"}`}>
-                                    <Sun className="w-5 h-5" />
+                            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 w-full">
+                                <div className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl shrink-0 ${selectedSlot === "Lunch" ? "bg-orange-500 text-white shadow-sm" : "bg-stone-200 text-stone-500"}`}>
+                                    <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span className="text-sm sm:text-base font-black">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                                        <span className="text-xs sm:text-base font-black truncate leading-tight">
                                             {state.isSunday ? "Sunday Lunch" : "Lunch"}
                                         </span>
                                         {state.lunchSlotAvailable ? (
-                                            <span className="text-[10px] bg-green-100 text-green-700 font-extrabold px-1.5 py-0.2 rounded">Open</span>
+                                            <span className="text-[9px] sm:text-[10px] bg-green-100 text-green-700 font-extrabold px-1 sm:px-1.5 py-0.2 rounded shrink-0">Open</span>
                                         ) : (
-                                            <span className="text-[10px] bg-red-100 text-red-600 font-semibold px-1.5 py-0.2 rounded">Closed</span>
+                                            <span className="text-[9px] sm:text-[10px] bg-red-100 text-red-600 font-semibold px-1 sm:px-1.5 py-0.2 rounded shrink-0">Closed</span>
                                         )}
                                     </div>
-                                    <p className="text-[11px] text-stone-500 font-medium truncate">
-                                        {state.isSunday ? "🥞 Paratha Special Menu" : "11:30 AM–2:00 PM"}
+                                    <p className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate mt-0.5 leading-tight">
+                                        {state.isSunday ? "🥞 Parathas" : "11:30 AM–2:00 PM"}
                                     </p>
                                 </div>
                             </div>
@@ -485,29 +491,28 @@ export function HomemadeSection() {
                         <button
                             type="button"
                             onClick={() => setSelectedSlot("Dinner")}
-                            className={`p-3 sm:p-3.5 rounded-2xl flex items-center text-left transition-all cursor-pointer relative ${
-                                selectedSlot === "Dinner"
-                                    ? "bg-white text-indigo-950 shadow-md ring-2 ring-indigo-500 font-bold"
-                                    : "bg-white/50 hover:bg-white text-stone-600 font-medium"
-                            }`}
+                            className={`p-2 sm:p-3.5 rounded-xl sm:rounded-2xl flex items-center text-left transition-all cursor-pointer relative min-w-0 max-w-full overflow-hidden box-border ${selectedSlot === "Dinner"
+                                ? "bg-white text-indigo-950 shadow-md ring-2 ring-indigo-500 font-bold"
+                                : "bg-white/60 hover:bg-white text-stone-600 font-medium"
+                                }`}
                         >
-                            <div className="flex items-center gap-2.5">
-                                <div className={`p-2 rounded-xl shrink-0 ${selectedSlot === "Dinner" ? "bg-indigo-600 text-white shadow-sm" : "bg-stone-200 text-stone-500"}`}>
-                                    <Moon className="w-5 h-5" />
+                            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 w-full">
+                                <div className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl shrink-0 ${selectedSlot === "Dinner" ? "bg-indigo-600 text-white shadow-sm" : "bg-stone-200 text-stone-500"}`}>
+                                    <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span className="text-sm sm:text-base font-black">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                                        <span className="text-xs sm:text-base font-black truncate leading-tight">
                                             {state.isSunday ? "Sunday Dinner" : "Dinner"}
                                         </span>
                                         {state.dinnerSlotAvailable ? (
-                                            <span className="text-[10px] bg-green-100 text-green-700 font-extrabold px-1.5 py-0.2 rounded">Open</span>
+                                            <span className="text-[9px] sm:text-[10px] bg-green-100 text-green-700 font-extrabold px-1 sm:px-1.5 py-0.2 rounded shrink-0">Open</span>
                                         ) : (
-                                            <span className="text-[10px] bg-red-100 text-red-600 font-semibold px-1.5 py-0.2 rounded">Closed</span>
+                                            <span className="text-[9px] sm:text-[10px] bg-red-100 text-red-600 font-semibold px-1 sm:px-1.5 py-0.2 rounded shrink-0">Closed</span>
                                         )}
                                     </div>
-                                    <p className="text-[11px] text-stone-500 font-medium truncate">
-                                        {state.isSunday ? "👑 Special Feast" : "7:30–10:00 PM"}
+                                    <p className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate mt-0.5 leading-tight">
+                                        {state.isSunday ? "👑 Feast" : "7:30–10:00 PM"}
                                     </p>
                                 </div>
                             </div>
@@ -515,36 +520,34 @@ export function HomemadeSection() {
                     </div>
 
                     {/* Today's Special Sabji / Sunday Banner */}
-                    <div className="px-4 py-3 bg-stone-50 border-b border-stone-200 flex flex-wrap items-center justify-between gap-2">
+                    <div className="px-3.5 sm:px-5 py-3 sm:py-3.5 bg-gradient-to-r from-orange-50/70 via-stone-50 to-amber-50/50 border-b border-stone-200/80 flex flex-wrap items-center justify-between gap-3 w-full min-w-0 max-w-full box-border">
                         {state.isSunday ? (
                             <div className="flex items-center gap-2.5 text-xs sm:text-sm">
-                                <span className="font-extrabold text-stone-500 uppercase tracking-wide text-[11px]">
-                                    {selectedSlot === "Lunch" ? "☀️ Lunch Menu:" : "🌙 Dinner Feast:"}
+                                <span className="font-bold text-stone-500 uppercase tracking-wider text-[11px]">
+                                    {selectedSlot === "Lunch" ? "☀️ Sunday Lunch:" : "🌙 Sunday Feast:"}
                                 </span>
-                                <span className={`font-extrabold px-2.5 py-0.5 rounded-md ${
-                                    selectedSlot === "Lunch" 
-                                        ? "bg-amber-100 text-amber-900 border border-amber-200" 
-                                        : "bg-indigo-100 text-indigo-900 border border-indigo-200"
-                                }`}>
+                                <span className={`font-black px-3 py-1 rounded-lg text-xs sm:text-sm shadow-2xs ${selectedSlot === "Lunch"
+                                    ? "bg-amber-500 text-white"
+                                    : "bg-indigo-600 text-white"
+                                    }`}>
                                     {selectedSlot === "Lunch" ? "🥞 Fresh Stuffed Parathas with Dahi & Butter" : `👑 ${activeSundayName}`}
                                 </span>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-3 text-xs sm:text-sm">
-                                <span className="font-bold text-stone-500 uppercase tracking-wide text-[11px]">
-                                    {selectedSlot} Sabji:
+                            <div className="flex items-center gap-2.5 text-xs sm:text-sm">
+                                <span className="font-bold text-stone-500 uppercase tracking-wider text-[11px]">
+                                    Today's Sabji:
                                 </span>
-                                <span className="font-extrabold text-orange-700 bg-orange-100/70 px-2 py-0.5 rounded-md">
-                                    🍲 {activeSabji}
-                                </span>
-                                <span className="font-extrabold text-purple-700 bg-purple-100/70 px-2 py-0.5 rounded-md">
-                                    🧀 {activePaneerSabji}
+                                <span className="font-black text-orange-900 bg-orange-100/90 border border-orange-200/90 px-3 py-1 rounded-lg text-xs sm:text-sm shadow-2xs flex items-center gap-1.5">
+                                    <span>🍲</span>
+                                    <span>{activeSabji}</span>
                                 </span>
                             </div>
                         )}
-                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${isSlotLate ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
-                            {isSlotLate ? "+₹30 Late Delivery" : "✓ Free Delivery"}
-                        </span>
+                        <div className="flex items-center gap-2 text-xs font-semibold text-stone-500">
+                            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>Freshly prepared for {selectedSlot}</span>
+                        </div>
                     </div>
 
                     {/* 2. MAIN MENU CONTENT: SUNDAY SPECIAL vs WEEKDAY 3 THALIS */}
@@ -580,13 +583,12 @@ export function HomemadeSection() {
                             </div>
 
                             {/* Featured Sunday Card */}
-                            <div className={`rounded-3xl border-2 p-5 sm:p-7 shadow-lg relative overflow-hidden transition-all ${
-                                selectedSlot === "Lunch"
-                                    ? "border-amber-300 bg-gradient-to-br from-amber-50/70 via-white to-orange-50/50 shadow-amber-500/5"
-                                    : "border-indigo-300 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/50 shadow-indigo-500/5"
-                            }`}>
+                            <div className={`rounded-3xl border-2 p-5 sm:p-7 shadow-lg relative overflow-hidden transition-all ${selectedSlot === "Lunch"
+                                ? "border-amber-300 bg-gradient-to-br from-amber-50/70 via-white to-orange-50/50 shadow-amber-500/5"
+                                : "border-indigo-300 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/50 shadow-indigo-500/5"
+                                }`}>
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-                                    
+
                                     {/* Left Image */}
                                     <div className="lg:col-span-5 relative w-full h-56 sm:h-72 rounded-2xl overflow-hidden shadow-md border border-stone-200/80 group">
                                         <Image
@@ -599,11 +601,10 @@ export function HomemadeSection() {
                                             priority
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
-                                        
+
                                         <div className="absolute top-3 left-3">
-                                            <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider text-white shadow-sm ${
-                                                selectedSlot === "Lunch" ? "bg-amber-600" : "bg-indigo-600"
-                                            }`}>
+                                            <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider text-white shadow-sm ${selectedSlot === "Lunch" ? "bg-amber-600" : "bg-indigo-600"
+                                                }`}>
                                                 {selectedSlot === "Lunch" ? "🥞 Fresh Tawa Parathas" : "👑 Royal Dinner Feast"}
                                             </span>
                                         </div>
@@ -710,11 +711,10 @@ export function HomemadeSection() {
                                                         type="button"
                                                         disabled={sundayQty <= 1}
                                                         onClick={() => setSundayQty(q => Math.max(1, q - 1))}
-                                                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
-                                                            sundayQty > 1
-                                                                ? "bg-white hover:bg-stone-200 text-stone-800 shadow-2xs cursor-pointer active:scale-95"
-                                                                : "text-stone-300 cursor-not-allowed"
-                                                        }`}
+                                                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${sundayQty > 1
+                                                            ? "bg-white hover:bg-stone-200 text-stone-800 shadow-2xs cursor-pointer active:scale-95"
+                                                            : "text-stone-300 cursor-not-allowed"
+                                                            }`}
                                                         aria-label="Decrease sunday plates"
                                                     >
                                                         <Minus className="w-4 h-4 stroke-[2.5]" />
@@ -753,13 +753,12 @@ export function HomemadeSection() {
                                                 size="lg"
                                                 disabled={!isSundaySlotOpen}
                                                 onClick={handleSundayOrderNow}
-                                                className={`w-full sm:w-1/2 text-base font-bold text-white cursor-pointer py-6 rounded-xl shadow-md ${
-                                                    !isSundaySlotOpen
-                                                        ? "bg-stone-300 text-stone-500 cursor-not-allowed"
-                                                        : selectedSlot === "Lunch"
-                                                            ? "bg-orange-600 hover:bg-orange-700 shadow-orange-600/30"
-                                                            : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30"
-                                                }`}
+                                                className={`w-full sm:w-1/2 text-base font-bold text-white cursor-pointer py-6 rounded-xl shadow-md ${!isSundaySlotOpen
+                                                    ? "bg-stone-300 text-stone-500 cursor-not-allowed"
+                                                    : selectedSlot === "Lunch"
+                                                        ? "bg-orange-600 hover:bg-orange-700 shadow-orange-600/30"
+                                                        : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30"
+                                                    }`}
                                             >
                                                 {!isSundaySlotOpen
                                                     ? `${selectedSlot} Closed for Today`
@@ -771,24 +770,86 @@ export function HomemadeSection() {
                                 </div>
                             </div>
 
+                            {/* 📝 Special Cooking / Meal Instructions for Sunday (Optional) */}
+                            <div className="mt-5 p-4 rounded-2xl bg-white border border-stone-200 shadow-2xs">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div>
+                                        <h4 className="text-xs sm:text-sm font-black text-stone-900 flex items-center gap-1.5">
+                                            <MessageSquare className="w-4 h-4 text-orange-600" />
+                                            Special Instructions for Kitchen (Optional)
+                                        </h4>
+                                        <p className="text-[11px] text-stone-500">
+                                            Koi pasand ya instruction? (e.g. Extra chawal, Kam mirchi, Zyada ghee)
+                                        </p>
+                                    </div>
+                                    {mealInstructions && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setMealInstructions("")}
+                                            className="text-[11px] font-semibold text-stone-400 hover:text-stone-700 cursor-pointer"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-1.5 mb-2.5 overflow-x-auto pb-1 scrollbar-none">
+                                    {["Extra Chawal", "Kam Teekha", "Bina Pyaj-Lahsun", "Extra Salad", "Zyada Ghee"].map((tag) => {
+                                        const isSelected = mealInstructions.includes(tag);
+                                        return (
+                                            <button
+                                                key={`sunday-${tag}`}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (isSelected) {
+                                                        setMealInstructions(prev => prev.split(',').map(s => s.trim()).filter(s => s !== tag).join(', '));
+                                                    } else {
+                                                        setMealInstructions(prev => prev ? `${prev}, ${tag}` : tag);
+                                                    }
+                                                }}
+                                                className={`text-xs font-bold px-3 py-1.5 rounded-xl border shrink-0 transition-all cursor-pointer ${isSelected
+                                                    ? "bg-orange-100 text-orange-900 border-orange-300 ring-1 ring-orange-400/40"
+                                                    : "bg-stone-50 text-stone-700 border-stone-200 hover:bg-orange-50 hover:border-orange-200"
+                                                    }`}
+                                            >
+                                                {isSelected ? `✓ ${tag}` : `+ ${tag}`}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <input
+                                    type="text"
+                                    value={mealInstructions}
+                                    onChange={(e) => setMealInstructions(e.target.value)}
+                                    placeholder="Type your instruction here (e.g. Extra chawal pack kar dena, kam teekha)..."
+                                    className="w-full text-xs sm:text-sm px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:bg-white focus:outline-none focus:border-orange-500 transition-all"
+                                />
+                            </div>
+
                             {/* Sticky Floating Bar for Sunday */}
                             <div className="sticky bottom-3 z-30 mt-6 bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-stone-300 shadow-xl shadow-stone-900/10 transition-all">
                                 <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-                                    
+
                                     {/* Selected Meal Info */}
                                     <div className="w-full lg:w-auto">
                                         <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">
                                             Sunday {selectedSlot}: {activeSundayName}
                                         </span>
-                                        <div className="flex items-center gap-2 mt-0.5">
+                                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                             <span className="text-base sm:text-lg font-black text-stone-900">
                                                 ₹{sundayItemsTotal}
                                             </span>
                                             <Badge variant="secondary" className="bg-orange-100 text-orange-700 font-bold text-xs">
                                                 {sundayQty} Plate{sundayQty > 1 ? "s" : ""}
                                             </Badge>
+                                            {mealInstructions.trim() && (
+                                                <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800 text-[11px] font-medium max-w-[200px] truncate">
+                                                    Note: {mealInstructions}
+                                                </Badge>
+                                            )}
                                         </div>
-                                        <p className="text-xs text-stone-500 font-medium mt-0.5">
+                                        <p className="text-xs text-stone-500 font-medium mt-0.5 break-words">
                                             Slot: <strong>{selectedSlot}</strong> (Delivery: {selectedSlot === "Lunch" ? "11:30 AM–2:00 PM" : "7:30–10:00 PM"})
                                         </p>
                                     </div>
@@ -840,13 +901,12 @@ export function HomemadeSection() {
                                             size="lg"
                                             onClick={handleSundayOrderNow}
                                             disabled={!isSundaySlotOpen}
-                                            className={`w-full sm:w-auto px-8 py-6 text-base font-bold text-white rounded-xl shadow-lg transition-all cursor-pointer ${
-                                                !isSundaySlotOpen
-                                                    ? "bg-stone-300 text-stone-500 cursor-not-allowed shadow-none"
-                                                    : selectedSlot === "Lunch"
-                                                        ? "bg-orange-600 hover:bg-orange-700 shadow-orange-600/30"
-                                                        : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30"
-                                            }`}
+                                            className={`w-full sm:w-auto px-8 py-6 text-base font-bold text-white rounded-xl shadow-lg transition-all cursor-pointer ${!isSundaySlotOpen
+                                                ? "bg-stone-300 text-stone-500 cursor-not-allowed shadow-none"
+                                                : selectedSlot === "Lunch"
+                                                    ? "bg-orange-600 hover:bg-orange-700 shadow-orange-600/30"
+                                                    : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30"
+                                                }`}
                                         >
                                             {!isSundaySlotOpen
                                                 ? `${selectedSlot} Closed for Today`
@@ -889,11 +949,10 @@ export function HomemadeSection() {
                                         <div
                                             key={thali.id}
                                             onClick={() => setSelectedThaliId(thali.id)}
-                                            className={`rounded-2xl border-2 p-4 sm:p-5 flex flex-col justify-between transition-all cursor-pointer relative shadow-sm hover:shadow-md ${
-                                                isSelected 
-                                                    ? thali.activeBorder 
-                                                    : `${thali.themeBorder} bg-white`
-                                            } ${!thali.isAvailable ? "opacity-60 grayscale cursor-not-allowed" : ""}`}
+                                            className={`rounded-2xl border-2 p-4 sm:p-5 flex flex-col justify-between transition-all cursor-pointer relative shadow-sm hover:shadow-md ${isSelected
+                                                ? thali.activeBorder
+                                                : `${thali.themeBorder} bg-white`
+                                                } ${!thali.isAvailable ? "opacity-60 grayscale cursor-not-allowed" : ""}`}
                                         >
                                             <div>
                                                 {/* Top Row: Badge + Radio Checkmark */}
@@ -901,11 +960,10 @@ export function HomemadeSection() {
                                                     <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${thali.badgeColor}`}>
                                                         {thali.badge}
                                                     </span>
-                                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${
-                                                        isSelected 
-                                                            ? "bg-orange-600 border-orange-600 text-white" 
-                                                            : "border-stone-300 bg-white"
-                                                    }`}>
+                                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${isSelected
+                                                        ? "bg-orange-600 border-orange-600 text-white"
+                                                        : "border-stone-300 bg-white"
+                                                        }`}>
                                                         {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                                                     </div>
                                                 </div>
@@ -922,13 +980,10 @@ export function HomemadeSection() {
                                                         priority={thali.id === 'regular'}
                                                     />
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
-                                                    
-                                                    <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-white text-[11px] font-bold">
-                                                        <span className="bg-black/65 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/20 truncate max-w-[70%]">
+
+                                                    <div className="absolute bottom-2.5 left-2.5 flex items-center text-white text-[11px] font-bold">
+                                                        <span className="bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20 truncate flex items-center gap-1.5 shadow-sm">
                                                             {thali.id === 'paneerSpecial' ? `🧀 ${activePaneerSabji}` : `🍲 ${activeSabji}`}
-                                                        </span>
-                                                        <span className="bg-orange-600/90 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider text-white shadow-xs">
-                                                            Real Plate
                                                         </span>
                                                     </div>
                                                 </div>
@@ -947,7 +1002,7 @@ export function HomemadeSection() {
                                                         </div>
 
                                                         {/* Extra Thali / Plates Counter */}
-                                                        <div 
+                                                        <div
                                                             onClick={(e) => e.stopPropagation()}
                                                             className="flex items-center gap-1.5 bg-stone-100/90 rounded-xl p-1 border border-stone-200/90 shadow-2xs"
                                                         >
@@ -959,11 +1014,10 @@ export function HomemadeSection() {
                                                                     setSelectedThaliId(thali.id);
                                                                     updateThaliQty(thali.id, -1);
                                                                 }}
-                                                                className={`w-7 h-7 flex items-center justify-center rounded-lg transition-all ${
-                                                                    cfg.quantity > 1
-                                                                        ? "bg-white hover:bg-stone-200 text-stone-800 shadow-2xs cursor-pointer active:scale-95"
-                                                                        : "text-stone-300 cursor-not-allowed"
-                                                                }`}
+                                                                className={`w-7 h-7 flex items-center justify-center rounded-lg transition-all ${cfg.quantity > 1
+                                                                    ? "bg-white hover:bg-stone-200 text-stone-800 shadow-2xs cursor-pointer active:scale-95"
+                                                                    : "text-stone-300 cursor-not-allowed"
+                                                                    }`}
                                                                 aria-label="Decrease thali plates"
                                                             >
                                                                 <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -1006,36 +1060,23 @@ export function HomemadeSection() {
                                                     ))}
                                                 </div>
 
-                                                {/* 🫓 Direct Extra Roti Controls */}
-                                                <div 
+                                                {/* 🫓 Direct Extra Roti Controls (Clean 1-Row Stepper) */}
+                                                <div
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className="my-3 p-2.5 sm:p-3 bg-gradient-to-r from-amber-50/90 via-orange-50/60 to-amber-50/90 rounded-2xl border border-amber-300/80 flex items-center justify-between gap-2 shadow-2xs"
+                                                    className="my-2.5 p-2 bg-amber-50/60 rounded-xl border border-amber-200/80 flex items-center justify-between gap-2 shadow-2xs"
                                                 >
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        <span className="text-xl sm:text-2xl select-none shrink-0">🫓</span>
-                                                        <div className="min-w-0">
-                                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                                                <span className="text-xs font-black text-amber-950">
-                                                                    Extra Desi Ghee Roti
-                                                                </span>
-                                                                <span className="text-[10px] font-bold text-amber-800 bg-amber-200/90 px-1.5 py-0.5 rounded-md shrink-0">
-                                                                    +₹{state.extraRotiPrice || 10}/ea
-                                                                </span>
-                                                            </div>
-                                                            {cfg.extraRoti > 0 ? (
-                                                                <p className="text-[11px] text-amber-900 font-bold mt-0.5 truncate">
-                                                                    ✓ {cfg.extraRoti} Extra Roti added (+₹{cfg.extraRoti * (state.extraRotiPrice || 10)})
-                                                                </p>
-                                                            ) : (
-                                                                <p className="text-[10px] text-stone-500 font-medium mt-0.5 truncate">
-                                                                    Tawa fresh in pure desi ghee
-                                                                </p>
-                                                            )}
-                                                        </div>
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        <span className="text-base select-none shrink-0">🫓</span>
+                                                        <span className="text-xs font-bold text-stone-900">
+                                                            Extra Roti
+                                                        </span>
+                                                        <span className="text-[11px] font-semibold text-amber-800">
+                                                            (+₹{state.extraRotiPrice || 10})
+                                                        </span>
                                                     </div>
 
                                                     {/* Inline Direct Roti Counter [-] [count] [+] */}
-                                                    <div className="flex items-center gap-1.5 bg-white rounded-xl p-1 border border-amber-300 shadow-2xs shrink-0">
+                                                    <div className="flex items-center gap-1 bg-white rounded-lg p-0.5 border border-amber-300 shadow-2xs shrink-0">
                                                         <button
                                                             type="button"
                                                             disabled={cfg.extraRoti <= 0}
@@ -1044,14 +1085,13 @@ export function HomemadeSection() {
                                                                 setSelectedThaliId(thali.id);
                                                                 updateThaliExtraRoti(thali.id, -1);
                                                             }}
-                                                            className={`w-7 h-7 flex items-center justify-center rounded-lg transition-all ${
-                                                                cfg.extraRoti > 0
-                                                                    ? "bg-amber-100 hover:bg-amber-200 text-amber-900 cursor-pointer active:scale-95"
-                                                                    : "text-stone-300 cursor-not-allowed"
-                                                            }`}
+                                                            className={`w-6 h-6 flex items-center justify-center rounded transition-all ${cfg.extraRoti > 0
+                                                                ? "bg-amber-100 hover:bg-amber-200 text-amber-900 cursor-pointer active:scale-95"
+                                                                : "text-stone-300 cursor-not-allowed"
+                                                                }`}
                                                             aria-label="Decrease extra roti"
                                                         >
-                                                            <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+                                                            <Minus className="w-3 h-3 stroke-[2.5]" />
                                                         </button>
                                                         <span className="font-extrabold text-stone-900 w-5 text-center text-xs">
                                                             {cfg.extraRoti}
@@ -1063,10 +1103,10 @@ export function HomemadeSection() {
                                                                 setSelectedThaliId(thali.id);
                                                                 updateThaliExtraRoti(thali.id, 1);
                                                             }}
-                                                            className="w-7 h-7 flex items-center justify-center bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all cursor-pointer shadow-2xs active:scale-95"
+                                                            className="w-6 h-6 flex items-center justify-center bg-orange-600 hover:bg-orange-700 text-white rounded transition-all cursor-pointer shadow-2xs active:scale-95"
                                                             aria-label="Increase extra roti"
                                                         >
-                                                            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                                                            <Plus className="w-3 h-3 stroke-[2.5]" />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1099,9 +1139,8 @@ export function HomemadeSection() {
                                                         setSelectedThaliId(thali.id);
                                                         handleOrderNow(thali);
                                                     }}
-                                                    className={`w-1/2 text-xs font-bold text-white cursor-pointer ${
-                                                        isSelected ? "bg-orange-600 hover:bg-orange-700 shadow-sm" : "bg-stone-800 hover:bg-stone-900"
-                                                    }`}
+                                                    className={`w-1/2 text-xs font-bold text-white cursor-pointer ${isSelected ? "bg-orange-600 hover:bg-orange-700 shadow-sm" : "bg-stone-800 hover:bg-stone-900"
+                                                        }`}
                                                 >
                                                     Order • ₹{cardItemTotal}
                                                 </Button>
@@ -1119,16 +1158,73 @@ export function HomemadeSection() {
                                 })}
                             </div>
 
+                            {/* 📝 Special Cooking / Meal Instructions (Optional) */}
+                            <div className="mt-5 p-4 rounded-2xl bg-white border border-stone-200 shadow-2xs">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div>
+                                        <h4 className="text-xs sm:text-sm font-black text-stone-900 flex items-center gap-1.5">
+                                            <MessageSquare className="w-4 h-4 text-orange-600" />
+                                            Special Instructions for Kitchen (Optional)
+                                        </h4>
+                                        <p className="text-[11px] text-stone-500">
+                                            Koi pasand ya khaas instruction? (e.g. Extra chawal, Kam mirchi, Roti par ghee)
+                                        </p>
+                                    </div>
+                                    {mealInstructions && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setMealInstructions("")}
+                                            className="text-[11px] font-semibold text-stone-400 hover:text-stone-700 cursor-pointer"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-1.5 mb-2.5 overflow-x-auto pb-1 scrollbar-none">
+                                    {["Extra Chawal", "Kam Teekha", "Bina Pyaj-Lahsun", "Extra Salad", "Roti par Ghee"].map((tag) => {
+                                        const isSelected = mealInstructions.includes(tag);
+                                        return (
+                                            <button
+                                                key={tag}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (isSelected) {
+                                                        setMealInstructions(prev => prev.split(',').map(s => s.trim()).filter(s => s !== tag).join(', '));
+                                                    } else {
+                                                        setMealInstructions(prev => prev ? `${prev}, ${tag}` : tag);
+                                                    }
+                                                }}
+                                                className={`text-xs font-bold px-3 py-1.5 rounded-xl border shrink-0 transition-all cursor-pointer ${isSelected
+                                                    ? "bg-orange-100 text-orange-900 border-orange-300 ring-1 ring-orange-400/40"
+                                                    : "bg-stone-50 text-stone-700 border-stone-200 hover:bg-orange-50 hover:border-orange-200"
+                                                    }`}
+                                            >
+                                                {isSelected ? `✓ ${tag}` : `+ ${tag}`}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <input
+                                    type="text"
+                                    value={mealInstructions}
+                                    onChange={(e) => setMealInstructions(e.target.value)}
+                                    placeholder="Type your instruction here (e.g. Extra chawal pack kar dena, kam teekha)..."
+                                    className="w-full text-xs sm:text-sm px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:bg-white focus:outline-none focus:border-orange-500 transition-all"
+                                />
+                            </div>
+
                             {/* Sticky Floating Bar for Weekday */}
                             <div className="sticky bottom-3 z-30 mt-6 bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-stone-300 shadow-xl shadow-stone-900/10 transition-all">
                                 <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-                                    
+
                                     {/* Selected Thali Info */}
                                     <div className="w-full lg:w-auto">
                                         <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">
                                             Selected: {currentThali.name}
                                         </span>
-                                        <div className="flex items-center gap-2 mt-0.5">
+                                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                             <span className="text-base sm:text-lg font-black text-stone-900">
                                                 ₹{currentItemsTotal}
                                             </span>
@@ -1136,8 +1232,13 @@ export function HomemadeSection() {
                                                 {currentCfg.quantity} Plate{currentCfg.quantity > 1 ? "s" : ""}
                                                 {currentCfg.extraRoti > 0 ? ` + ${currentCfg.extraRoti} Extra Roti` : ""}
                                             </Badge>
+                                            {mealInstructions.trim() && (
+                                                <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800 text-[11px] font-medium max-w-[200px] truncate">
+                                                    Note: {mealInstructions}
+                                                </Badge>
+                                            )}
                                         </div>
-                                        <p className="text-xs text-stone-500 font-medium mt-0.5">
+                                        <p className="text-xs text-stone-500 font-medium mt-0.5 break-words">
                                             Slot: <strong>{selectedSlot}</strong> (Delivery: {selectedSlot === "Lunch" ? "11:30 AM–2:00 PM" : "7:30–10:00 PM"})
                                         </p>
                                     </div>
@@ -1215,17 +1316,18 @@ export function HomemadeSection() {
                                             size="lg"
                                             onClick={() => handleOrderNow(currentThali)}
                                             disabled={!isSlotOpen || !currentThali.isAvailable}
-                                            className={`w-full sm:w-auto px-8 py-6 text-base font-bold text-white rounded-xl shadow-lg transition-all cursor-pointer ${
-                                                !isSlotOpen || !currentThali.isAvailable
-                                                    ? "bg-stone-300 text-stone-500 cursor-not-allowed shadow-none"
-                                                    : selectedSlot === "Lunch"
-                                                        ? "bg-orange-600 hover:bg-orange-700 shadow-orange-600/30"
-                                                        : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30"
-                                            }`}
+                                            className={`w-full sm:w-auto px-8 py-6 text-base font-bold text-white rounded-xl shadow-lg transition-all cursor-pointer ${!isSlotOpen || !currentThali.isAvailable
+                                                ? "bg-stone-300 text-stone-500 cursor-not-allowed shadow-none"
+                                                : selectedSlot === "Lunch"
+                                                    ? "bg-orange-600 hover:bg-orange-700 shadow-orange-600/30"
+                                                    : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30"
+                                                }`}
                                         >
                                             {!isSlotOpen
                                                 ? `${selectedSlot} Closed for Today`
-                                                : `Order Now • ₹${currentTotalWithDelivery}`}
+                                                : !currentThali.isAvailable
+                                                    ? `${currentThali.name} Unavailable`
+                                                    : `Order Now • ₹${currentTotalWithDelivery}`}
                                         </Button>
                                     </div>
                                 </div>
@@ -1269,9 +1371,16 @@ export function HomemadeSection() {
                 extraRotiPrice={state.extraRotiPrice || 10}
                 initialQuantity={customizingThali ? (thaliConfig[customizingThali.id]?.quantity || 1) : 1}
                 initialExtraRoti={customizingThali ? (thaliConfig[customizingThali.id]?.extraRoti || 0) : 0}
+                initialInstructions={mealInstructions}
                 isSlotLate={isSlotLate}
-                onAddToCart={handleCustomizedAddToCart}
-                onOrderNow={handleCustomizedOrderNow}
+                onAddToCart={(thali, qty, extraRoti, inst) => {
+                    if (inst !== undefined) setMealInstructions(inst);
+                    handleCustomizedAddToCart(thali, qty, extraRoti, inst);
+                }}
+                onOrderNow={(thali, qty, extraRoti, inst) => {
+                    if (inst !== undefined) setMealInstructions(inst);
+                    handleCustomizedOrderNow(thali, qty, extraRoti, inst);
+                }}
             />
         </div>
     );

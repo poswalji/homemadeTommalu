@@ -18,16 +18,30 @@ try {
   firebase.initializeApp(firebaseConfig);
   const messaging = firebase.messaging();
 
+  // In-memory deduplication cache in SW to prevent duplicate background alerts
+  const recentSwAlerts = new Map();
+
   messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    const orderId = payload.data?.orderId || payload.data?.relatedId || '';
+    const dedupeKey = String(orderId || payload.notification?.title || payload.data?.title || 'tommalu-alert');
+
+    const now = Date.now();
+    const lastShown = recentSwAlerts.get(dedupeKey);
+    if (lastShown && (now - lastShown < 60000)) {
+      console.log('[firebase-messaging-sw.js] Duplicate alert suppressed for:', dedupeKey);
+      return;
+    }
+    recentSwAlerts.set(dedupeKey, now);
+
     const notificationTitle = payload.notification?.title || payload.data?.title || 'Tommalu Notification';
     const notificationOptions = {
       body: payload.notification?.body || payload.data?.body || payload.data?.message || 'You have a new update.',
       icon: '/icons/icon-192x192.png',
       badge: '/icons/icon-192x192.png',
       vibrate: [200, 100, 200],
-      tag: payload.data?.orderId || 'tommalu-alert',
-      renotify: true,
+      tag: orderId ? `order-${orderId}` : dedupeKey,
+      renotify: false,
       data: payload.data || {}
     };
 

@@ -87,26 +87,22 @@ export function HeroSection() {
                   transition={{ duration: 0.6 }}
                   className="lg:col-span-7"
                >
-                  {/* Pre-order Alert */}
-                  <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-amber-500 text-black font-bold text-xs sm:text-sm md:text-base rounded-lg shadow-lg animate-pulse">
-                     <Clock className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                     <span>Pre-order before 1:00 PM (Lunch) / 9:00 PM (Dinner) for Free Delivery!</span>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                     <span className="inline-block px-3.5 py-1 text-xs sm:text-sm font-semibold tracking-wide text-orange-200 bg-orange-600/30 backdrop-blur-md border border-orange-500/40 rounded-full">
-                        ✨ 100% Ghar Ka Swaad • Pure Veg
+                  {/* Fresh Food Badge */}
+                  <div className="inline-flex items-center gap-2.5 px-4 py-2 mb-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-full shadow-lg">
+                     <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                      </span>
-                     <span className="inline-block px-3 py-1 text-xs font-semibold tracking-wide text-green-300 bg-green-900/40 border border-green-500/30 rounded-full">
-                        🧈 Desi Ghee
+                     <span className="text-xs sm:text-sm font-bold text-white tracking-wide">
+                        100% Ghar Ka Swaad • Pure Veg • Desi Ghee
                      </span>
                   </div>
 
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.1] mb-6 drop-shadow-md">
-                     Authentic <span className="text-orange-500">Homemade Food</span>, Delivered Fresh.
+                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.08] mb-6 drop-shadow-md">
+                     Authentic <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500">Homemade Food</span>, Delivered Fresh.
                   </h1>
 
-                  <p className="text-base sm:text-lg md:text-xl text-stone-200 mb-8 max-w-xl leading-relaxed font-light">
+                  <p className="text-base sm:text-lg md:text-xl text-stone-200/90 mb-8 max-w-xl leading-relaxed font-light">
                      Wholesome, piping hot home-cooked meals prepared with love & hygiene. Soft Desi Ghee rotis, rich dal tadka, fresh daily sabji & chilled chach delivered to your doorstep.
                   </p>
 
@@ -182,7 +178,7 @@ export function HeroSection() {
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
                            </span>
-                           <span className="text-xs font-bold text-white tracking-wide uppercase">Real Thali Plate</span>
+                           <span className="text-xs font-bold text-white tracking-wide">Daily Fresh Thali</span>
                         </div>
                         <span className="text-[11px] font-semibold text-orange-300 bg-orange-500/20 border border-orange-500/40 px-2.5 py-0.5 rounded-full">
                            Tommalu Kitchen
@@ -216,7 +212,7 @@ export function HeroSection() {
                               4 Roti • Dal Tadka • Sabji • Salad • Chach
                            </p>
                            <p className="text-[11px] text-stone-300 mt-1 font-medium flex items-center justify-between">
-                              <span className="text-emerald-400 font-semibold">✓ Exact Meal Served</span>
+                              <span className="text-emerald-400 font-semibold">✓ Pure Desi Ghee</span>
                               <span className="text-orange-400 font-extrabold text-sm">₹99 Only</span>
                            </p>
                         </div>

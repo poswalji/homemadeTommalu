@@ -35,11 +35,13 @@ import {
   ExternalLink,
   Phone,
   Clock,
-  Loader2
+  Loader2,
+  Printer
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
@@ -47,6 +49,7 @@ export default function AdminOrderDetailPage() {
   const [statusUpdate, setStatusUpdate] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
 
   const { data, isLoading, error, refetch } = useAdminHomemadeFoodOrder(orderId);
   const updateStatus = useUpdateHomemadeFoodOrderStatus();
@@ -145,16 +148,27 @@ export default function AdminOrderDetailPage() {
         </Badge>
       </div>
 
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-          Order #{order.orderNumber}
-        </h1>
-        <p className="text-gray-500 mt-1 flex items-center gap-2">
-          <Calendar className="w-4 h-4" />
-          Placed on {new Date(order.createdAt).toLocaleString('en-IN', {
-            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-          })}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Order #{order.orderNumber}
+          </h1>
+          <p className="text-gray-500 mt-1 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Placed on {new Date(order.createdAt).toLocaleString('en-IN', {
+              day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            })}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setIsInvoiceOpen(true)}
+            className="bg-stone-900 hover:bg-black text-white gap-2 font-medium shadow-xs cursor-pointer"
+          >
+            <Printer className="w-4 h-4 text-orange-400" />
+            Print Bill / Invoice
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -301,7 +315,16 @@ export default function AdminOrderDetailPage() {
                 <span className="text-2xl font-bold text-orange-600">₹{order.total || order.finalAmount}</span>
               </div>
 
-              <div className="pt-4 border-t border-stone-100">
+              <div className="pt-4 border-t border-stone-100 space-y-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsInvoiceOpen(true)}
+                  className="w-full border-stone-300 text-stone-700 hover:bg-stone-50 gap-2 h-11 cursor-pointer"
+                >
+                  <Printer className="w-4 h-4 text-orange-600" />
+                  View & Print Bill
+                </Button>
+
                 <Dialog open={isDialogOpen} onOpenChange={(open) => {
                     setIsDialogOpen(open);
                     if (open) {
@@ -310,7 +333,7 @@ export default function AdminOrderDetailPage() {
                     }
                 }}>
                   <DialogTrigger asChild>
-                    <Button className="w-full bg-orange-600 hover:bg-orange-700 h-12 text-md">
+                    <Button className="w-full bg-orange-600 hover:bg-orange-700 h-12 text-md cursor-pointer">
                       Update Order Status
                     </Button>
                   </DialogTrigger>
@@ -362,6 +385,13 @@ export default function AdminOrderDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Printable Invoice Modal */}
+      <OrderInvoiceModal
+        isOpen={isInvoiceOpen}
+        onClose={() => setIsInvoiceOpen(false)}
+        order={order}
+      />
     </div>
   );
 }

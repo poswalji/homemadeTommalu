@@ -11,17 +11,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-    Minus, 
-    Plus, 
-    ShoppingCart, 
-    ArrowRight, 
-    CheckCircle2, 
-    Utensils, 
-    Sun, 
-    Moon, 
+import {
+    Minus,
+    Plus,
+    ShoppingCart,
+    ArrowRight,
+    CheckCircle2,
+    Utensils,
+    Sun,
+    Moon,
     Flame,
-    Sparkles
+    Sparkles,
+    MessageSquare
 } from "lucide-react";
 
 export interface CustomizerThali {
@@ -45,9 +46,10 @@ interface ThaliCustomizerModalProps {
     extraRotiPrice?: number;
     initialQuantity?: number;
     initialExtraRoti?: number;
+    initialInstructions?: string;
     isSlotLate?: boolean;
-    onAddToCart: (thali: CustomizerThali, quantity: number, extraRoti: number) => void;
-    onOrderNow: (thali: CustomizerThali, quantity: number, extraRoti: number) => void;
+    onAddToCart: (thali: CustomizerThali, quantity: number, extraRoti: number, instructions?: string) => void;
+    onOrderNow: (thali: CustomizerThali, quantity: number, extraRoti: number, instructions?: string) => void;
 }
 
 export function ThaliCustomizerModal({
@@ -59,20 +61,23 @@ export function ThaliCustomizerModal({
     extraRotiPrice = 10,
     initialQuantity = 1,
     initialExtraRoti = 0,
+    initialInstructions = "",
     isSlotLate = false,
     onAddToCart,
     onOrderNow,
 }: ThaliCustomizerModalProps) {
     const [quantity, setQuantity] = useState(initialQuantity);
     const [extraRoti, setExtraRoti] = useState(initialExtraRoti);
+    const [instructions, setInstructions] = useState(initialInstructions);
 
     // Sync when modal opens with new initial values
     useEffect(() => {
         if (isOpen) {
             setQuantity(Math.max(1, initialQuantity));
             setExtraRoti(Math.max(0, initialExtraRoti));
+            setInstructions(initialInstructions || "");
         }
-    }, [isOpen, initialQuantity, initialExtraRoti]);
+    }, [isOpen, initialQuantity, initialExtraRoti, initialInstructions]);
 
     if (!thali) return null;
 
@@ -126,9 +131,6 @@ export function ThaliCustomizerModal({
                                     unoptimized
                                     className="object-cover"
                                 />
-                                <span className="absolute bottom-1 right-1 bg-black/70 backdrop-blur-xs text-[9px] font-black text-white px-1.5 py-0.2 rounded">
-                                    Real
-                                </span>
                             </div>
                         )}
                     </div>
@@ -197,65 +199,103 @@ export function ThaliCustomizerModal({
                         </div>
                     </div>
 
-                    {/* 🫓 Extra Roti Section (Highlighted Swiggy/Zomato style) */}
+                    {/* 🫓 Extra Roti Section (Clean 1-Row Stepper) */}
                     {!isSundayDinner ? (
-                        <div className="p-4 rounded-2xl border-2 border-amber-300/80 bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-amber-50/90 space-y-3 relative shadow-xs">
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-start gap-2.5">
-                                    <span className="text-2xl shrink-0 select-none">🫓</span>
-                                    <div>
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                            <span className="text-sm font-black text-stone-900">
-                                                Add Extra Desi Ghee Roti
-                                            </span>
-                                            <Badge className="bg-amber-600 text-white text-[10px] font-extrabold px-1.5 py-0 h-4">
-                                                HOT ADD-ON
-                                            </Badge>
-                                        </div>
-                                        <p className="text-xs text-stone-600 font-medium mt-0.5">
-                                            Fresh, hot tawa roti with pure desi ghee (+₹{extraRotiPrice} each)
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Stepper */}
-                                <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-amber-300 shadow-2xs shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={handleDecrementRoti}
-                                        disabled={extraRoti <= 0}
-                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-600 hover:bg-amber-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                                        aria-label="Decrease extra roti"
-                                    >
-                                        <Minus className="w-4 h-4" />
-                                    </button>
-                                    <span className="w-7 text-center font-black text-amber-900 text-sm">
-                                        {extraRoti}
+                        <div className="p-3.5 rounded-2xl border border-amber-200 bg-amber-50/60 flex items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl shrink-0 select-none">🫓</span>
+                                <div>
+                                    <span className="text-sm font-bold text-stone-900 block">
+                                        Extra Roti
                                     </span>
-                                    <button
-                                        type="button"
-                                        onClick={handleIncrementRoti}
-                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-600 hover:bg-amber-50 transition-colors cursor-pointer"
-                                        aria-label="Increase extra roti"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                    </button>
+                                    <span className="text-xs text-amber-800 font-medium">
+                                        +₹{extraRotiPrice} each
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Roti subtotal tag if selected */}
-                            {extraRoti > 0 && (
-                                <div className="pt-2 border-t border-amber-200/70 flex items-center justify-between text-xs font-bold text-amber-900">
-                                    <span>{extraRoti} Extra Roti added</span>
-                                    <span>+₹{rotiTotal}</span>
-                                </div>
-                            )}
+                            {/* Stepper */}
+                            <div className="flex items-center gap-1.5 bg-white rounded-xl p-1 border border-amber-300 shadow-2xs shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={handleDecrementRoti}
+                                    disabled={extraRoti <= 0}
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-600 hover:bg-amber-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                    aria-label="Decrease extra roti"
+                                >
+                                    <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <span className="w-6 text-center font-extrabold text-amber-950 text-xs">
+                                    {extraRoti}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={handleIncrementRoti}
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-orange-600 hover:bg-orange-700 text-white transition-colors cursor-pointer"
+                                    aria-label="Increase extra roti"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
                         </div>
                     ) : (
                         <div className="p-3 bg-stone-100 rounded-xl text-xs text-stone-500 text-center font-medium">
                             Sunday Dinner special menu does not require extra rotis.
                         </div>
                     )}
+
+                    {/* 📝 Special Cooking / Meal Instructions (Optional) */}
+                    <div className="p-3.5 rounded-2xl border border-stone-200 bg-stone-50/70 space-y-2">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-stone-800 flex items-center gap-1.5">
+                                <MessageSquare className="w-3.5 h-3.5 text-orange-600" />
+                                Special Instructions (Optional)
+                            </label>
+                            {instructions && (
+                                <button
+                                    type="button"
+                                    onClick={() => setInstructions("")}
+                                    className="text-[10px] text-stone-400 hover:text-stone-600 cursor-pointer"
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Quick 1-tap tag chips */}
+                        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                            {["Extra Chawal", "Kam Teekha", "Bina Pyaj-Lahsun", "Extra Salad", "Roti par Ghee"].map((tag) => {
+                                const isSelected = instructions.includes(tag);
+                                return (
+                                    <button
+                                        key={tag}
+                                        type="button"
+                                        onClick={() => {
+                                            if (isSelected) {
+                                                setInstructions(prev => prev.split(',').map(s => s.trim()).filter(s => s !== tag).join(', '));
+                                            } else {
+                                                setInstructions(prev => prev ? `${prev}, ${tag}` : tag);
+                                            }
+                                        }}
+                                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border shrink-0 transition-colors cursor-pointer ${isSelected
+                                            ? "bg-orange-100 text-orange-800 border-orange-300"
+                                            : "bg-white text-stone-700 border-stone-200 hover:bg-stone-100"
+                                            }`}
+                                    >
+                                        {isSelected ? `✓ ${tag}` : `+ ${tag}`}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <input
+                            type="text"
+                            value={instructions}
+                            onChange={(e) => setInstructions(e.target.value)}
+                            placeholder="e.g. Extra chawal pack kar dena, kam teekha..."
+                            className="w-full text-xs px-3 py-2 bg-white border border-stone-200 rounded-xl focus:outline-none focus:border-orange-500"
+                        />
+                    </div>
 
                     {/* Live Bill Breakdown */}
                     <div className="bg-stone-50 p-3.5 rounded-2xl border border-stone-200/70 space-y-1.5 text-xs">
@@ -290,11 +330,12 @@ export function ThaliCustomizerModal({
                         type="button"
                         variant="outline"
                         size="lg"
+                        disabled={!thali.isAvailable}
                         onClick={() => {
-                            onAddToCart(thali, quantity, effectiveExtraRoti);
+                            onAddToCart(thali, quantity, effectiveExtraRoti, instructions.trim());
                             onClose();
                         }}
-                        className="w-full py-6 rounded-2xl border-stone-300 hover:bg-stone-50 text-stone-800 font-bold text-sm flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                        className="w-full py-6 rounded-2xl border-stone-300 hover:bg-stone-50 text-stone-800 font-bold text-sm flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <ShoppingCart className="w-4 h-4 text-orange-600" />
                         Add to Cart
@@ -303,14 +344,18 @@ export function ThaliCustomizerModal({
                     <Button
                         type="button"
                         size="lg"
+                        disabled={!thali.isAvailable}
                         onClick={() => {
-                            onOrderNow(thali, quantity, effectiveExtraRoti);
+                            onOrderNow(thali, quantity, effectiveExtraRoti, instructions.trim());
                             onClose();
                         }}
-                        className="w-full py-6 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-orange-600/25"
+                        className={`w-full py-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-1.5 cursor-pointer shadow-lg transition-all ${!thali.isAvailable
+                            ? "bg-stone-300 text-stone-500 cursor-not-allowed shadow-none"
+                            : "bg-orange-600 hover:bg-orange-700 text-white shadow-orange-600/25"
+                            }`}
                     >
-                        <span>Order • ₹{grandTotal}</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <span>{!thali.isAvailable ? "Currently Unavailable" : `Order • ₹${grandTotal}`}</span>
+                        {thali.isAvailable && <ArrowRight className="w-4 h-4" />}
                     </Button>
                 </div>
             </DialogContent>

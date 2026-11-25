@@ -223,7 +223,7 @@ export function AiThaliImageModal({
         }, 700);
     };
 
-    // Handle local image file upload
+    // Handle local image file upload with mobile client-side compression
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -234,11 +234,41 @@ export function AiThaliImageModal({
         }
 
         const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result as string;
-            setPreviewUrl(result);
-            setPreviewTitle("Uploaded Kitchen Photo");
-            toast.success("Photo uploaded successfully! Click Apply to save.");
+        reader.onload = (loadEvt) => {
+            const rawDataUrl = loadEvt.target?.result as string;
+            const img = new window.Image();
+            img.onload = () => {
+                const maxDim = 1000;
+                let width = img.width;
+                let height = img.height;
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    setPreviewUrl(compressedDataUrl);
+                } else {
+                    setPreviewUrl(rawDataUrl);
+                }
+                setPreviewTitle("Uploaded Kitchen Photo");
+                toast.success("Photo optimized & uploaded! Click Apply to save.");
+            };
+            img.onerror = () => {
+                setPreviewUrl(rawDataUrl);
+                setPreviewTitle("Uploaded Kitchen Photo");
+            };
+            img.src = rawDataUrl;
         };
         reader.readAsDataURL(file);
     };

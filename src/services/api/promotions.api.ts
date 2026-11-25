@@ -32,6 +32,7 @@ export interface ValidatePromotionData {
   code: string;
   orderAmount: number;
   storeId?: string;
+  phone?: string;
 }
 
 export interface ValidatePromotionResponse {

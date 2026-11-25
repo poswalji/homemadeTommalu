@@ -18,15 +18,17 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Eye, Package, Calendar, MapPin, Search, XCircle, Clock, Utensils } from 'lucide-react';
+import { Eye, Package, Calendar, MapPin, Search, XCircle, Clock, Utensils, FileText, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
 
 export default function CustomerOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState('');
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
   const { data, isLoading, error } = useMyOrders();
   const cancelOrder = useCancelOrder();
 
@@ -287,6 +289,17 @@ export default function CustomerOrdersPage() {
                         </Button>
                       </Link>
 
+                      {order.status?.toLowerCase() === 'delivered' && (
+                        <Button
+                          variant="outline"
+                          onClick={() => setInvoiceOrder(order)}
+                          className="flex-1 text-xs sm:text-sm border-stone-300 text-stone-700 hover:bg-stone-50 cursor-pointer"
+                        >
+                          <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-orange-600" />
+                          <span>Bill / Receipt</span>
+                        </Button>
+                      )}
+
                       {order.status === 'Pending' && (
                         <Dialog open={isCancelDialogOpen && selectedOrder === order.id} onOpenChange={(open) => {
                           setIsCancelDialogOpen(open);
@@ -359,6 +372,13 @@ export default function CustomerOrdersPage() {
               </div>
             )}
           </Card>
+
+      {/* Invoice & Bill Modal */}
+      <OrderInvoiceModal
+        isOpen={!!invoiceOrder}
+        onClose={() => setInvoiceOrder(null)}
+        order={invoiceOrder}
+      />
     </div>
   );
 }

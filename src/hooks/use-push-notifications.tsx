@@ -6,6 +6,80 @@ import { notificationsApi } from '@/services/api/notifications.api';
 import { useAuth } from '@/providers/auth-provider';
 import { toast } from 'sonner';
 
+// Module-level singleton state to prevent duplicate listeners across multiple component instances
+let isGlobalMessageListenerAttached = false;
+const recentPushes = new Map<string, number>();
+
+function setupGlobalForegroundMessageListener() {
+  if (isGlobalMessageListenerAttached || !messaging) return;
+  isGlobalMessageListenerAttached = true;
+
+  onMessage(messaging, (payload) => {
+    console.log('[FCM] Foreground message received:', payload);
+
+    const title = payload.notification?.title || payload.data?.title || 'Tommalu Notification';
+    const body = payload.notification?.body || payload.data?.body || payload.data?.message || '';
+    const orderId = payload.data?.orderId || payload.data?.relatedId || '';
+    const dedupeKey = String(orderId || `${title}-${body}`);
+
+    // Deduplicate: ignore if same alert was received in the last 60 seconds
+    const now = Date.now();
+    const lastSeen = recentPushes.get(dedupeKey);
+    if (lastSeen && (now - lastSeen < 60000)) {
+      console.log(`[FCM] Suppressed duplicate foreground push for: ${dedupeKey}`);
+      return;
+    }
+    recentPushes.set(dedupeKey, now);
+
+    // If the user is on /admin pages, AdminRealtimeListener owns order ringing and rich toast
+    const isOnAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+    if (isOnAdmin && (payload.data?.type === 'new_order' || orderId)) {
+      console.log('[FCM] User is on /admin; AdminRealtimeListener is handling order alert');
+      return;
+    }
+
+    // Play chime sound for customer
+    try {
+      const audio = new Audio('/notification-ring.wav');
+      audio.play().catch(() => {});
+    } catch (e) {
+      // audio playback failure safe to ignore
+    }
+
+    // Show single toast
+    toast(title, {
+      id: `fcm-${dedupeKey}`,
+      description: body,
+      icon: '🔔',
+      duration: 6000,
+      position: 'top-right',
+      action: payload.data?.url
+        ? {
+            label: 'View',
+            onClick: () => {
+              if (payload.data?.url) {
+                window.location.href = payload.data.url;
+              }
+            },
+          }
+        : undefined,
+    });
+
+    // Desktop notification with tag to prevent duplicate stacking
+    try {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+          body: body,
+          icon: '/icons/icon-192x192.png',
+          tag: `order-${dedupeKey}`,
+        });
+      }
+    } catch (e) {
+      console.log('[FCM] Desktop notification display error:', e);
+    }
+  });
+}
+
 export const usePushNotifications = () => {
   const { user } = useAuth();
   const [permission, setPermission] = useState<NotificationPermission | null>(null);
@@ -15,61 +89,7 @@ export const usePushNotifications = () => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermission(Notification.permission);
     }
-  }, []);
-
-  useEffect(() => {
-    if (!messaging) return;
-
-    // Handle foreground messages
-    const unsubscribe = onMessage(messaging, (payload) => {
-      console.log('[FCM] Foreground message received:', payload);
-
-      // Play chime sound
-      try {
-        const audio = new Audio('/notification-ring.wav');
-        audio.play().catch(() => {});
-      } catch (e) {
-        // audio playback failure safe to ignore
-      }
-
-      const title = payload.notification?.title || payload.data?.title || 'Tommalu Notification';
-      const body = payload.notification?.body || payload.data?.body || payload.data?.message;
-
-      // Show toast
-      toast(title, {
-        description: body,
-        icon: '🔔',
-        duration: 6000,
-        position: 'top-right',
-        action: payload.data?.url
-          ? {
-              label: 'View',
-              onClick: () => {
-                if (payload.data?.url) {
-                  window.location.href = payload.data.url;
-                }
-              },
-            }
-          : undefined,
-      });
-
-      // Always trigger browser desktop notification if permitted
-      try {
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification(title, {
-            body: body,
-            icon: '/icons/icon-192x192.png',
-            tag: payload.data?.orderId || `tommalu-${Date.now()}`,
-          });
-        }
-      } catch (e) {
-        console.log('[FCM] Desktop notification display error:', e);
-      }
-    });
-
-    return () => {
-      unsubscribe();
-    };
+    setupGlobalForegroundMessageListener();
   }, []);
 
   const requestPermissionAndGetToken = useCallback(async () => {

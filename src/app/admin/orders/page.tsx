@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Package, MapPin, Phone, Loader2, ListFilter, Clock, CheckCircle2, Truck, Check, Users, User, Plus, MessageCircle } from 'lucide-react';
+import { Search, Package, MapPin, Phone, Loader2, ListFilter, Clock, CheckCircle2, Truck, Check, Users, User, Plus, MessageCircle, Printer } from 'lucide-react';
 import { useAdminHomemadeFoodOrders, useUpdateHomemadeFoodOrderStatus } from '@/hooks/api';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { AddManualOrderModal } from '@/components/admin/orders/AddManualOrderModal';
+import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
 import Link from 'next/link';
 
 export default function AdminOrdersPage() {
@@ -27,6 +28,7 @@ export default function AdminOrdersPage() {
 
     const [searchInput, setSearchInput] = useState('');
     const [isManualOrderModalOpen, setIsManualOrderModalOpen] = useState(false);
+    const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
 
     // Debounce search
     useEffect(() => {
@@ -251,9 +253,20 @@ export default function AdminOrdersPage() {
 
                                     {/* Right: Actions */}
                                     <div className="w-full md:w-56 bg-stone-50 p-4 flex flex-col justify-center gap-2">
-                                        <Link href={`/admin/orders/${order.id || order._id}`} className="w-full">
-                                            <Button variant="outline" className="w-full bg-white">View Details</Button>
-                                        </Link>
+                                        <div className="grid grid-cols-2 gap-1.5 w-full">
+                                            <Link href={`/admin/orders/${order.id || order._id}`} className="w-full">
+                                                <Button variant="outline" size="sm" className="w-full bg-white text-xs h-8">Details</Button>
+                                            </Link>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setInvoiceOrder(order)}
+                                                className="w-full bg-white hover:bg-stone-100 text-stone-800 border-stone-300 gap-1 text-xs h-8 cursor-pointer"
+                                            >
+                                                <Printer className="w-3 h-3 text-orange-600" />
+                                                Bill
+                                            </Button>
+                                        </div>
 
                                         {(order.status?.toUpperCase() === 'NEW' || order.status?.toUpperCase() === 'PENDING') && (
                                             <Button onClick={() => handleQuickStatusUpdate(order.id || order._id, 'Confirmed')} disabled={updateOrderStatus.isPending} className="w-full bg-indigo-600 hover:bg-indigo-700">
@@ -343,6 +356,13 @@ export default function AdminOrdersPage() {
                 isOpen={isManualOrderModalOpen}
                 onClose={() => setIsManualOrderModalOpen(false)}
                 onSuccess={() => refetch()}
+            />
+
+            {/* Invoice & Bill Modal */}
+            <OrderInvoiceModal
+                isOpen={!!invoiceOrder}
+                onClose={() => setInvoiceOrder(null)}
+                order={invoiceOrder}
             />
         </div>
     );
